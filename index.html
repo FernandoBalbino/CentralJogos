@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jogos educativos sobre fundamentos de informática e sistemas operacionais.">
+    <meta name="theme-color" content="#182a43">
+    <title>Central de Jogos — Fundamentos de Informática</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css?v=1.1.0">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#/" aria-label="Voltar para a Central de Jogos">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span class="brand-copy">
+          <strong>Central de Jogos</strong>
+          <small>Fundamentos de Informática</small>
+        </span>
+      </a>
+      <nav class="header-nav" aria-label="Navegação principal">
+        <a href="#/" data-route-link="home">Início</a>
+        <a href="#/classificacao" data-route-link="classification">Classificação</a>
+        <a href="#/forca" data-route-link="hangman">Forca</a>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <section id="home-screen" class="screen home-screen" data-screen="home">
+        <div class="hero-copy">
+          <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
+          <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
+          <p>Dois jogos rápidos para reconhecer equipamentos, programas e os elementos que fazem um sistema operacional funcionar.</p>
+          <div class="hero-stats" aria-label="Conteúdo disponível">
+            <div><strong>40</strong><span>itens para classificar</span></div>
+            <div><strong>30</strong><span>termos na forca</span></div>
+            <div><strong>100%</strong><span>gratuito e local</span></div>
+          </div>
+        </div>
+
+        <div class="game-selection" aria-label="Escolha um jogo">
+          <article class="game-card classification-card">
+            <div class="card-topline"><span>Jogo 01</span><span class="difficulty">Observação</span></div>
+            <div class="classification-preview" aria-hidden="true">
+              <span class="preview-chip chip-keyboard">⌨</span>
+              <span class="preview-chip chip-monitor">▣</span>
+              <span class="preview-chip chip-software">◎</span>
+              <span class="preview-slot"></span><span class="preview-slot"></span><span class="preview-slot"></span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Arraste e organize</p>
+              <h2>Classifique os itens</h2>
+              <p>Descubra o que é entrada, saída, hardware, software ou periférico híbrido.</p>
+              <a class="primary-button" href="#/classificacao">Começar atividade <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <article class="game-card hangman-card">
+            <div class="card-topline"><span>Jogo 02</span><span class="difficulty">Vocabulário</span></div>
+            <div class="hangman-preview" aria-hidden="true">
+              <span class="mini-gallows"></span>
+              <div><span class="mini-word">_ _ _ _ _ _</span><span class="mini-keys">A B C D E</span></div>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Escolha e descubra</p>
+              <h2>Forca do sistema</h2>
+              <p>O professor prepara o termo e a turma tenta revelar cada letra antes do boneco ficar completo.</p>
+              <a class="primary-button" href="#/forca">Preparar partida <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="classification-screen" class="screen game-screen" data-screen="classification" hidden>
+        <div class="game-heading">
+          <div>
+            <a class="back-link" href="#/">← Voltar para os jogos</a>
+            <span class="eyebrow">Jogo de classificação</span>
+            <h1>Onde cada item pertence?</h1>
+            <p>Arraste cada cartão até um quadrado. No celular ou teclado, selecione o cartão e depois o destino.</p>
+          </div>
+          <div class="progress-card" aria-live="polite">
+            <span>Progresso</span>
+            <strong id="classification-progress">0 de 40</strong>
+            <div class="progress-track"><span id="classification-progress-bar"></span></div>
+          </div>
+        </div>
+
+        <aside id="classification-instructions" class="instruction-strip">
+          <span class="instruction-number">1</span><p>Escolha um item</p>
+          <span aria-hidden="true">→</span>
+          <span class="instruction-number">2</span><p>Coloque em uma categoria</p>
+          <span aria-hidden="true">→</span>
+          <span class="instruction-number">3</span><p>Envie quando completar</p>
+        </aside>
+
+        <div class="classification-workspace">
+          <section class="items-tray-section" aria-labelledby="tray-title">
+            <div class="section-title-row">
+              <div><span class="section-label">Itens disponíveis</span><h2 id="tray-title">Bandeja de cartões</h2></div>
+              <button id="shuffle-button" class="ghost-button" type="button">↻ Embaralhar</button>
+            </div>
+            <div id="items-tray" class="items-tray" role="list" aria-describedby="classification-instructions"></div>
+          </section>
+
+          <section class="classification-board" aria-label="Categorias e quadrados de classificação">
+            <div id="category-grid" class="category-grid"></div>
+          </section>
+        </div>
+
+        <section id="classification-result" class="result-panel" aria-live="polite" hidden></section>
+        <div class="sticky-actions">
+          <p id="classification-help">Faltam 40 itens para completar a atividade.</p>
+          <div>
+            <button id="reset-classification" class="secondary-button" type="button">Recomeçar</button>
+            <button id="submit-classification" class="primary-button" type="button" disabled>Enviar respostas</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="hangman-screen" class="screen game-screen" data-screen="hangman" hidden>
+        <div id="hangman-app"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Feito para aprender — nenhum dado do aluno é coletado.</p>
+      <button id="open-credits" class="text-button" type="button">Créditos das imagens</button>
+    </footer>
+
+    <dialog id="credits-dialog" class="credits-dialog">
+      <div class="dialog-header">
+        <div><span class="section-label">Transparência</span><h2>Créditos das imagens</h2></div>
+        <button id="close-credits" class="icon-button" type="button" aria-label="Fechar créditos">×</button>
+      </div>
+      <p>As imagens ficam armazenadas no próprio site. Consulte abaixo a fonte e a licença registradas no download.</p>
+      <div id="credits-list" class="credits-list"></div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./js/credits-data.js?v=1.0.5"></script>
+    <script src="./js/data.js?v=1.0.5"></script>
+    <script type="module" src="./js/app.js?v=1.0.5"></script>
+  </body>
+</html>
