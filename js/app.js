@@ -1,3 +1,6 @@
+import { sideGame } from "./side-game.mjs";
+import { sideGameItems } from "./side-game-data.mjs";
+
 (function () {
   "use strict";
 
@@ -6,6 +9,7 @@
   const routeLinks = [...document.querySelectorAll("[data-route-link]")];
   const toastElement = document.getElementById("toast");
   let toastTimer;
+  let activeRoute = null;
 
   const shuffle = (values) => {
     const copy = [...values];
@@ -27,11 +31,13 @@
     const hash = window.location.hash || "#/";
     if (hash.startsWith("#/classificacao")) return "classification";
     if (hash.startsWith("#/forca")) return "hangman";
+    if (hash.startsWith("#/escolha-seu-lado")) return "side-game";
     return "home";
   };
 
   const renderRoute = () => {
     const route = getRoute();
+    if (activeRoute === "side-game" && route !== "side-game") sideGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -44,10 +50,14 @@
       ? "Classifique os itens — Central de Jogos"
       : route === "hangman"
         ? "Forca do Sistema Operacional — Central de Jogos"
+        : route === "side-game"
+          ? "Escolha seu lado — Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
+    if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
+    activeRoute = route;
   };
 
   const classification = {
@@ -649,14 +659,16 @@
   const creditsDialog = document.getElementById("credits-dialog");
   const renderCredits = () => {
     const list = document.getElementById("credits-list");
-    list.innerHTML = classificationItems.map((item) => {
-      const detail = window.assetCredits?.[item.id] || {};
-      const isLink = /^https?:/.test(item.fonte);
+    list.innerHTML = sideGameItems.map((item) => {
+      const detail = item.attribution || window.assetCredits?.[item.creditId || item.id] || {};
+      const source = detail.source || "Fonte registrada no projeto";
+      const license = detail.license || "Consulte a fonte";
+      const isLink = /^https?:/.test(source);
       return `
         <article class="credit-row">
-          <div><strong>${item.nome}</strong><small>${detail.title || item.alt}</small></div>
-          <div><strong>${item.licenca}</strong><small>${detail.author || "Autoria na página da fonte"}</small></div>
-          ${isLink ? `<a href="${item.fonte}" target="_blank" rel="noopener noreferrer">Ver fonte ↗</a>` : "<span>Fonte local</span>"}
+          <div><strong>${item.name}</strong><small>${detail.title || item.alt}</small></div>
+          <div><strong>${license}</strong><small>${detail.author || "Autoria na página da fonte"}</small></div>
+          ${isLink ? `<a href="${source}" target="_blank" rel="noopener noreferrer">Ver fonte ↗</a>` : "<span>Fonte local</span>"}
         </article>
       `;
     }).join("");
@@ -672,6 +684,7 @@
 
   window.addEventListener("hashchange", renderRoute);
   if (!window.location.hash) window.location.hash = "#/";
+  sideGame.mount(document.getElementById("side-game-app"));
   classification.ensureState();
   renderRoute();
 })();

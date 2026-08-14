@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css?v=1.1.0">
+    <link rel="stylesheet" href="./side-game.css?v=1.0.0">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -28,6 +29,7 @@
         <a href="#/" data-route-link="home">Início</a>
         <a href="#/classificacao" data-route-link="classification">Classificação</a>
         <a href="#/forca" data-route-link="hangman">Forca</a>
+        <a href="#/escolha-seu-lado" data-route-link="side-game">Escolha seu lado</a>
       </nav>
     </header>
 
@@ -36,11 +38,11 @@
         <div class="hero-copy">
           <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
           <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
-          <p>Dois jogos rápidos para reconhecer equipamentos, programas e os elementos que fazem um sistema operacional funcionar.</p>
+          <p>Três jogos rápidos para reconhecer equipamentos, programas e os elementos que fazem um sistema operacional funcionar.</p>
           <div class="hero-stats" aria-label="Conteúdo disponível">
-            <div><strong>40</strong><span>itens para classificar</span></div>
+            <div><strong>3</strong><span>jogos educativos</span></div>
+            <div><strong>75</strong><span>itens na roleta</span></div>
             <div><strong>30</strong><span>termos na forca</span></div>
-            <div><strong>100%</strong><span>gratuito e local</span></div>
           </div>
         </div>
 
@@ -72,6 +74,22 @@
               <h2>Forca do sistema</h2>
               <p>O professor prepara o termo e a turma tenta revelar cada letra antes do boneco ficar completo.</p>
               <a class="primary-button" href="#/forca">Preparar partida <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <article class="game-card choose-side-card">
+            <div class="card-topline"><span>Jogo 03</span><span class="difficulty">Movimento</span></div>
+            <div class="choose-side-preview" aria-hidden="true">
+              <span class="choose-preview-zone choose-preview-left"><img src="./assets/side-game/icons/arrow_back.svg" alt=""></span>
+              <span class="choose-preview-zone choose-preview-center"><img src="./assets/side-game/icons/arrow_downward.svg" alt=""></span>
+              <span class="choose-preview-zone choose-preview-right"><img src="./assets/side-game/icons/arrow_forward.svg" alt=""></span>
+              <span class="choose-preview-item"><img src="./assets/items/memoria-ram.jpg" alt=""></span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Observe e se mova</p>
+              <h2>Escolha seu lado</h2>
+              <p>A roleta sorteia 75 itens e a turma escolhe um lado para classificar natureza ou fluxo de dados.</p>
+              <a class="primary-button" href="#/escolha-seu-lado">Abrir a roleta <span aria-hidden="true">→</span></a>
             </div>
           </article>
         </div>
@@ -126,6 +144,10 @@
 
       <section id="hangman-screen" class="screen game-screen" data-screen="hangman" hidden>
         <div id="hangman-app"></div>
+      </section>
+
+      <section id="side-game-screen" class="screen" data-screen="side-game" hidden>
+        <div id="side-game-app"></div>
       </section>
     </main>
 
