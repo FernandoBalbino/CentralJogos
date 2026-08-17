@@ -1,5 +1,5 @@
 import {
-  supportCards,
+  supportLevels,
   supportSlotTypes,
   supportTickets
 } from "./support-game-data.mjs";
@@ -14,7 +14,8 @@ import {
   shuffleSupportCardIds
 } from "./support-game-core.mjs";
 
-const TOTAL_SLOTS = supportTickets.length * supportSlotTypes.length;
+const SLOTS_PER_LEVEL = supportLevels[0].tickets.length * supportSlotTypes.length;
+const TOTAL_GAME_SLOTS = supportLevels.length * SLOTS_PER_LEVEL;
 const ANALYSIS_DELAY = 1200;
 const ERROR_RETURN_DELAY = 1050;
 const iconPath = (name) => `./assets/side-game/icons/${name}.svg`;
@@ -50,10 +51,26 @@ const supportGame = {
     root.addEventListener("drop", (event) => this.handleDrop(event));
   },
 
-  createState() {
-    const state = createSupportState(supportCards.map((card) => card.id));
-    state.trayOrder = shuffleSupportCardIds(state.trayOrder, supportCards);
+  createState(levelIndex = 0, attempts = 0) {
+    const level = supportLevels[levelIndex];
+    const state = createSupportState(level.cards.map((card) => card.id));
+    state.trayOrder = shuffleSupportCardIds(state.trayOrder, level.cards);
+    state.levelIndex = levelIndex;
+    state.levelAttempts = 0;
+    state.attempts = attempts;
     return state;
+  },
+
+  currentLevel() {
+    return supportLevels[this.state.levelIndex];
+  },
+
+  currentCards() {
+    return this.currentLevel().cards;
+  },
+
+  currentTickets() {
+    return this.currentLevel().tickets;
   },
 
   enter() {
@@ -79,7 +96,7 @@ const supportGame = {
   },
 
   cardById(cardId) {
-    return supportCards.find((card) => card.id === cardId);
+    return this.currentCards().find((card) => card.id === cardId);
   },
 
   isCardLocked(cardId) {
@@ -184,6 +201,29 @@ const supportGame = {
     `;
   },
 
+  renderLevelComplete() {
+    if (this.state.phase !== "level-complete") return "";
+    const currentLevel = this.currentLevel();
+    const nextLevel = supportLevels[this.state.levelIndex + 1];
+    return `
+      <div class="support-level-backdrop">
+        <section class="support-level-complete" role="dialog" aria-modal="true" aria-labelledby="support-level-title">
+          <div class="support-level-emblem" aria-hidden="true">${currentLevel.number}</div>
+          <span class="section-label">Nível ${currentLevel.number} concluído</span>
+          <h2 id="support-level-title">Três chamados resolvidos!</h2>
+          <p>Ótimo diagnóstico. Uma nova fila de atendimentos acabou de chegar.</p>
+          <div class="support-level-progress"><strong>${SLOTS_PER_LEVEL}/${TOTAL_GAME_SLOTS}</strong><span>etapas concluídas</span></div>
+          <div class="support-next-preview" aria-label="Próximos chamados">
+            ${nextLevel.tickets.map((ticket) => `
+              <span><img src="${iconPath(ticket.icon)}" alt="" aria-hidden="true">${escapeHtml(ticket.title)}</span>
+            `).join("")}
+          </div>
+          <button class="primary-button" type="button" data-action="next-level">Começar nível ${nextLevel.number}</button>
+        </section>
+      </div>
+    `;
+  },
+
   renderCompletion() {
     if (this.state.phase !== "completed") return "";
     return `
@@ -192,9 +232,9 @@ const supportGame = {
           <div class="support-completion-emblem" aria-hidden="true">✓</div>
           <span class="section-label">Atividade concluída</span>
           <h2 id="support-completion-title">Central de Suporte concluída!</h2>
-          <p class="support-completion-lead">Você resolveu os 3 chamados.</p>
+          <p class="support-completion-lead">Você resolveu os 6 chamados dos dois níveis.</p>
           <div class="support-completion-stats">
-            <div><strong>9/9</strong><span>diagnósticos corretos</span></div>
+            <div><strong>${TOTAL_GAME_SLOTS}/${TOTAL_GAME_SLOTS}</strong><span>etapas corretas</span></div>
             <div><strong>${this.state.attempts}</strong><span>${this.state.attempts === 1 ? "tentativa" : "tentativas"}</span></div>
           </div>
           <p class="support-reasoning-title">Verificar → identificar → solucionar</p>
@@ -237,8 +277,10 @@ const supportGame = {
 
   render() {
     if (!this.root || !this.state) return;
-    const progress = this.state.lockedSlots.size;
-    const missing = countMissingSupportSlots(this.state.placements, TOTAL_SLOTS);
+    const currentLevel = this.currentLevel();
+    const levelProgress = this.state.lockedSlots.size;
+    const progress = (this.state.levelIndex * SLOTS_PER_LEVEL) + levelProgress;
+    const missing = countMissingSupportSlots(this.state.placements, SLOTS_PER_LEVEL);
     const selectedLocation = this.state.selectedCard
       ? locateSupportCard(this.state.placements, this.state.selectedCard)
       : null;
@@ -248,7 +290,7 @@ const supportGame = {
       && !this.state.lockedSlots.has(selectedLocation)
       && this.state.phase === "playing"
     );
-    const canSubmit = missing === 0 && this.state.phase === "playing" && progress < TOTAL_SLOTS;
+    const canSubmit = missing === 0 && this.state.phase === "playing" && levelProgress < SLOTS_PER_LEVEL;
     const helpText = this.state.phase === "analyzing"
       ? "Analisando os diagnósticos..."
       : this.state.phase === "feedback"
@@ -262,14 +304,14 @@ const supportGame = {
         <header class="support-game-heading">
           <div>
             <a class="back-link" href="#/">← Voltar para os jogos</a>
-            <span class="eyebrow">Jogo de diagnóstico</span>
+            <div class="support-heading-meta"><span class="eyebrow">Jogo de diagnóstico</span><span class="support-level-pill">Nível ${currentLevel.number} de ${supportLevels.length}</span></div>
             <h1>Central de Suporte</h1>
-            <p>Três usuários abriram chamados. Analise cada situação e monte o diagnóstico correto.</p>
+            <p>${escapeHtml(currentLevel.label)}: ${escapeHtml(currentLevel.description)}. Monte os três diagnósticos corretos.</p>
           </div>
           <div class="progress-card" aria-live="polite">
-            <span>Progresso</span>
-            <strong>${progress} de ${TOTAL_SLOTS}</strong>
-            <div class="progress-track"><span style="width:${(progress / TOTAL_SLOTS) * 100}%"></span></div>
+            <span>Progresso total</span>
+            <strong>${progress} de ${TOTAL_GAME_SLOTS}</strong>
+            <div class="progress-track"><span style="width:${(progress / TOTAL_GAME_SLOTS) * 100}%"></span></div>
           </div>
         </header>
 
@@ -300,7 +342,7 @@ const supportGame = {
           </section>
 
           <section class="support-board" aria-label="Três chamados de suporte técnico">
-            ${supportTickets.map((ticket) => this.renderTicket(ticket)).join("")}
+            ${currentLevel.tickets.map((ticket) => this.renderTicket(ticket)).join("")}
           </section>
         </div>
 
@@ -308,17 +350,21 @@ const supportGame = {
           <p aria-live="polite">${escapeHtml(helpText)}</p>
           <div>
             <button class="secondary-button" type="button" data-action="reset">Recomeçar</button>
-            <button class="primary-button" type="button" data-action="submit" ${canSubmit ? "" : "disabled"}>${this.state.attempts > 0 ? "Reenviar diagnósticos" : "Enviar diagnósticos"}</button>
+            <button class="primary-button" type="button" data-action="submit" ${canSubmit ? "" : "disabled"}>${this.state.levelAttempts > 0 ? "Reenviar diagnósticos" : "Enviar diagnósticos"}</button>
           </div>
         </div>
 
         ${this.renderAnalysis()}
+        ${this.renderLevelComplete()}
         ${this.renderCompletion()}
       </div>
     `;
 
     if (this.state.phase === "completed") {
       requestAnimationFrame(() => this.root.querySelector('[data-action="restart"]')?.focus());
+    }
+    if (this.state.phase === "level-complete") {
+      requestAnimationFrame(() => this.root.querySelector('[data-action="next-level"]')?.focus());
     }
   },
 
@@ -328,6 +374,7 @@ const supportGame = {
       if (action === "shuffle") this.shuffleTray();
       if (action === "return-selected") this.returnSelectedToTray();
       if (action === "reset" || action === "restart") this.reset();
+      if (action === "next-level") this.startNextLevel();
       if (action === "submit") this.evaluate();
       return;
     }
@@ -416,25 +463,30 @@ const supportGame = {
 
   shuffleTray() {
     if (this.state.phase !== "playing") return;
-    this.state.trayOrder = shuffleSupportCardIds(this.state.trayOrder, supportCards);
+    this.state.trayOrder = shuffleSupportCardIds(this.state.trayOrder, this.currentCards());
     this.render();
     this.showToast("As respostas disponíveis foram embaralhadas.");
   },
 
   evaluate() {
-    if (this.state.phase !== "playing" || this.state.placements.size !== TOTAL_SLOTS) return;
+    if (this.state.phase !== "playing" || this.state.placements.size !== SLOTS_PER_LEVEL) return;
     this.state.phase = "analyzing";
     this.state.selectedCard = null;
     this.state.attempts += 1;
+    this.state.levelAttempts += 1;
     this.render();
 
     this.analysisTimer = setTimeout(() => {
-      const result = evaluateSupportPlacements(this.state.placements, supportCards);
+      const result = evaluateSupportPlacements(this.state.placements, this.currentCards());
       this.state.lockedSlots = result.correctSlots;
       this.state.feedback = new Map(
         [...this.state.placements.keys()].map((slotId) => [slotId, result.correctSlots.has(slotId)])
       );
-      this.state.phase = result.score === TOTAL_SLOTS ? "completed" : "feedback";
+      const levelComplete = result.score === SLOTS_PER_LEVEL;
+      const finalLevel = this.state.levelIndex === supportLevels.length - 1;
+      this.state.phase = levelComplete
+        ? (finalLevel ? "completed" : "level-complete")
+        : "feedback";
       this.render();
       if (this.state.phase === "feedback") {
         this.feedbackTimer = setTimeout(() => this.returnIncorrectCards(), ERROR_RETURN_DELAY);
@@ -468,6 +520,15 @@ const supportGame = {
     this.render();
     document.getElementById("support-game-screen")?.scrollIntoView({ behavior: "smooth" });
     this.showToast("Nova rodada iniciada. As respostas foram embaralhadas.");
+  },
+
+  startNextLevel() {
+    if (this.state.phase !== "level-complete") return;
+    const nextLevelIndex = this.state.levelIndex + 1;
+    this.state = this.createState(nextLevelIndex, this.state.attempts);
+    this.render();
+    document.getElementById("support-game-screen")?.scrollIntoView({ behavior: "smooth" });
+    this.showToast(`Nível ${nextLevelIndex + 1} iniciado: três novos chamados na fila.`);
   },
 
   handleDragStart(event) {

@@ -1,6 +1,6 @@
 import { sideGame } from "./side-game.mjs";
 import { sideGameItems } from "./side-game-data.mjs";
-import { supportGame } from "./support-game.mjs";
+import { supportGame } from "./support-game.mjs?v=2.0.0";
 
 (function () {
   "use strict";
