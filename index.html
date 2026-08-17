@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css?v=1.1.0">
     <link rel="stylesheet" href="./side-game.css?v=1.0.0">
+    <link rel="stylesheet" href="./support-game.css?v=1.0.0">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -30,6 +31,7 @@
         <a href="#/classificacao" data-route-link="classification">Classificação</a>
         <a href="#/forca" data-route-link="hangman">Forca</a>
         <a href="#/escolha-seu-lado" data-route-link="side-game">Escolha seu lado</a>
+        <a href="#/suporte-tecnico" data-route-link="support-game">Suporte</a>
       </nav>
     </header>
 
@@ -38,9 +40,9 @@
         <div class="hero-copy">
           <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
           <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
-          <p>Três jogos rápidos para reconhecer equipamentos, programas e os elementos que fazem um sistema operacional funcionar.</p>
+          <p>Quatro jogos rápidos para reconhecer equipamentos, programas, sistemas operacionais e o raciocínio do suporte técnico.</p>
           <div class="hero-stats" aria-label="Conteúdo disponível">
-            <div><strong>3</strong><span>jogos educativos</span></div>
+            <div><strong>4</strong><span>jogos educativos</span></div>
             <div><strong>75</strong><span>itens na roleta</span></div>
             <div><strong>30</strong><span>termos na forca</span></div>
           </div>
@@ -90,6 +92,22 @@
               <h2>Escolha seu lado</h2>
               <p>A roleta sorteia 75 itens e a turma escolhe um lado para classificar natureza ou fluxo de dados.</p>
               <a class="primary-button" href="#/escolha-seu-lado">Abrir a roleta <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <article class="game-card support-card">
+            <div class="card-topline"><span>Jogo 04</span><span class="difficulty">Suporte Técnico</span></div>
+            <div class="support-preview" aria-hidden="true">
+              <span class="support-preview-headset">◖◗</span>
+              <span class="support-preview-ticket ticket-one"><i></i><i></i><i></i></span>
+              <span class="support-preview-ticket ticket-two"><i></i><i></i><i></i></span>
+              <span class="support-preview-check">✓</span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Analise e resolva</p>
+              <h2>Central de Suporte</h2>
+              <p>Resolva chamados identificando o que verificar, a possível causa e a solução.</p>
+              <a class="primary-button" href="#/suporte-tecnico">Atender chamados <span aria-hidden="true">→</span></a>
             </div>
           </article>
         </div>
@@ -149,6 +167,10 @@
       <section id="side-game-screen" class="screen" data-screen="side-game" hidden>
         <div id="side-game-app"></div>
       </section>
+
+      <section id="support-game-screen" class="screen game-screen" data-screen="support-game" hidden>
+        <div id="support-game-app"></div>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -168,6 +190,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="./js/credits-data.js?v=1.0.5"></script>
     <script src="./js/data.js?v=1.0.5"></script>
-    <script type="module" src="./js/app.js?v=1.0.5"></script>
+    <script type="module" src="./js/app.js?v=1.1.0"></script>
   </body>
 </html>

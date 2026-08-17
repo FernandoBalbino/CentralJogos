@@ -1,10 +1,11 @@
 # Central de Jogos — Fundamentos de Informática
 
-Site educacional estático com três jogos para aulas introdutórias de informática:
+Site educacional estático com quatro jogos para aulas introdutórias de informática:
 
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
 - **Escolha seu lado:** uma roleta sem repetição apresenta 75 itens. Peças, programas e conceitos usam Hardware/Nenhum/Software; periféricos usam Entrada/Híbrido/Saída.
+- **Central de Suporte:** o aluno resolve três chamados ligando o que verificar, a possível causa e a solução, com três respostas distratoras.
 
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 
@@ -20,7 +21,10 @@ python -m http.server 8000
 
 Depois acesse `http://localhost:8000/`.
 
-A rota direta do novo jogo é `http://localhost:8000/#/escolha-seu-lado`.
+As rotas diretas dos jogos mais recentes são:
+
+- `http://localhost:8000/#/escolha-seu-lado`
+- `http://localhost:8000/#/suporte-tecnico`
 
 ## Atalhos do Escolha seu lado
 
@@ -37,6 +41,7 @@ Os testes usam somente o executor nativo do Node.js:
 
 ```powershell
 node --test tests/side-game.test.mjs
+node --test tests/support-game.test.mjs
 ```
 
 ## Publicar no GitHub Pages

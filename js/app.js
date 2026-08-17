@@ -1,5 +1,6 @@
 import { sideGame } from "./side-game.mjs";
 import { sideGameItems } from "./side-game-data.mjs";
+import { supportGame } from "./support-game.mjs";
 
 (function () {
   "use strict";
@@ -32,12 +33,14 @@ import { sideGameItems } from "./side-game-data.mjs";
     if (hash.startsWith("#/classificacao")) return "classification";
     if (hash.startsWith("#/forca")) return "hangman";
     if (hash.startsWith("#/escolha-seu-lado")) return "side-game";
+    if (hash.startsWith("#/suporte-tecnico")) return "support-game";
     return "home";
   };
 
   const renderRoute = () => {
     const route = getRoute();
     if (activeRoute === "side-game" && route !== "side-game") sideGame.leave();
+    if (activeRoute === "support-game" && route !== "support-game") supportGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -52,11 +55,14 @@ import { sideGameItems } from "./side-game-data.mjs";
         ? "Forca do Sistema Operacional — Central de Jogos"
         : route === "side-game"
           ? "Escolha seu lado — Central de Jogos"
+        : route === "support-game"
+          ? "Central de Suporte — Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
     if (route !== "side-game") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
+    if (route === "support-game" && activeRoute !== "support-game") supportGame.enter();
     activeRoute = route;
   };
 
@@ -685,6 +691,7 @@ import { sideGameItems } from "./side-game-data.mjs";
   window.addEventListener("hashchange", renderRoute);
   if (!window.location.hash) window.location.hash = "#/";
   sideGame.mount(document.getElementById("side-game-app"));
+  supportGame.mount(document.getElementById("support-game-app"));
   classification.ensureState();
   renderRoute();
 })();
