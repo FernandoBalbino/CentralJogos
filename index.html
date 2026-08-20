@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="./styles.css?v=1.1.0">
     <link rel="stylesheet" href="./side-game.css?v=1.0.0">
     <link rel="stylesheet" href="./support-game.css?v=2.0.0">
+    <link rel="stylesheet" href="./memory-game.css?v=1.0.0">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -32,6 +33,7 @@
         <a href="#/forca" data-route-link="hangman">Forca</a>
         <a href="#/escolha-seu-lado" data-route-link="side-game">Escolha seu lado</a>
         <a href="#/suporte-tecnico" data-route-link="support-game">Suporte</a>
+        <a href="#/ache-os-pares" data-route-link="memory-game">Ache os pares</a>
       </nav>
     </header>
 
@@ -40,9 +42,9 @@
         <div class="hero-copy">
           <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
           <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
-          <p>Quatro jogos rápidos para reconhecer equipamentos, programas, sistemas operacionais e o raciocínio do suporte técnico.</p>
+          <p>Cinco jogos rápidos para reconhecer equipamentos, programas, redes, sistemas operacionais e o raciocínio do suporte técnico.</p>
           <div class="hero-stats" aria-label="Conteúdo disponível">
-            <div><strong>4</strong><span>jogos educativos</span></div>
+            <div><strong>5</strong><span>jogos educativos</span></div>
             <div><strong>75</strong><span>itens na roleta</span></div>
             <div><strong>30</strong><span>termos na forca</span></div>
           </div>
@@ -110,6 +112,23 @@
               <a class="primary-button" href="#/suporte-tecnico">Atender chamados <span aria-hidden="true">→</span></a>
             </div>
           </article>
+
+          <article class="game-card memory-home-card">
+            <div class="card-topline"><span>Jogo 05</span><span class="difficulty">Imagem + definição</span></div>
+            <div class="memory-home-preview" aria-hidden="true">
+              <span class="memory-preview-card memory-preview-back">?</span>
+              <span class="memory-preview-card memory-preview-image">▦</span>
+              <span class="memory-preview-card memory-preview-back">?</span>
+              <span class="memory-preview-card memory-preview-text"><i></i><i></i><i></i></span>
+              <span class="memory-preview-link">↔</span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Associe e conquiste</p>
+              <h2>Ache os Pares</h2>
+              <p>Encontre o equipamento, conceito ou tecnologia correspondente à definição.</p>
+              <a class="primary-button" href="#/ache-os-pares">Começar partida <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -171,6 +190,10 @@
       <section id="support-game-screen" class="screen game-screen" data-screen="support-game" hidden>
         <div id="support-game-app"></div>
       </section>
+
+      <section id="memory-game-screen" class="screen" data-screen="memory-game" hidden>
+        <div id="memory-game-app"></div>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -190,6 +213,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="./js/credits-data.js?v=1.0.5"></script>
     <script src="./js/data.js?v=1.0.5"></script>
-    <script type="module" src="./js/app.js?v=1.2.0"></script>
+    <script type="module" src="./js/app.js?v=1.3.0"></script>
   </body>
 </html>

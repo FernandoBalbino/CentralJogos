@@ -176,6 +176,7 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 }
 .game-card:hover { transform: translateY(-7px) rotate(-.3deg); box-shadow: 0 24px 48px rgba(24,42,67,.17); }
 .game-card:nth-child(2):hover { transform: translateY(-7px) rotate(.3deg); }
+.game-card:nth-child(4):hover { transform: translateY(-7px) rotate(.3deg); }
 .card-topline { position: absolute; top: 18px; right: 20px; left: 20px; z-index: 2; display: flex; justify-content: space-between; font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .difficulty { padding: 4px 8px; background: rgba(255,255,255,.8); border-radius: 999px; }
 .classification-preview, .hangman-preview, .choose-side-preview { position: relative; min-height: 100%; overflow: hidden; }
@@ -219,6 +220,16 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 .choose-side-card .card-kicker { color: var(--purple); }
 .game-card h2 { margin: 0 0 10px; font-family: "Fredoka", sans-serif; font-size: 2rem; line-height: 1; }
 .game-card-copy > p:not(.card-kicker) { margin: 0 0 22px; color: var(--muted); line-height: 1.45; }
+
+.memory-home-card { background: linear-gradient(145deg,#ffffff 0%,#f2f7ff 100%); }
+.memory-home-preview { position: relative; display: grid; grid-template-columns: repeat(2,68px); gap: 10px; place-content: center; min-height: 220px; background: radial-gradient(circle at 50% 45%,rgba(38,198,181,.22),transparent 50%),linear-gradient(145deg,#172b4d,#213d68); overflow: hidden; }
+.memory-home-preview::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px); background-size: 22px 22px; }
+.memory-preview-card { position: relative; z-index: 1; display: grid; place-items: center; width: 68px; height: 68px; border: 2px solid rgba(255,255,255,.6); border-radius: 14px; box-shadow: 0 8px 18px rgba(0,0,0,.22); font: 700 1.6rem/1 "Fredoka",sans-serif; }
+.memory-preview-back { color: #fff; background: linear-gradient(145deg,#31598f,#1b355c); }
+.memory-preview-image { color: #163455; background: #fff3cc; transform: rotate(-4deg); }
+.memory-preview-text { gap: 5px; padding: 16px 10px; background: #fff; transform: rotate(3deg); }
+.memory-preview-text i { display: block; width: 100%; height: 5px; border-radius: 9px; background: #8ba2bd; }
+.memory-preview-link { position: absolute; z-index: 2; left: 50%; top: 50%; display: grid; place-items: center; width: 38px; height: 38px; color: #17314f; background: #ffd36a; border-radius: 50%; transform: translate(-50%,-50%) rotate(-12deg); box-shadow: 0 5px 14px rgba(0,0,0,.2); font-weight: 900; }
 
 .primary-button, .secondary-button, .ghost-button, .text-button, .icon-button {
   border: 0;

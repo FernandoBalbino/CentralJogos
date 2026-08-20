@@ -1,6 +1,7 @@
 import { sideGame } from "./side-game.mjs";
 import { sideGameItems } from "./side-game-data.mjs";
 import { supportGame } from "./support-game.mjs?v=2.0.0";
+import { memoryGame } from "./memory-game.mjs?v=1.0.0";
 
 (function () {
   "use strict";
@@ -34,6 +35,7 @@ import { supportGame } from "./support-game.mjs?v=2.0.0";
     if (hash.startsWith("#/forca")) return "hangman";
     if (hash.startsWith("#/escolha-seu-lado")) return "side-game";
     if (hash.startsWith("#/suporte-tecnico")) return "support-game";
+    if (hash.startsWith("#/ache-os-pares")) return "memory-game";
     return "home";
   };
 
@@ -41,6 +43,7 @@ import { supportGame } from "./support-game.mjs?v=2.0.0";
     const route = getRoute();
     if (activeRoute === "side-game" && route !== "side-game") sideGame.leave();
     if (activeRoute === "support-game" && route !== "support-game") supportGame.leave();
+    if (activeRoute === "memory-game" && route !== "memory-game") memoryGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -57,12 +60,15 @@ import { supportGame } from "./support-game.mjs?v=2.0.0";
           ? "Escolha seu lado — Central de Jogos"
         : route === "support-game"
           ? "Central de Suporte — Central de Jogos"
+        : route === "memory-game"
+          ? "Ache os Pares — Desafio TI | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    if (route !== "side-game") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game" && route !== "memory-game") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
     if (route === "support-game" && activeRoute !== "support-game") supportGame.enter();
+    if (route === "memory-game" && activeRoute !== "memory-game") memoryGame.enter();
     activeRoute = route;
   };
 
