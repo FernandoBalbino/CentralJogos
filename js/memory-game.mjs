@@ -20,6 +20,8 @@ const TEAM_COLORS = [
   { name: "Ciano", value: "#0795a5", tint: "#e4f9fb" }
 ];
 
+const MISMATCH_READ_TIME_MS = 3200;
+
 const escapeHTML = (value = "") => String(value)
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
@@ -462,7 +464,7 @@ class MemoryGameController {
       this.selectedCards = [];
       this.busy = false;
       this.advanceTurn();
-    }, 1050);
+    }, MISMATCH_READ_TIME_MS);
   }
 
   applyOwner(element, team) {

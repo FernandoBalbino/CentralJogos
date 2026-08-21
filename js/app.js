@@ -1,7 +1,7 @@
 import { sideGame } from "./side-game.mjs";
 import { sideGameItems } from "./side-game-data.mjs";
 import { supportGame } from "./support-game.mjs?v=2.0.0";
-import { memoryGame } from "./memory-game.mjs?v=1.0.0";
+import { memoryGame } from "./memory-game.mjs?v=1.0.1";
 
 (function () {
   "use strict";
