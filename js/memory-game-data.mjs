@@ -60,7 +60,7 @@ export const memoryGamePairs = [
   { id: "topology-mesh", name: "Topologia em malha", category: "topologies", visual: symbol("topology-mesh"), definition: "Existem vários caminhos entre os dispositivos, aumentando a tolerância a falhas.", alt: "Nós de rede unidos por várias conexões cruzadas" },
   { id: "topology-tree", name: "Topologia em árvore", category: "topologies", visual: symbol("topology-tree"), definition: "A rede se organiza em níveis, com ramificações que partem de pontos superiores.", alt: "Rede hierárquica com ramos em diferentes níveis" },
 
-  // Redes — 15
+  // Redes — 14
   { id: "network-lan", name: "LAN", category: "networks", visual: symbol("lan"), definition: "Conecta dispositivos em uma área pequena, como residência, laboratório, escola ou empresa.", alt: "Dispositivos conectados dentro de um prédio" },
   { id: "network-man", name: "MAN", category: "networks", visual: symbol("man"), definition: "Interliga diferentes pontos distribuídos pela área de uma cidade.", alt: "Prédios de uma cidade ligados em rede" },
   { id: "network-wan", name: "WAN", category: "networks", visual: symbol("wan"), definition: "Cobre grandes distâncias e pode conectar cidades, estados ou países.", alt: "Mapa com pontos distantes interligados" },
@@ -72,7 +72,6 @@ export const memoryGamePairs = [
   { id: "network-gateway", name: "Gateway", category: "networks", visual: symbol("gateway"), definition: "É o caminho usado por um dispositivo para alcançar outras redes.", alt: "Computadores passando por um roteador para chegar à Internet" },
   { id: "network-dns", name: "DNS", category: "networks", visual: symbol("dns"), definition: "Relaciona nomes de domínio aos respectivos endereços de rede.", alt: "Nome de site apontando para um endereço numérico" },
   { id: "network-dhcp", name: "DHCP", category: "networks", visual: symbol("dhcp"), definition: "Fornece automaticamente endereços e outras configurações de rede aos dispositivos.", alt: "Roteador distribuindo configurações a três computadores" },
-  { id: "network-nat", name: "NAT", category: "networks", visual: symbol("nat"), definition: "Traduz endereços privados para permitir que vários dispositivos compartilhem um acesso externo.", alt: "Vários endereços privados convertidos em um endereço público" },
   { id: "network-ipv4", name: "IPv4", category: "networks", visual: symbol("ipv4"), definition: "Usa endereços de 32 bits, normalmente escritos como quatro números decimais separados por pontos.", alt: "Exemplo de endereço com quatro grupos decimais" },
   { id: "network-ipv6", name: "IPv6", category: "networks", visual: symbol("ipv6"), definition: "Usa endereços de 128 bits, ampliando muito a quantidade de identificadores disponíveis.", alt: "Exemplo de endereço longo com grupos hexadecimais" },
   { id: "network-modem", name: "Modem", category: "networks", visual: image("./assets/items/modem.jpg"), definition: "Adapta o sinal do provedor ao meio de comunicação usado para levar a conexão até o local.", alt: "Equipamento que recebe o sinal do provedor" },

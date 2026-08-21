@@ -22,15 +22,15 @@ const sequenceRandom = (...values) => {
   return () => values[index++ % values.length];
 };
 
-test("banco possui 69 pares válidos em oito categorias", async () => {
-  assert.equal(memoryGamePairs.length, 69);
+test("banco possui 68 pares válidos em oito categorias", async () => {
+  assert.equal(memoryGamePairs.length, 68);
   assert.equal(memoryCategories.length, 8);
-  assert.equal(new Set(memoryGamePairs.map((pair) => pair.id)).size, 69);
+  assert.equal(new Set(memoryGamePairs.map((pair) => pair.id)).size, 68);
   assert.deepEqual(
     Object.fromEntries(memoryCategories.map((category) => [category.id, memoryGamePairs.filter((pair) => pair.category === category.id).length])),
-    { hardware: 11, software: 8, peripherals: 15, networks: 15, topologies: 5, security: 2, malware: 8, wireless: 5 }
+    { hardware: 11, software: 8, peripherals: 15, networks: 14, topologies: 5, security: 2, malware: 8, wireless: 5 }
   );
-  assert.ok(!memoryGamePairs.some((pair) => ["network-tcp", "network-udp"].includes(pair.id)));
+  assert.ok(!memoryGamePairs.some((pair) => ["network-tcp", "network-udp", "network-nat"].includes(pair.id)));
 
   const sprite = await readFile(resolve(projectRoot, "assets/memory-game/tech-illustrations.svg"), "utf8");
   for (const pair of memoryGamePairs) {
