@@ -6,10 +6,12 @@ import {
   CROSSWORD_BLOCKED_IDS,
   evaluateEntry,
   generateCrossword,
+  getCrosswordTerm,
   isCrosswordConnected,
   normalizeCrosswordAnswer,
   revealHint
 } from "../js/crossword-core.mjs";
+import { CROSSWORD_MAX_HINTS } from "../js/crossword-game.mjs";
 
 const seededRandom = (seed) => {
   let state = seed >>> 0;
@@ -63,6 +65,16 @@ test("normalização remove separadores e acentos, mas preserva números", () =>
   assert.equal(normalizeCrosswordAnswer("Wi-Fi"), "WIFI");
   assert.equal(normalizeCrosswordAnswer("Processador / CPU"), "PROCESSADORCPU");
   assert.equal(normalizeCrosswordAnswer("IPv4"), "IPV4");
+});
+
+test("respostas compostas usam somente o termo principal em português", () => {
+  assert.equal(getCrosswordTerm("Processador / CPU"), "Processador");
+  assert.equal(normalizeCrosswordAnswer(getCrosswordTerm("Processador / CPU")), "PROCESSADOR");
+  assert.equal(memoryGamePairs.find((pair) => pair.id === "hardware-cpu")?.name, "Processador");
+});
+
+test("a partida oferece cinco dicas", () => {
+  assert.equal(CROSSWORD_MAX_HINTS, 5);
 });
 
 test("gerador cria dez palavras conectadas e válidas em centenas de sementes", () => {

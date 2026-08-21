@@ -1,15 +1,16 @@
-import { memoryGamePairs } from "./memory-game-data.mjs?v=1.0.2";
+import { memoryGamePairs } from "./memory-game-data.mjs?v=1.0.3";
 import {
   evaluateEntry,
   generateCrossword,
   normalizeCrosswordAnswer,
   revealHint
-} from "./crossword-core.mjs?v=1.0.1";
+} from "./crossword-core.mjs?v=1.1.0";
 
-const SESSION_KEY = "central-jogos-crossword-session-v1";
-const LAST_SIGNATURE_KEY = "central-jogos-crossword-last-signature-v1";
+const SESSION_KEY = "central-jogos-crossword-session-v2";
+const LAST_SIGNATURE_KEY = "central-jogos-crossword-last-signature-v2";
 const TEACHER_PASSWORD_HASH = "8509bbd7680391aceb4a2ed1ca6ed5685e84d85076b840b8199b1147bb252fb2";
-const MAX_HINTS = 3;
+export const CROSSWORD_MAX_HINTS = 5;
+const MAX_HINTS = CROSSWORD_MAX_HINTS;
 
 const escapeHTML = (value = "") => String(value)
   .replaceAll("&", "&amp;")
@@ -96,7 +97,7 @@ class CrosswordGameController {
 
   createIntroState(studentName = "") {
     return {
-      version: 1,
+      version: 2,
       phase: "intro",
       studentName,
       puzzle: null,
@@ -120,7 +121,7 @@ class CrosswordGameController {
   restoreSession() {
     try {
       const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-      if (!saved || saved.version !== 1 || !["playing", "complete"].includes(saved.phase)) return null;
+      if (!saved || saved.version !== 2 || !["playing", "complete"].includes(saved.phase)) return null;
       if (!saved.puzzle || saved.puzzle.entries?.length !== 10 || !Array.isArray(saved.puzzle.cells)) return null;
       const eligibleIds = new Set(memoryGamePairs.map((pair) => pair.id));
       if (!saved.puzzle.entries.every((entry) => eligibleIds.has(entry.id))) return null;
@@ -209,7 +210,7 @@ class CrosswordGameController {
             <h1 id="crossword-intro-title">Cruzadinha <em>Tech</em></h1>
             <p>Leia as dez definições, descubra os conceitos e complete uma grade criada especialmente para esta partida.</p>
             <div class="crossword-feature-row" aria-label="Características da atividade">
-              <span><b>10</b> palavras</span><span><b>3</b> dicas</span><span><b>1</b> grade única</span>
+              <span><b>10</b> palavras</span><span><b>5</b> dicas</span><span><b>1</b> grade única</span>
             </div>
           </div>
           <form class="crossword-name-form" data-crossword-form="name" novalidate>

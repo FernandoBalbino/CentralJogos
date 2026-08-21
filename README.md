@@ -7,7 +7,7 @@ Site educacional estático com seis jogos para aulas introdutórias de informát
 - **Escolha seu lado:** uma roleta sem repetição apresenta 74 itens. Peças, programas e conceitos usam Hardware/Nenhum/Software; periféricos usam Entrada/Híbrido/Saída.
 - **Central de Suporte:** o aluno resolve seis chamados em dois níveis, ligando o que verificar, a possível causa e a solução, com três respostas distratoras por nível.
 - **Ache os Pares — Desafio TI:** equipes associam imagens a definições em rodadas de 8 a 15 pares, com 68 conceitos de hardware, software, periféricos, redes, segurança e comunicação.
-- **Cruzadinha Tech:** cada partida cria localmente uma grade conectada com 10 termos aleatórios do banco do Ache os Pares, três dicas, retomada da sessão e resultado individual do aluno.
+- **Cruzadinha Tech:** cada partida cria localmente uma grade conectada com 10 termos aleatórios do banco do Ache os Pares, cinco dicas, retomada da sessão e resultado individual do aluno.
 
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 

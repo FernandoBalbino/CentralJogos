@@ -1,4 +1,4 @@
-import { memoryCategories, memoryGamePairs } from "./memory-game-data.mjs?v=1.0.2";
+import { memoryCategories, memoryGamePairs } from "./memory-game-data.mjs?v=1.0.3";
 import {
   advanceTeamIndex,
   buildMemoryDeck,

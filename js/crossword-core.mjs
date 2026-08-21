@@ -15,6 +15,10 @@ export const normalizeCrosswordAnswer = (value) => String(value || "")
   .toUpperCase()
   .replace(/[^A-Z0-9]/g, "");
 
+export const getCrosswordTerm = (value) => String(value || "")
+  .split("/")[0]
+  .trim();
+
 export const shuffleCrosswordValues = (values, random = Math.random) => {
   const copy = [...values];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -234,7 +238,10 @@ export const generateCrossword = ({
 }) => {
   const eligible = items
     .filter((item) => !BLOCKED_IDS.has(item.id))
-    .map((item) => ({ ...item, answer: normalizeCrosswordAnswer(item.name) }))
+    .map((item) => {
+      const name = getCrosswordTerm(item.name);
+      return { ...item, name, answer: normalizeCrosswordAnswer(name) };
+    })
     .filter((item) => item.answer.length >= 2);
 
   if (eligible.length < wordCount) throw new Error("Banco insuficiente para gerar a cruzadinha.");
