@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="./side-game.css?v=1.0.0">
     <link rel="stylesheet" href="./support-game.css?v=2.0.0">
     <link rel="stylesheet" href="./memory-game.css?v=1.0.0">
+    <link rel="stylesheet" href="./crossword-game.css?v=1.0.2">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -34,6 +35,7 @@
         <a href="#/escolha-seu-lado" data-route-link="side-game">Escolha seu lado</a>
         <a href="#/suporte-tecnico" data-route-link="support-game">Suporte</a>
         <a href="#/ache-os-pares" data-route-link="memory-game">Ache os pares</a>
+        <a href="#/cruzadinha" data-route-link="crossword-game">Cruzadinha</a>
       </nav>
     </header>
 
@@ -42,9 +44,9 @@
         <div class="hero-copy">
           <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
           <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
-          <p>Cinco jogos rápidos para reconhecer equipamentos, programas, redes, sistemas operacionais e o raciocínio do suporte técnico.</p>
+          <p>Seis jogos rápidos para reconhecer equipamentos, programas, redes, sistemas operacionais e o raciocínio do suporte técnico.</p>
           <div class="hero-stats" aria-label="Conteúdo disponível">
-            <div><strong>5</strong><span>jogos educativos</span></div>
+            <div><strong>6</strong><span>jogos educativos</span></div>
             <div><strong>74</strong><span>itens na roleta</span></div>
             <div><strong>30</strong><span>termos na forca</span></div>
           </div>
@@ -129,6 +131,20 @@
               <a class="primary-button" href="#/ache-os-pares">Começar partida <span aria-hidden="true">→</span></a>
             </div>
           </article>
+
+          <article class="game-card crossword-home-card">
+            <div class="card-topline"><span>Jogo 06</span><span class="difficulty">Raciocínio + vocabulário</span></div>
+            <div class="crossword-home-preview" aria-hidden="true">
+              <img src="./assets/side-game/icons/apps.svg" alt="">
+              <span>10 palavras</span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Leia, cruze e descubra</p>
+              <h2>Cruzadinha Tech</h2>
+              <p>Resolva uma grade aleatória com dez conceitos e definições diferentes a cada partida.</p>
+              <a class="primary-button" href="#/cruzadinha">Gerar cruzadinha <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -194,6 +210,10 @@
       <section id="memory-game-screen" class="screen" data-screen="memory-game" hidden>
         <div id="memory-game-app"></div>
       </section>
+
+      <section id="crossword-game-screen" class="screen" data-screen="crossword-game" hidden>
+        <div id="crossword-game-app"></div>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -213,6 +233,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="./js/credits-data.js?v=1.0.5"></script>
     <script src="./js/data.js?v=1.0.5"></script>
-    <script type="module" src="./js/app.js?v=1.3.3"></script>
+    <script type="module" src="./js/app.js?v=1.4.2"></script>
   </body>
 </html>
