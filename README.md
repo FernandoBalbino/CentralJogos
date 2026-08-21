@@ -4,9 +4,9 @@ Site educacional estático com cinco jogos para aulas introdutórias de informá
 
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
-- **Escolha seu lado:** uma roleta sem repetição apresenta 75 itens. Peças, programas e conceitos usam Hardware/Nenhum/Software; periféricos usam Entrada/Híbrido/Saída.
+- **Escolha seu lado:** uma roleta sem repetição apresenta 74 itens. Peças, programas e conceitos usam Hardware/Nenhum/Software; periféricos usam Entrada/Híbrido/Saída.
 - **Central de Suporte:** o aluno resolve seis chamados em dois níveis, ligando o que verificar, a possível causa e a solução, com três respostas distratoras por nível.
-- **Ache os Pares — Desafio TI:** equipes associam imagens a definições em rodadas de 8 a 15 pares, com 71 conceitos de hardware, software, periféricos, redes, segurança e comunicação.
+- **Ache os Pares — Desafio TI:** equipes associam imagens a definições em rodadas de 8 a 15 pares, com 69 conceitos de hardware, software, periféricos, redes, segurança e comunicação.
 
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 

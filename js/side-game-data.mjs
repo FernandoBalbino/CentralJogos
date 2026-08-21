@@ -114,7 +114,6 @@ export const sideGameItems = Object.freeze([
   material("arquivo", "Arquivo", "nature", "neither", "insert_drive_file", "Ícone de arquivo", "Arquivo é uma unidade de dados armazenada, não o hardware nem o programa."),
   material("dado", "Dado", "nature", "neither", "storage", "Ícone de dados armazenados", "Dado é uma representação de informação que pode ser processada ou armazenada."),
   material("rede-computadores", "Rede de computadores", "nature", "neither", "device_hub", "Ícone de dispositivos conectados", "Rede é o conjunto de dispositivos e conexões que permite a troca de dados."),
-  material("tcp-ip", "Protocolo TCP/IP", "nature", "neither", "settings_ethernet", "Ícone de protocolo de rede", "TCP/IP é um conjunto de regras de comunicação, não uma peça ou aplicativo isolado."),
   material("html", "Linguagem HTML", "nature", "neither", "code", "Ícone de código HTML", "HTML é uma linguagem de marcação usada para estruturar páginas."),
   material("algoritmo", "Algoritmo", "nature", "neither", "account_tree", "Ícone de fluxo de algoritmo", "Algoritmo é uma sequência abstrata de passos para resolver um problema."),
   material("bit", "Bit", "nature", "neither", "filter_1", "Ícone do número um", "Bit é a menor unidade de informação digital e pode assumir os valores zero ou um."),

@@ -1,4 +1,4 @@
-import { memoryCategories, memoryGamePairs } from "./memory-game-data.mjs";
+import { memoryCategories, memoryGamePairs } from "./memory-game-data.mjs?v=1.0.1";
 import {
   advanceTeamIndex,
   buildMemoryDeck,
@@ -134,7 +134,7 @@ class MemoryGameController {
           <h1>Ache os Pares <em>Desafio TI</em></h1>
           <p>Descubra qual imagem combina com cada definição. Acerte, marque pontos e continue jogando.</p>
           <div class="memory-feature-row" aria-label="Destaques do jogo">
-            <span><b>71</b> conceitos</span><span><b>8</b> assuntos</span><span><b>2–8</b> equipes</span>
+            <span><b>69</b> conceitos</span><span><b>8</b> assuntos</span><span><b>2–8</b> equipes</span>
           </div>
           <button class="memory-primary-button memory-start-button" type="button" data-action="open-setup">Preparar equipes <span aria-hidden="true">→</span></button>
         </div>

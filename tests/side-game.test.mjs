@@ -36,9 +36,10 @@ const sequenceRandom = (...values) => {
   return () => values[index++ % values.length];
 };
 
-test("dataset possui 75 registros válidos e IDs únicos", async () => {
-  assert.equal(sideGameItems.length, 75);
-  assert.equal(new Set(sideGameItems.map((item) => item.id)).size, 75);
+test("dataset possui 74 registros válidos e IDs únicos", async () => {
+  assert.equal(sideGameItems.length, 74);
+  assert.equal(new Set(sideGameItems.map((item) => item.id)).size, 74);
+  assert.ok(!sideGameItemMap.has("tcp-ip"));
 
   const allowed = {
     nature: new Set(["hardware", "software", "neither"]),

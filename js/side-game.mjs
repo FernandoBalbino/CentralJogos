@@ -4,7 +4,7 @@ import {
   getQuestionForItem,
   sideGameItemMap,
   sideGameItems
-} from "./side-game-data.mjs";
+} from "./side-game-data.mjs?v=1.0.1";
 import {
   SIDE_GAME_STORAGE_KEY,
   buildWheelCandidates,
@@ -269,7 +269,7 @@ class SideGameController {
         <div class="side-wheel-wrap" aria-label="Roleta com doze candidatos">
           <div class="side-wheel-pointer">${icon("navigation")}</div>
           <div class="side-wheel" style="--wheel-angle:${this.wheelAngle}deg">
-            <div class="side-wheel-center"><span>75</span><small>itens</small></div>
+            <div class="side-wheel-center"><span>${sideGameItems.length}</span><small>itens</small></div>
             ${candidates.map((id, index) => {
               const item = sideGameItemMap.get(id);
               const angle = (index * 30) + 15;
