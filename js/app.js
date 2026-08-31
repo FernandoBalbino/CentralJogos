@@ -3,6 +3,7 @@ import { sideGameItems } from "./side-game-data.mjs?v=1.0.1";
 import { supportGame } from "./support-game.mjs?v=2.0.0";
 import { memoryGame } from "./memory-game.mjs?v=1.0.3";
 import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
+import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
 
 (function () {
   "use strict";
@@ -38,6 +39,7 @@ import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
     if (hash.startsWith("#/suporte-tecnico")) return "support-game";
     if (hash.startsWith("#/ache-os-pares")) return "memory-game";
     if (hash.startsWith("#/cruzadinha")) return "crossword-game";
+    if (hash.startsWith("#/desafio-ti")) return "desafio-ti";
     return "home";
   };
 
@@ -47,6 +49,7 @@ import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
     if (activeRoute === "support-game" && route !== "support-game") supportGame.leave();
     if (activeRoute === "memory-game" && route !== "memory-game") memoryGame.leave();
     if (activeRoute === "crossword-game" && route !== "crossword-game") crosswordGame.leave();
+    if (activeRoute === "desafio-ti" && route !== "desafio-ti") desafioTiGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -67,14 +70,17 @@ import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
           ? "Ache os Pares — Desafio TI | Central de Jogos"
         : route === "crossword-game"
           ? "Cruzadinha Tech | Central de Jogos"
+        : route === "desafio-ti"
+          ? "Desafio TI — Valendo Pontos | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
     if (route === "support-game" && activeRoute !== "support-game") supportGame.enter();
     if (route === "memory-game" && activeRoute !== "memory-game") memoryGame.enter();
     if (route === "crossword-game" && activeRoute !== "crossword-game") crosswordGame.enter();
+    if (route === "desafio-ti" && activeRoute !== "desafio-ti") desafioTiGame.enter();
     activeRoute = route;
   };
 
@@ -705,6 +711,7 @@ import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
   sideGame.mount(document.getElementById("side-game-app"));
   supportGame.mount(document.getElementById("support-game-app"));
   crosswordGame.mount(document.getElementById("crossword-game-app"));
+  desafioTiGame.mount(document.getElementById("desafio-ti-app"));
   classification.ensureState();
   renderRoute();
 })();

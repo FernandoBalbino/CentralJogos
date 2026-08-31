@@ -9,11 +9,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=1.1.0">
+    <link rel="stylesheet" href="./styles.css?v=1.2.0">
     <link rel="stylesheet" href="./side-game.css?v=1.0.0">
     <link rel="stylesheet" href="./support-game.css?v=2.0.0">
     <link rel="stylesheet" href="./memory-game.css?v=1.0.0">
     <link rel="stylesheet" href="./crossword-game.css?v=1.1.0">
+    <link rel="stylesheet" href="./desafio-ti-game.css?v=1.0.0">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -36,6 +37,7 @@
         <a href="#/suporte-tecnico" data-route-link="support-game">Suporte</a>
         <a href="#/ache-os-pares" data-route-link="memory-game">Ache os pares</a>
         <a href="#/cruzadinha" data-route-link="crossword-game">Cruzadinha</a>
+        <a href="#/desafio-ti" data-route-link="desafio-ti">Desafio TI</a>
       </nav>
     </header>
 
@@ -44,9 +46,9 @@
         <div class="hero-copy">
           <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
           <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
-          <p>Seis jogos rápidos para reconhecer equipamentos, programas, redes, sistemas operacionais e o raciocínio do suporte técnico.</p>
+          <p>Sete jogos rápidos para reconhecer equipamentos, programas, redes, sistemas operacionais e o raciocínio do suporte técnico.</p>
           <div class="hero-stats" aria-label="Conteúdo disponível">
-            <div><strong>6</strong><span>jogos educativos</span></div>
+            <div><strong>7</strong><span>jogos educativos</span></div>
             <div><strong>74</strong><span>itens na roleta</span></div>
             <div><strong>30</strong><span>termos na forca</span></div>
           </div>
@@ -145,6 +147,26 @@
               <a class="primary-button" href="#/cruzadinha">Gerar cruzadinha <span aria-hidden="true">→</span></a>
             </div>
           </article>
+
+          <article class="game-card desafio-home-card">
+            <div class="card-topline"><span>Jogo 07</span><span class="difficulty">Competição em equipes</span></div>
+            <div class="desafio-home-preview" aria-hidden="true">
+              <span class="desafio-preview-title">VALENDO PONTOS</span>
+              <span class="desafio-preview-cell">100</span>
+              <span class="desafio-preview-cell">200</span>
+              <span class="desafio-preview-cell">300</span>
+              <span class="desafio-preview-cell">200</span>
+              <span class="desafio-preview-cell is-hot">400</span>
+              <span class="desafio-preview-cell">500</span>
+              <span class="desafio-preview-score">BYTE <strong>800</strong></span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Escolha, arrisque e dispute</p>
+              <h2>Desafio TI</h2>
+              <p>Escolha categorias, responda perguntas e dispute pontos com sua equipe em uma grande revisão de informática.</p>
+              <a class="primary-button" href="#/desafio-ti">Iniciar desafio <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -214,6 +236,10 @@
       <section id="crossword-game-screen" class="screen" data-screen="crossword-game" hidden>
         <div id="crossword-game-app"></div>
       </section>
+
+      <section id="desafio-ti-screen" class="screen" data-screen="desafio-ti" hidden>
+        <div id="desafio-ti-app"></div>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -233,6 +259,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="./js/credits-data.js?v=1.0.5"></script>
     <script src="./js/data.js?v=1.0.5"></script>
-    <script type="module" src="./js/app.js?v=1.5.0"></script>
+    <script type="module" src="./js/app.js?v=1.6.0"></script>
   </body>
 </html>
