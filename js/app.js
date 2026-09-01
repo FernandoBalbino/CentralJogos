@@ -4,6 +4,8 @@ import { supportGame } from "./support-game.mjs?v=2.0.0";
 import { memoryGame } from "./memory-game.mjs?v=1.0.3";
 import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
 import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
+import { windowsMissionGame } from "./windows-mission-game.mjs?v=1.0.1";
+import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
 
 (function () {
   "use strict";
@@ -40,6 +42,8 @@ import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
     if (hash.startsWith("#/ache-os-pares")) return "memory-game";
     if (hash.startsWith("#/cruzadinha")) return "crossword-game";
     if (hash.startsWith("#/desafio-ti")) return "desafio-ti";
+    if (hash.startsWith("#/missoes-windows")) return "windows-mission";
+    if (hash.startsWith("#/descubra-windows")) return "windows-discovery";
     return "home";
   };
 
@@ -50,6 +54,8 @@ import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
     if (activeRoute === "memory-game" && route !== "memory-game") memoryGame.leave();
     if (activeRoute === "crossword-game" && route !== "crossword-game") crosswordGame.leave();
     if (activeRoute === "desafio-ti" && route !== "desafio-ti") desafioTiGame.leave();
+    if (activeRoute === "windows-mission" && route !== "windows-mission") windowsMissionGame.leave();
+    if (activeRoute === "windows-discovery" && route !== "windows-discovery") windowsDiscoveryGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -72,8 +78,12 @@ import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
           ? "Cruzadinha Tech | Central de Jogos"
         : route === "desafio-ti"
           ? "Desafio TI — Valendo Pontos | Central de Jogos"
+        : route === "windows-mission"
+          ? "Técnico em Ação 3D — Missões Windows | Central de Jogos"
+        : route === "windows-discovery"
+          ? "Descubra o Windows — Aula e Caça-palavras | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
@@ -81,6 +91,8 @@ import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
     if (route === "memory-game" && activeRoute !== "memory-game") memoryGame.enter();
     if (route === "crossword-game" && activeRoute !== "crossword-game") crosswordGame.enter();
     if (route === "desafio-ti" && activeRoute !== "desafio-ti") desafioTiGame.enter();
+    if (route === "windows-mission" && activeRoute !== "windows-mission") windowsMissionGame.enter();
+    if (route === "windows-discovery" && activeRoute !== "windows-discovery") windowsDiscoveryGame.enter();
     activeRoute = route;
   };
 
@@ -712,6 +724,59 @@ import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
   supportGame.mount(document.getElementById("support-game-app"));
   crosswordGame.mount(document.getElementById("crossword-game-app"));
   desafioTiGame.mount(document.getElementById("desafio-ti-app"));
+  windowsMissionGame.mount(document.getElementById("windows-mission-app"));
+  windowsDiscoveryGame.mount(document.getElementById("windows-discovery-app"));
   classification.ensureState();
   renderRoute();
+
+  const offlineStatus = document.getElementById("site-offline-status");
+  const retryOffline = document.getElementById("retry-offline");
+  const publishOfflineStatus = (state, label) => {
+    document.documentElement.dataset.offlineState = state;
+    if (offlineStatus) {
+      offlineStatus.dataset.offlineState = state;
+      const text = offlineStatus.querySelector("span");
+      if (text) text.textContent = label;
+    }
+    document.dispatchEvent(new CustomEvent("central-offline-status", { detail: { state, label } }));
+  };
+
+  const prepareOffline = async () => {
+    if (!("serviceWorker" in navigator)) {
+      publishOfflineStatus("error", "Este navegador não oferece modo offline.");
+      return;
+    }
+    try {
+      publishOfflineStatus("preparing", "Preparando jogos para uso offline…");
+      const registration = await navigator.serviceWorker.register("./service-worker.js", { scope: "./" });
+      await navigator.serviceWorker.ready;
+      const worker = registration.active || registration.waiting || registration.installing;
+      if (!worker) throw new Error("Service worker não ficou ativo.");
+      const channel = new MessageChannel();
+      const result = await new Promise((resolve, reject) => {
+        const timeout = window.setTimeout(() => reject(new Error("Tempo esgotado ao preparar o cache.")), 120000);
+        channel.port1.onmessage = (event) => {
+          if (event.data?.type === "progress") {
+            publishOfflineStatus("preparing", `Preparando uso offline: ${event.data.loaded}/${event.data.total}…`);
+            return;
+          }
+          if (event.data?.type === "done") {
+            window.clearTimeout(timeout);
+            resolve(event.data);
+          }
+        };
+        worker.postMessage({ type: "PREPARE_OFFLINE" }, [channel.port2]);
+      });
+      if (!result?.ok) throw new Error(result?.message || "Falha ao preparar o cache.");
+      publishOfflineStatus("ready", "Pronto para jogar offline.");
+      showToast("Treinamento salvo neste Chromebook. Já pode desligar a internet.");
+    } catch (error) {
+      console.error("Falha ao preparar o modo offline:", error);
+      publishOfflineStatus("error", "Não foi possível preparar o modo offline.");
+    }
+  };
+
+  retryOffline?.addEventListener("click", prepareOffline);
+  window.addEventListener("central-retry-offline", prepareOffline);
+  prepareOffline();
 })();

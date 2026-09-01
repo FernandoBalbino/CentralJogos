@@ -6,15 +6,15 @@
     <meta name="description" content="Jogos educativos sobre fundamentos de informática e sistemas operacionais.">
     <meta name="theme-color" content="#182a43">
     <title>Central de Jogos — Fundamentos de Informática</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles.css?v=1.3.0">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="stylesheet" href="./styles.css?v=1.4.0">
     <link rel="stylesheet" href="./side-game.css?v=1.0.0">
     <link rel="stylesheet" href="./support-game.css?v=2.0.0">
     <link rel="stylesheet" href="./memory-game.css?v=1.0.0">
     <link rel="stylesheet" href="./crossword-game.css?v=1.1.0">
     <link rel="stylesheet" href="./desafio-ti-game.css?v=1.0.0">
+    <link rel="stylesheet" href="./windows-mission-game.css?v=1.0.1">
+    <link rel="stylesheet" href="./windows-discovery-game.css?v=1.0.3">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -38,6 +38,8 @@
         <a href="#/ache-os-pares" data-route-link="memory-game">Ache os pares</a>
         <a href="#/cruzadinha" data-route-link="crossword-game">Cruzadinha</a>
         <a href="#/desafio-ti" data-route-link="desafio-ti">Desafio TI</a>
+        <a href="#/missoes-windows" data-route-link="windows-mission">Missões Windows</a>
+        <a href="#/descubra-windows" data-route-link="windows-discovery">Descubra o Windows</a>
       </nav>
     </header>
 
@@ -46,9 +48,9 @@
         <div class="hero-copy">
           <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
           <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
-          <p>Sete jogos rápidos para reconhecer equipamentos, programas, redes, sistemas operacionais e o raciocínio do suporte técnico.</p>
+          <p>Nove jogos rápidos para reconhecer equipamentos, programas, redes, sistemas operacionais e o raciocínio do suporte técnico.</p>
           <div class="hero-stats" aria-label="Conteúdo disponível">
-            <div><strong>7</strong><span>jogos educativos</span></div>
+            <div><strong>9</strong><span>jogos educativos</span></div>
             <div><strong>74</strong><span>itens na roleta</span></div>
             <div><strong>30</strong><span>termos na forca</span></div>
           </div>
@@ -167,6 +169,34 @@
               <a class="primary-button" href="#/desafio-ti">Iniciar desafio <span aria-hidden="true">→</span></a>
             </div>
           </article>
+
+          <article class="game-card windows-mission-home-card">
+            <div class="card-topline"><span>Jogo 08</span><span class="difficulty">Prática guiada + 3D</span></div>
+            <div class="windows-mission-home-preview">
+              <img src="./assets/windows-mission/tecnico-em-acao-card.png" alt="Laboratório de informática em estilo 3D">
+              <span>6 missões</span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Aprenda e faça</p>
+              <h2>Técnico em Ação 3D</h2>
+              <p>Aprenda o básico do Windows e organize as ações corretas para resolver seis chamados.</p>
+              <a class="primary-button" href="#/missoes-windows">Começar treinamento <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <article class="game-card windows-discovery-home-card">
+            <div class="card-topline"><span>Jogo 09</span><span class="difficulty">Aula animada + vocabulário</span></div>
+            <div class="windows-discovery-home-preview">
+              <img src="./assets/windows-discovery/scene-desktop.png" alt="Área de Trabalho do Windows 11">
+              <span>30 aulas + 15 termos</span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Assista, responda e encontre</p>
+              <h2>Descubra o Windows</h2>
+              <p>Aprenda 30 conceitos em animações rápidas e pratique em um caça-palavras diferente para cada aluno.</p>
+              <a class="primary-button" href="#/descubra-windows">Começar aula <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -240,6 +270,14 @@
       <section id="desafio-ti-screen" class="screen" data-screen="desafio-ti" hidden>
         <div id="desafio-ti-app"></div>
       </section>
+
+      <section id="windows-mission-screen" class="screen" data-screen="windows-mission" hidden>
+        <div id="windows-mission-app"></div>
+      </section>
+
+      <section id="windows-discovery-screen" class="screen" data-screen="windows-discovery" hidden>
+        <div id="windows-discovery-app"></div>
+      </section>
     </main>
 
     <footer class="site-footer">
@@ -257,8 +295,11 @@
     </dialog>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="site-offline-status" class="site-offline-status" data-offline-state="preparing" role="status" aria-live="polite">
+      <img src="./assets/side-game/icons/wifi.svg" alt=""><span>Preparando jogos para uso offline…</span><button id="retry-offline" type="button">Tentar novamente</button>
+    </div>
     <script src="./js/credits-data.js?v=1.0.5"></script>
     <script src="./js/data.js?v=1.0.5"></script>
-    <script type="module" src="./js/app.js?v=1.6.0"></script>
+    <script type="module" src="./js/app.js?v=1.8.0"></script>
   </body>
 </html>

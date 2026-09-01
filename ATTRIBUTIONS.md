@@ -2,6 +2,19 @@
 
 Todos os recursos usados pelo site são armazenados localmente. Este arquivo complementa os créditos exibidos na interface.
 
+## Técnico em Ação 3D e modo offline
+
+- **Three.js 0.185.1** — Copyright © 2010-2026 three.js authors — licença MIT. A cópia usada pelo site está em `vendor/three/` e a licença completa em `vendor/three/LICENSE.txt`.
+- **Fredoka** — fonte distribuída pela Google Fonts sob SIL Open Font License 1.1. Licença em `assets/fonts/OFL-Fredoka.txt`.
+- **Atkinson Hyperlegible** — fonte distribuída pela Google Fonts sob SIL Open Font License 1.1. Licença em `assets/fonts/OFL-Atkinson-Hyperlegible.txt`.
+- **Ilustração Técnico em Ação 3D** — imagem original gerada para este projeto e armazenada localmente em `assets/windows-mission/tecnico-em-acao-card.png`.
+
+## Descubra o Windows
+
+- **Cenas e vídeos educativos** — as cinco cenas limpas do Windows 11, os pôsteres e os 30 vídeos WebM VP9 foram produzidos localmente para este projeto, sem download de vídeos de terceiros. Os arquivos estão em `assets/windows-discovery/`.
+- **Cursor do Windows** — a imagem do cursor usada durante a produção dos vídeos foi extraída da instalação local do Windows exclusivamente para representar a interação do sistema na atividade educativa.
+- **Ícones da interface** — o jogo reutiliza os Material Design Icons locais já atribuídos abaixo.
+
 ## Acervo original do CentralJogos
 
 As 40 fotografias e marcas que já faziam parte dos jogos Classificação e Forca continuam documentadas individualmente em `js/credits-data.js`, com fonte, autoria, título e licença. Os arquivos correspondentes permanecem em `assets/items/`.

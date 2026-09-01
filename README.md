@@ -1,6 +1,6 @@
 # Central de Jogos — Fundamentos de Informática
 
-Site educacional estático com sete jogos para aulas introdutórias de informática:
+Site educacional estático com nove jogos para aulas introdutórias de informática:
 
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
@@ -9,6 +9,8 @@ Site educacional estático com sete jogos para aulas introdutórias de informát
 - **Ache os Pares — Desafio TI:** equipes associam imagens a definições em rodadas de 8 a 15 pares, com 68 conceitos de hardware, software, periféricos, redes, segurança e comunicação.
 - **Cruzadinha Tech:** cada partida cria localmente uma grade conectada com 10 termos aleatórios do banco do Ache os Pares, cinco dicas, retomada da sessão e resultado individual do aluno.
 - **Desafio TI — Valendo Pontos:** competição para 2 a 6 equipes com 150 perguntas, tabuleiro de 30 casas, roubo, cronômetro, placar persistente e desafio final.
+- **Técnico em Ação 3D — Missões Windows:** seis chamados sequenciais para aprender e praticar ações básicas do Windows, com laboratório 3D em Three.js, dicas sob demanda e progresso local.
+- **Descubra o Windows:** 30 aulas animadas sobre o Windows 11, seguidas por um caça-palavras 20 × 20 com 15 termos sorteados — 13 na lista e duas palavras-surpresa —, progresso local e uso integral sem internet após o preparo.
 
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 
@@ -31,6 +33,14 @@ As rotas diretas dos jogos mais recentes são:
 - `http://localhost:8000/#/ache-os-pares`
 - `http://localhost:8000/#/cruzadinha`
 - `http://localhost:8000/#/desafio-ti`
+- `http://localhost:8000/#/missoes-windows`
+- `http://localhost:8000/#/descubra-windows`
+
+## Uso offline nos Chromebooks
+
+O site registra um service worker e prepara automaticamente os arquivos essenciais em cache. Aguarde o aviso **Pronto para jogar offline** antes de desligar o roteamento da internet. As fontes, os ícones, o Three.js, os 30 vídeos WebM e seus pôsteres são servidos pelo próprio repositório; não há dependência de CDN durante a aula.
+
+Para testar localmente, use `localhost` (não abra por `file://`), carregue a página uma vez, aguarde a confirmação e então coloque o navegador em modo offline.
 
 ## Atalhos do Desafio TI
 
@@ -59,6 +69,8 @@ node --test tests/support-game.test.mjs
 node --test tests/memory-game.test.mjs
 node --test tests/crossword-game.test.mjs
 node --test tests/desafio-ti.test.mjs
+node --test tests/windows-mission.test.mjs
+node --test tests/windows-discovery.test.mjs
 ```
 
 ## Publicar no GitHub Pages
@@ -69,6 +81,8 @@ node --test tests/desafio-ti.test.mjs
 4. Selecione a branch `main`, a pasta `/(root)` e salve.
 
 O projeto usa apenas caminhos relativos e navegação por hash, portanto também funciona em endereços como `https://usuario.github.io/CentralJogos/`.
+
+O jogo 3D usa uma cópia local do **Three.js 0.185.1** em `vendor/three/`, compatível com a hospedagem estática do GitHub Pages.
 
 ## Recursos visuais e licenças
 

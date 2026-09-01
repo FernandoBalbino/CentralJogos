@@ -1,68 +1,66 @@
-# Design QA — ajustes da Cruzadinha Tech
+# Design QA — Descubra o Windows
 
 ## Evidências
 
-- Fonte visual do problema: `C:\Users\Fernando\AppData\Local\Temp\codex-clipboard-94c898f7-3820-4c1a-a93f-1aba9b0805ab.png`.
-- Implementação com a resposta corrigida: `qa-evidence/crossword-processador-1024x768.png`.
-- Comparação combinada e detalhe ampliado: `qa-evidence/crossword-adjustment-comparison.png`.
-- Layout final em 1366×768: `qa-evidence/crossword-adjusted-1366.png`.
-- Layout final em 1024×768: `qa-evidence/crossword-adjusted-1024x768.png`.
-- Layout empilhado em 390×844: `qa-evidence/crossword-adjusted-mobile-390x844.png`.
-- Rota local: `http://127.0.0.1:4173/#/cruzadinha`.
-- Estado principal: palavra Processador respondida corretamente, progresso 1/10 e cinco dicas disponíveis.
-- Fonte: 531 × 67 pixels. Implementação principal: 1024 × 768 pixels. Comparação combinada: 1180 × 950 pixels.
-- Viewports CSS: 1366×768, 1024×768 e 390×844; densidade 1×.
-- Normalização: a fonte é um recorte focado do erro e não um layout completo. A comparação combinada preserva o recorte original em 2× e inclui a captura integral e um detalhe ampliado da palavra corrigida.
+- Verdade visual: `qa-evidence/descubra-windows-reference.png`.
+- Aula final em 1366 × 768: `qa-evidence/windows-discovery-start-1366x768-final.jpg`.
+- Comparação combinada: `qa-evidence/windows-discovery-comparison-final.png`.
+- Caça-palavras em 1366 × 768: `qa-evidence/windows-discovery-wordsearch-1366-final.jpg`.
+- Aula e caça-palavras em 1280 × 720: `qa-evidence/windows-discovery-quiz-1280x720-final.jpg` e `qa-evidence/windows-discovery-wordsearch-1280x720-final.jpg`.
+- Problema responsivo informado: `qa-evidence/windows-discovery-responsive-issue-reference.png`.
+- Comparação responsiva antes/depois: `qa-evidence/windows-discovery-responsive-comparison-final.png`.
+- Estado final com 13 termos visíveis e uma surpresa revelada: `qa-evidence/windows-discovery-wordsearch-surprises-1366-final.jpg`.
+- Rota local verificada: `http://127.0.0.1:4179/#/descubra-windows`.
 
-## Comparação final
+## Comparação com a Opção 1
 
-### Visão completa
+A captura combinada coloca a referência e a implementação na mesma proporção 16:9. A implementação preserva a hierarquia escolhida: cabeçalho azul-marinho, vídeo dominante à esquerda, pergunta e quatro alternativas à direita, turquesa e coral nos controles e tipografia de leitura à distância. O estado comparado usa a demonstração do Menu Iniciar nos dois lados.
 
-A resposta que antes aparecia como `PROCESSADORCPU` agora possui exatamente 11 células e exibe somente `PROCESSADOR`. No Chromebook de 1024 px, o painel da grade ocupa 74,3% da área de trabalho; em 1366 px, ocupa 74,4%. O painel de definições permanece fixo à direita, legível e com rolagem independente.
-
-As definições usam frases mais diretas e exemplos cotidianos, sem incluir a resposta completa. O cabeçalho mostra cinco dicas desde o início e bloqueia o controle após a quinta utilização.
-
-### Região focada
-
-O detalhe em `qa-evidence/crossword-adjustment-comparison.png` permite ler célula por célula. A fonte contém 14 células (`PROCESSADORCPU`); a implementação contém 11 células (`PROCESSADOR`) e preserva o mesmo estado verde de acerto. A direção vertical é consequência da geração aleatória e não afeta a correção do termo.
+As diferenças intencionais são de produto: a implementação exibe a descrição textual dentro do rodapé do vídeo para garantir fallback acessível e usa a numeração pedagógica real da aula. Não restaram diferenças P0, P1 ou P2 após a revisão visual.
 
 ## Superfícies obrigatórias
 
-- Fontes e tipografia: Fredoka e Atkinson Hyperlegible foram preservadas. O painel menor usa peso e entrelinha suficientes para manter as definições legíveis, sem truncamento.
-- Espaçamento e ritmo: a grade passou a dominar aproximadamente 75% da largura útil. Em 1024×768 não há overflow da página nem do painel da grade; em telas móveis, palavras muito longas usam rolagem interna controlada sem esconder os controles persistentes.
-- Cores e tokens: azul-marinho, azul, turquesa, âmbar, coral e verde continuam seguindo os tokens da Central de Jogos. Estados de dica, seleção e acerto mantêm contraste adequado.
-- Qualidade de imagem e assets: nenhuma imagem nova foi necessária. Os controles continuam usando ícones Material locais; não há emoji, asset remoto ou desenho improvisado.
-- Cópia e conteúdo: `Processador / CPU` foi reduzido para `Processador` no banco compartilhado, e o gerador também ignora qualquer complemento futuro depois de uma barra. As pistas técnicas foram simplificadas sem revelar literalmente a resposta.
-- Acessibilidade e comportamento: células, definições e estados preservam seus nomes acessíveis. O contador inicia em 5, chega a 0 após cinco usos e o botão é desabilitado. A nova chave de sessão impede que grades antigas com `CPU` sejam restauradas.
+- Tipografia e contraste: Fredoka e Atkinson Hyperlegible são locais; títulos, alternativas, instruções e letras da grade permanecem legíveis nos dois viewports.
+- Layout: a aula e a grade ocupam exatamente a viewport, sem rolagem da página ou overflow. Em 1280 × 720 a lista de termos usa rolagem interna, mantendo grade, seleção e ações sempre visíveis.
+- Assets: 30 vídeos WebM VP9 de 960 × 540, cinco pôsteres e cenas limpas foram produzidos localmente. O pacote de vídeos soma 1.769.232 bytes.
+- Conteúdo: as 30 lições seguem o currículo solicitado, com quatro alternativas, uma resposta correta, explicação, repetição e fallback textual.
+- Acessibilidade: botões e células têm nomes acessíveis, foco visível e mensagens de estado; movimento reduzido libera o conteúdo por texto.
+- Integração: o Jogo 08 permanece disponível e o Jogo 09 usa a rota `#/descubra-windows` com `mount`, `enter` e `leave`.
 
-## Histórico de iterações
+## Iterações
 
-### Iteração 1 — bloqueada
+### Passagem 1
 
-- [P1] A resposta composta `PROCESSADORCPU` adicionava uma sigla não solicitada e aumentava indevidamente a palavra para 14 células.
-- [P2] O painel da grade ocupava cerca de dois terços da largura, deixando pouco espaço para as células em Chromebooks.
-- [P2] O limite de três dicas e parte das definições mantinham a atividade mais difícil do que o desejado.
+- [P2] Um título visualmente oculto ainda ocupava espaço sobre o vídeo.
+- [P2] A vigésima linha da grade ficava parcialmente fora do cartão em 1366 × 768.
 
-### Correções aplicadas
+### Correções
 
-- O nome compartilhado foi alterado para `Processador`, e `getCrosswordTerm` mantém somente a parte anterior à barra em futuros rótulos compostos.
-- A sessão passou à versão 2 para descartar partidas anteriores incompatíveis.
-- As colunas foram ajustadas para aproximadamente 3:1, com refinamento responsivo de 74,3% em 1024 px.
-- O limite foi elevado para cinco dicas e as definições mais técnicas foram reescritas em linguagem mais direta.
+- A classe de texto somente para leitores de tela passou a remover o título do fluxo visual.
+- A dimensão da grade passou a considerar a altura disponível da viewport. A medição final foi 556 px em 1366 × 768 e 508 px em 1280 × 720, sempre dentro do painel.
 
-### Iteração 2 — aprovada
+### Passagem 2 — feedback e botão responsivos
 
-- `PROCESSADOR` validado pelo fluxo real do aluno com 11 células, estado verde e progresso 1/10.
-- Largura medida: 74,4% em 1366×768 e 74,3% em 1024×768.
-- Sem overflow horizontal da página ou da grade nos dois tamanhos de Chromebook.
-- Console local sem erros ou avisos durante geração, acerto e consumo das cinco dicas.
-- Nenhuma diferença P0, P1 ou P2 restante.
+- [P1] Depois da resposta, o cartão de feedback aumentava o painel direito e deixava **Próxima aula** abaixo da área útil quando as barras do navegador e do Windows estavam visíveis.
+- O estado pós-resposta agora reduz apenas o espaçamento das alternativas e organiza explicação e botão lado a lado. As alternativas permanecem grandes antes da resposta.
+- Na captura original de 1900 × 943, o botão terminava em `y = 956`, fora da viewport. Depois da correção, termina em `y = 801` em 1900 × 943, `y = 689` em 1366 × 768 e `y = 661` em 1280 × 720.
+- As três superfícies mantiveram `scrollWidth = clientWidth` e `scrollHeight = clientHeight`; o avanço real para a aula 3 foi confirmado sem erros no console.
 
-## Verificações
+### Passagem 3 — palavras-surpresa
 
-- 31 testes automatizados aprovados, incluindo 300 sementes determinísticas.
-- Resposta composta, banco compartilhado e limite de cinco dicas protegidos por testes de regressão.
-- Geração, resposta correta, cinco dicas, painel 75%, 1024×768 e layout móvel exercitados no navegador interno.
+- A grade continua contendo 15 termos, mas somente 13 aparecem na lista lateral.
+- O painel avisa que existem duas palavras-surpresa escondidas. Ao encontrar uma delas, o nome é revelado e o progresso continua contando para 15/15.
+- Uma rodada real confirmou exatamente 13 itens listados, duas surpresas não listadas e a descoberta de `Downloads` como palavra-surpresa.
+
+## Verificações funcionais
+
+- 30 aulas percorridas no navegador com vídeo, quatro alternativas, correção e avanço.
+- Desbloqueio do caça-palavras somente depois da aula 30.
+- Seleção inválida, direção constante, desfazer, limpar, acerto, 15/15, restauração e nova grade exercitados no navegador.
+- Nova aba aberta com o servidor desligado carregou a aplicação, restaurou a aula, reproduziu o vídeo e terminou o preparo em 93/93 arquivos, sem mensagens no console.
+- 61 testes automatizados aprovados, incluindo 200 sementes do gerador e validação de 30 vídeos locais.
+- 30/30 vídeos e 5/5 pôsteres responderam HTTP 200; vídeos com `Content-Type: video/webm`.
+- Sintaxe dos módulos e do service worker validada; `git diff --check` sem erros.
 
 ## Resultado
 

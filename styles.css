@@ -1,3 +1,27 @@
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/atkinson-hyperlegible-400-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/atkinson-hyperlegible-700-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url("./assets/fonts/fredoka-500-700-latin.woff2") format("woff2");
+}
+
 :root {
   --ink: #182a43;
   --muted: #607086;
@@ -124,6 +148,30 @@ img { display: block; max-width: 100%; }
 .header-nav a { padding: 8px 14px; color: var(--muted); border-radius: 999px; font-weight: 700; text-decoration: none; }
 .header-nav a:hover, .header-nav a[aria-current="page"] { color: #fff; background: var(--ink); }
 
+.site-offline-status {
+  position: fixed;
+  z-index: 80;
+  right: 18px;
+  bottom: 18px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: min(360px, calc(100vw - 36px));
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  background: #fff;
+  box-shadow: var(--shadow);
+  font-weight: 700;
+}
+.site-offline-status img { width: 22px; height: 22px; }
+.site-offline-status button { display: none; min-height: 34px; padding: 0 10px; border: 1px solid currentColor; border-radius: 8px; color: inherit; background: transparent; font-weight: 700; cursor: pointer; }
+.site-offline-status[data-offline-state="error"] button { display: inline-flex; align-items: center; }
+.site-offline-status[data-offline-state="ready"] { color: #176f46; border-color: #a8d7bb; background: #eef9f2; }
+.site-offline-status[data-offline-state="error"] { color: var(--red); border-color: #e5b2aa; background: #fff2ef; }
+
 main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 .screen { min-height: calc(100vh - 150px); }
 
@@ -235,11 +283,32 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 .card-kicker { margin: 0 0 5px; color: var(--teal-dark); font-weight: 700; font-size: .64rem; letter-spacing: .06em; text-transform: uppercase; }
 .hangman-card .card-kicker { color: var(--coral); }
 .choose-side-card .card-kicker { color: var(--purple); }
+.windows-mission-home-card .card-kicker { color: var(--teal-dark); }
+.windows-discovery-home-card .card-kicker { color: var(--teal-dark); }
 .game-card h2 { margin: 0 0 7px; font-family: "Fredoka", sans-serif; font-size: 1.28rem; line-height: 1.04; }
 .game-card-copy > p:not(.card-kicker) { display: -webkit-box; margin: 0 0 11px; overflow: hidden; color: var(--muted); font-size: .81rem; line-height: 1.34; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .game-card-copy .primary-button { width: 100%; min-height: 38px; margin-top: auto; padding: 8px 12px; border-radius: 10px; font-size: .78rem; }
 
-.home-screen :is(.classification-preview,.hangman-preview,.choose-side-preview,.support-preview,.memory-home-preview,.crossword-home-preview,.desafio-home-preview) { height: 112px; min-height: 112px; }
+.windows-mission-home-preview {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--ink);
+}
+.windows-mission-home-preview img { width: 100%; height: 100%; object-fit: cover; object-position: center 44%; }
+.windows-mission-home-preview::after { content: ""; position: absolute; inset: auto 0 0; height: 52%; background: linear-gradient(transparent, rgba(24,42,67,.72)); pointer-events: none; }
+.windows-mission-home-preview span { position: absolute; z-index: 1; right: 10px; bottom: 9px; padding: 5px 9px; border-radius: 999px; color: #fff; background: rgba(24,42,67,.88); font-size: .64rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+
+.windows-discovery-home-preview {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--ink);
+}
+.windows-discovery-home-preview img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.windows-discovery-home-preview span { position: absolute; z-index: 1; right: 10px; bottom: 9px; padding: 5px 9px; border-radius: 999px; color: #fff; background: rgba(24,42,67,.9); font-size: .64rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+
+.home-screen :is(.classification-preview,.hangman-preview,.choose-side-preview,.support-preview,.memory-home-preview,.crossword-home-preview,.desafio-home-preview,.windows-mission-home-preview,.windows-discovery-home-preview) { height: 112px; min-height: 112px; }
 .home-screen .preview-chip { width: 46px; height: 41px; border-width: 3px; border-radius: 9px; box-shadow: 3px 4px 0 rgba(24,42,67,.3); font-size: 1.1rem; }
 .home-screen .chip-keyboard { top: 42px; left: 18px; }
 .home-screen .chip-monitor { top: 46px; right: 20px; }

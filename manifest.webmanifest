@@ -1,0 +1,11 @@
+{
+  "name": "Central de Jogos — Fundamentos de Informática",
+  "short_name": "Central de Jogos",
+  "description": "Jogos educativos de informática e sistemas operacionais.",
+  "lang": "pt-BR",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffdf8",
+  "theme_color": "#182a43"
+}
