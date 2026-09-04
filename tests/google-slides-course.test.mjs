@@ -10,11 +10,13 @@ import {
   GOOGLE_SLIDES_DEMO_TYPES,
   GOOGLE_SLIDES_PRACTICE_ACTIONS,
   demoStepCount,
+  googleSlidesFinalChallenge,
   googleSlidesLessons
 } from "../js/google-slides-course-data.mjs";
 import {
   GOOGLE_SLIDES_COURSE_STORAGE_KEY,
   courseStats,
+  createFinalChallengeProgress,
   createInitialCourseState,
   createLessonPresentationState,
   markLessonCompleteByTeacher,
@@ -22,26 +24,30 @@ import {
   rebuildDemoState,
   reducePresentation,
   resetLessonInState,
-  sanitizeCourseState
+  sanitizeCourseState,
+  updateFinalChallenge,
+  validateFinalChallenge
 } from "../js/google-slides-course-core.mjs";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-test("catálogo da Fase 1 possui três aulas completas e ações válidas", () => {
-  assert.equal(googleSlidesLessons.length, 3);
-  assert.deepEqual(googleSlidesLessons.map((lesson) => lesson.id), [1, 2, 3]);
-  assert.equal(new Set(googleSlidesLessons.map((lesson) => lesson.id)).size, 3);
+test("catálogo possui 30 aulas completas distribuídas nos cinco módulos", () => {
+  assert.equal(googleSlidesLessons.length, 30);
+  assert.deepEqual(googleSlidesLessons.map((lesson) => lesson.id), Array.from({ length: 30 }, (_, index) => index + 1));
+  assert.equal(new Set(googleSlidesLessons.map((lesson) => lesson.id)).size, 30);
+  assert.deepEqual([...new Set(googleSlidesLessons.map((lesson) => lesson.module))].length, 5);
+  assert.deepEqual([...new Set(googleSlidesLessons.map((lesson) => lesson.module))].map((module) => googleSlidesLessons.filter((lesson) => lesson.module === module).length), [6, 8, 5, 6, 5]);
   for (const lesson of googleSlidesLessons) {
     assert.ok(lesson.title.length > 5);
     assert.ok(lesson.objective.length > 20);
+    assert.ok(lesson.explanation.length > 20);
     assert.ok(GOOGLE_SLIDES_DEMO_TYPES.includes(lesson.demo.type));
-    assert.equal(lesson.demo.type, "script", "a Fase 1 deve usar somente demonstrações locais em script");
-    assert.equal(demoStepCount(lesson.demo), lesson.demo.steps.length);
-    assert.ok(lesson.demo.steps.length >= 4);
+    assert.equal(lesson.demo.type, "script");
+    assert.ok(demoStepCount(lesson.demo) >= 5);
     assert.equal(lesson.question.options.length, 4);
     assert.equal(new Set(lesson.question.options).size, 4);
     assert.ok(Number.isInteger(lesson.question.answer));
-    assert.ok(lesson.question.answer >= 0 && lesson.question.answer < lesson.question.options.length);
+    assert.ok(lesson.question.answer >= 0 && lesson.question.answer < 4);
     assert.ok(GOOGLE_SLIDES_PRACTICE_ACTIONS.includes(lesson.practice.expectedAction));
     for (const step of lesson.demo.steps) {
       assert.ok(GOOGLE_SLIDES_DEMO_ACTIONS.includes(step.action));
@@ -51,107 +57,126 @@ test("catálogo da Fase 1 possui três aulas completas e ações válidas", () =
   }
 });
 
-test("estado real do simulador identifica a tela, cria, seleciona e exclui slides", () => {
-  const first = createLessonPresentationState(1);
-  const focused = reducePresentation(first, { type: "canvas:focus", payload: {} });
-  assert.equal(focused.focusedRegion, "canvas");
-  assert.equal(first.focusedRegion, null, "o redutor não deve alterar o estado anterior");
+test("cada uma das 30 práticas altera o estado e só então é aceita", () => {
+  for (const lesson of googleSlidesLessons) {
+    let previous = createLessonPresentationState(lesson.id);
+    if (lesson.id === 6) previous = reducePresentation(previous, { type: "slide:select", payload: { id: "slide-2" } });
+    const event = { type: lesson.practice.expectedAction, payload: lesson.practice.expectedPayload || {} };
+    const next = reducePresentation(previous, event);
+    assert.notDeepEqual(next, previous, `aula ${lesson.id} não alterou o estado`);
+    assert.equal(practiceMatches(lesson, event, previous, next), true, `prática da aula ${lesson.id} não foi aceita`);
+    assert.equal(practiceMatches(lesson, { type: "canvas:focus", payload: {} }, previous, next), lesson.practice.expectedAction === "canvas:focus");
+  }
+});
 
-  const createStart = createLessonPresentationState(2);
-  const created = reducePresentation(createStart, { type: "slide:create", payload: {} });
+test("criar, duplicar, reordenar e excluir modificam o deck real", () => {
+  const initial = createLessonPresentationState(4);
+  const created = reducePresentation(initial, { type: "slide:create", payload: {} });
+  const duplicated = reducePresentation(created, { type: "slide:duplicate", payload: {} });
+  const reordered = reducePresentation(duplicated, { type: "slide:reorder", payload: { id: duplicated.selectedSlideId, toIndex: 0 } });
+  const deleted = reducePresentation(reordered, { type: "slide:delete", payload: { deletedSlideId: reordered.selectedSlideId } });
+  assert.equal(initial.slides.length, 1);
   assert.equal(created.slides.length, 2);
-  assert.equal(created.selectedSlideId, "slide-2");
-  assert.equal(createStart.slides.length, 1);
-
-  const deleteStart = createLessonPresentationState(3);
-  const selected = reducePresentation(deleteStart, { type: "slide:select", payload: { id: "slide-2" } });
-  const deleted = reducePresentation(selected, { type: "slide:delete", payload: { deletedSlideId: "slide-2" } });
-  assert.equal(selected.selectedSlideId, "slide-2");
-  assert.deepEqual(deleted.slides.map((slide) => slide.id), ["slide-1"]);
-  assert.equal(deleted.selectedSlideId, "slide-1");
+  assert.equal(duplicated.slides.length, 3);
+  assert.equal(reordered.slides[0].id, duplicated.selectedSlideId);
+  assert.equal(reordered.reordered, true);
+  assert.equal(deleted.slides.length, 2);
 });
 
-test("prática só conclui com o evento esperado e uma alteração verdadeira", () => {
-  const createLesson = googleSlidesLessons[1];
-  const previous = createLessonPresentationState(2);
-  const wrongEvent = { type: "canvas:focus", payload: {} };
-  const wrongNext = reducePresentation(previous, wrongEvent);
-  assert.equal(practiceMatches(createLesson, wrongEvent, previous, wrongNext), false);
-  assert.equal(practiceMatches(createLesson, { type: "slide:create", payload: {} }, previous, previous), false);
-
-  const correctEvent = { type: "slide:create", payload: {} };
-  const correctNext = reducePresentation(previous, correctEvent);
-  assert.equal(practiceMatches(createLesson, correctEvent, previous, correctNext), true);
-
-  const deleteLesson = googleSlidesLessons[2];
-  const deleteStart = reducePresentation(createLessonPresentationState(3), { type: "slide:select", payload: { id: "slide-2" } });
-  const wrongDelete = { type: "slide:delete", payload: { deletedSlideId: "slide-1" } };
-  const correctDelete = { type: "slide:delete", payload: { deletedSlideId: "slide-2" } };
-  const deleteNext = reducePresentation(deleteStart, correctDelete);
-  assert.equal(practiceMatches(deleteLesson, wrongDelete, deleteStart, deleteNext), false);
-  assert.equal(practiceMatches(deleteLesson, correctDelete, deleteStart, deleteNext), true);
+test("texto, imagens e elementos visuais guardam formatação e posição", () => {
+  let state = createLessonPresentationState(8);
+  state = reducePresentation(state, { type: "text:title", payload: { value: "Minha apresentação" } });
+  state = reducePresentation(state, { type: "text:create", payload: { value: "Conteúdo da aula" } });
+  state = reducePresentation(state, { type: "text:font-size", payload: { size: 28 } });
+  state = reducePresentation(state, { type: "text:font", payload: { font: "Verdana" } });
+  state = reducePresentation(state, { type: "text:style", payload: {} });
+  state = reducePresentation(state, { type: "text:color", payload: { color: "#1a73e8" } });
+  state = reducePresentation(state, { type: "text:align", payload: { align: "center" } });
+  state = reducePresentation(state, { type: "image:insert", payload: {} });
+  state = reducePresentation(state, { type: "image:resize", payload: { scale: 1.25 } });
+  state = reducePresentation(state, { type: "image:move", payload: { x: 62, y: 48 } });
+  state = reducePresentation(state, { type: "shape:insert", payload: { kind: "rectangle" } });
+  state = reducePresentation(state, { type: "line:insert", payload: { kind: "arrow" } });
+  const slide = state.slides[0];
+  const text = slide.textElements[0];
+  assert.equal(slide.title, "Minha apresentação");
+  assert.deepEqual({ size: text.fontSize, font: text.font, bold: text.bold, italic: text.italic, underline: text.underline, color: text.color, align: text.align }, { size: 28, font: "Verdana", bold: true, italic: true, underline: true, color: "#1a73e8", align: "center" });
+  assert.deepEqual({ scale: slide.images[0].scale, x: slide.images[0].x, y: slide.images[0].y }, { scale: 1.25, x: 62, y: 48 });
+  assert.deepEqual(slide.shapes.map((shape) => shape.kind), ["rectangle", "arrow"]);
 });
 
-test("demonstrações podem ser reconstruídas e repetidas sem estado falso", () => {
-  const createLesson = googleSlidesLessons[1];
-  const beforeClick = rebuildDemoState(createLesson, 2);
-  const afterClick = rebuildDemoState(createLesson, createLesson.demo.steps.length);
-  const repeated = rebuildDemoState(createLesson, 0);
-  assert.equal(beforeClick.slides.length, 1);
-  assert.equal(afterClick.slides.length, 2);
-  assert.equal(repeated.slides.length, 1);
-
-  const deleteLesson = googleSlidesLessons[2];
-  const afterDelete = rebuildDemoState(deleteLesson, deleteLesson.demo.steps.length);
-  assert.deepEqual(afterDelete.slides.map((slide) => slide.id), ["slide-1"]);
+test("demonstrações são reconstruídas e repetir volta ao estado inicial", () => {
+  for (const lesson of googleSlidesLessons) {
+    const complete = rebuildDemoState(lesson, demoStepCount(lesson.demo));
+    const repeated = rebuildDemoState(lesson, 0);
+    assert.notDeepEqual(complete, repeated, `demonstração da aula ${lesson.id} não produziu mudança`);
+    assert.deepEqual(repeated, createLessonPresentationState(lesson.id));
+  }
 });
 
-test("progresso inválido é saneado e não libera etapas", () => {
-  const initial = createInitialCourseState();
-  const sanitized = sanitizeCourseState({
-    version: initial.version,
-    view: "result",
-    currentLessonId: 999,
-    stage: "practice",
-    lessons: {
-      1: { watched: false, questionCompleted: true, practiceCompleted: true, completed: true, demoStep: 999 },
-      2: { watched: true, questionCompleted: false, practiceCompleted: true },
-      3: null
-    }
-  });
-  assert.equal(sanitized.currentLessonId, 1);
-  assert.equal(sanitized.stage, "watch");
-  assert.equal(sanitized.view, "lesson");
-  assert.equal(sanitized.lessons[1].questionCompleted, false);
-  assert.equal(sanitized.lessons[1].practiceCompleted, false);
-  assert.equal(sanitized.lessons[1].demoStep, googleSlidesLessons[0].demo.steps.length);
+test("o desafio final confere dez objetivos no estado real", () => {
+  let progress = createFinalChallengeProgress();
+  const apply = (type, payload = {}) => { progress = updateFinalChallenge(progress, { type, payload }); };
+  apply("slide:create");
+  apply("slide:create");
+  apply("slide:select", { id: "slide-1" });
+  apply("text:title", { value: "Minha apresentação" });
+  apply("text:create", { value: "Conteúdo da aula" });
+  apply("text:style");
+  apply("image:insert");
+  apply("layout:change", { layout: "title-body" });
+  apply("slide:select", { id: "slide-2" });
+  apply("slide:reorder", { id: "slide-2", toIndex: 0 });
+  apply("theme:change", { theme: "dourado" });
+  apply("transition:change", { transition: "dissolver" });
+  assert.equal(progress.completed, false);
+  apply("presentation:start");
+  assert.equal(googleSlidesFinalChallenge.goals.length, 10);
+  assert.equal(Object.values(validateFinalChallenge(progress.state)).filter(Boolean).length, 10);
+  assert.equal(progress.completed, true);
+  assert.ok(progress.completedAt);
 });
 
-test("progresso serializado restaura etapa, tentativas e estado parcial", () => {
+test("sanitização bloqueia aulas fora de ordem e restaura a etapa válida", () => {
   const state = createInitialCourseState();
   state.view = "lesson";
+  state.currentLessonId = 12;
   state.stage = "practice";
-  state.lessons[1].watched = true;
-  state.lessons[1].questionCompleted = true;
-  state.lessons[1].questionCompletedByStudent = true;
-  state.lessons[1].questionAttempts = 3;
-  state.lessons[1].incorrectAttempts = 2;
-  state.lessons[1].practiceState = reducePresentation(state.lessons[1].practiceState, { type: "slide:create", payload: {} });
+  state.lessons[12].watched = true;
+  state.lessons[12].questionCompleted = true;
+  const blocked = sanitizeCourseState(JSON.parse(JSON.stringify(state)));
+  assert.equal(blocked.currentLessonId, 1);
+  assert.equal(blocked.stage, "watch");
+
+  for (let id = 1; id <= 4; id += 1) Object.assign(state.lessons[id], { watched: true, questionCompleted: true, practiceCompleted: true, completed: true });
+  state.currentLessonId = 5;
+  state.stage = "question";
+  state.lessons[5].watched = true;
   const restored = sanitizeCourseState(JSON.parse(JSON.stringify(state)));
-  assert.equal(GOOGLE_SLIDES_COURSE_STORAGE_KEY, "central-jogos.google-slides-course.v1");
-  assert.equal(restored.stage, "practice");
-  assert.equal(restored.lessons[1].questionAttempts, 3);
-  assert.equal(restored.lessons[1].incorrectAttempts, 2);
-  assert.equal(restored.lessons[1].practiceState.slides.length, 2);
+  assert.equal(restored.currentLessonId, 5);
+  assert.equal(restored.stage, "question");
 });
 
-test("conclusão do professor é isolada das estatísticas do aluno e pode ser reiniciada", () => {
+test("progresso serializado preserva 30 aulas, simulador e desafio", () => {
+  const state = createInitialCourseState();
+  state.view = "lesson";
+  state.lessons[1].watched = true;
+  state.lessons[1].demoStep = 3;
+  state.lessons[1].questionAttempts = 2;
+  state.finalChallenge.state = reducePresentation(state.finalChallenge.state, { type: "slide:create", payload: {} });
+  const restored = sanitizeCourseState(JSON.parse(JSON.stringify(state)));
+  assert.equal(GOOGLE_SLIDES_COURSE_STORAGE_KEY, "central-jogos.google-slides-course.v1");
+  assert.equal(Object.keys(restored.lessons).length, 30);
+  assert.equal(restored.lessons[1].demoStep, 3);
+  assert.equal(restored.lessons[1].questionAttempts, 2);
+  assert.equal(restored.finalChallenge.state.slides.length, 2);
+});
+
+test("conclusões forçadas pelo professor não entram na precisão", () => {
   const initial = createInitialCourseState();
-  initial.lessons[2].questionAttempts = 2;
-  initial.lessons[2].incorrectAttempts = 2;
+  initial.lessons[2].questionAttempts = 3;
+  initial.lessons[2].incorrectAttempts = 3;
   const completed = markLessonCompleteByTeacher(initial, 2);
-  assert.equal(initial.lessons[2].completed, false);
-  assert.equal(completed.lessons[2].completed, true);
   assert.equal(completed.lessons[2].completedByTeacher, true);
   assert.deepEqual(courseStats(completed), {
     completedLessons: 1,
@@ -159,14 +184,15 @@ test("conclusão do professor é isolada das estatísticas do aluno e pode ser r
     questionAttempts: 0,
     accuracy: 0,
     completedPractices: 0,
-    teacherCompleted: 1
+    teacherCompleted: 1,
+    finalChallengeCompleted: false
   });
   const reset = resetLessonInState(completed, 2);
   assert.equal(reset.lessons[2].completed, false);
-  assert.equal(reset.lessons[2].practiceState.slides.length, 1);
+  assert.equal(reset.currentLessonId, 2);
 });
 
-test("rota, card, ciclo de vida, controles, responsividade e cache estão integrados", async () => {
+test("rota, desafio, modo professor, acessibilidade e cache v14 estão integrados", async () => {
   const [index, app, game, css, worker] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -174,19 +200,16 @@ test("rota, card, ciclo de vida, controles, responsividade e cache estão integr
     readFile(resolve(projectRoot, "google-slides-course.css"), "utf8"),
     readFile(resolve(projectRoot, "service-worker.js"), "utf8")
   ]);
-  assert.match(index, /Jogo 10/);
+  assert.match(index, /30 aulas \+ desafio/);
   assert.match(index, /#\/google-apresentacoes/);
-  assert.match(index, /google-slides-course\.css/);
   assert.match(app, /googleSlidesCourseGame\.mount/);
-  assert.match(app, /googleSlidesCourseGame\.enter/);
-  assert.match(app, /googleSlidesCourseGame\.leave/);
-  assert.match(game, /data-action="repeat-demo"/);
-  assert.match(game, /data-action="next-demo-step"/);
+  assert.match(game, /renderChallenge\(\)/);
+  assert.match(game, /teacher-module-filter/);
+  assert.match(game, /teacher-challenge/);
   assert.match(game, /new EventTarget\(\)/);
   assert.match(game, /type: event\.type, payload: event\.payload, state: next/);
-  assert.match(css, /grid-template-columns: minmax\(720px, 1\.68fr\)/);
-  assert.match(css, /\.gsc-toolbar button \{ width: 44px; min-width: 44px; min-height: 44px/);
+  assert.match(css, /gsc-challenge-checklist/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(worker, /central-jogos-offline-v13/);
-  assert.match(worker, /google-slides-course-game\.mjs/);
+  assert.match(worker, /central-jogos-offline-v14/);
+  assert.match(worker, /google-slides-course-data\.mjs/);
 });

@@ -11,7 +11,7 @@ Site educacional estático com dez jogos para aulas introdutórias de informáti
 - **Desafio TI — Valendo Pontos:** competição para 2 a 6 equipes com 150 perguntas, tabuleiro de 30 casas, roubo, cronômetro, placar persistente e desafio final.
 - **Técnico em Ação 3D — Missões Windows:** seis chamados sequenciais para aprender e praticar ações básicas do Windows, com laboratório 3D em Three.js, dicas sob demanda e progresso local.
 - **Descubra o Windows:** 30 aulas animadas sobre o Windows 11, seguidas por um caça-palavras 20 × 20 com 15 termos sorteados — 13 na lista e duas palavras-surpresa —, progresso local e uso integral sem internet após o preparo.
-- **Google Apresentações na Prática:** três aulas iniciais com demonstração, pergunta e prática real em um simulador local otimizado para Chromebook.
+- **Google Apresentações na Prática:** 30 aulas com demonstração, pergunta e prática real, além de um desafio final com dez objetivos em um simulador local otimizado para Chromebook.
 
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 
@@ -40,7 +40,7 @@ As rotas diretas dos jogos mais recentes são:
 
 ## Expandir o curso Google Apresentações
 
-As aulas ficam em `js/google-slides-course-data.mjs`. Cada registro contém objetivo, demonstração, pergunta e prática. As demonstrações usam alvos semânticos da interface e ações reutilizáveis como `move`, `click`, `open-menu`, `select-option`, `wait`, `highlight` e `announce`.
+As 30 aulas e o desafio final ficam em `js/google-slides-course-data.mjs`. Cada registro contém objetivo, demonstração, pergunta e prática. As demonstrações usam alvos semânticos da interface e ações reutilizáveis como `move`, `click`, `open-menu`, `select-option`, `wait`, `highlight` e `announce`.
 
 Para cadastrar uma aula, adicione o registro ao catálogo, defina seu estado inicial em `createLessonPresentationState`, implemente a ação no redutor quando ela ainda não existir e inclua o `expectedAction` na prática. A atividade só é concluída quando o evento esperado também produz a mudança correspondente no estado do simulador.
 
