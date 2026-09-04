@@ -1,6 +1,6 @@
 # Central de Jogos — Fundamentos de Informática
 
-Site educacional estático com nove jogos para aulas introdutórias de informática:
+Site educacional estático com dez jogos para aulas introdutórias de informática:
 
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
@@ -11,6 +11,7 @@ Site educacional estático com nove jogos para aulas introdutórias de informát
 - **Desafio TI — Valendo Pontos:** competição para 2 a 6 equipes com 150 perguntas, tabuleiro de 30 casas, roubo, cronômetro, placar persistente e desafio final.
 - **Técnico em Ação 3D — Missões Windows:** seis chamados sequenciais para aprender e praticar ações básicas do Windows, com laboratório 3D em Three.js, dicas sob demanda e progresso local.
 - **Descubra o Windows:** 30 aulas animadas sobre o Windows 11, seguidas por um caça-palavras 20 × 20 com 15 termos sorteados — 13 na lista e duas palavras-surpresa —, progresso local e uso integral sem internet após o preparo.
+- **Google Apresentações na Prática:** três aulas iniciais com demonstração, pergunta e prática real em um simulador local otimizado para Chromebook.
 
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 
@@ -35,6 +36,13 @@ As rotas diretas dos jogos mais recentes são:
 - `http://localhost:8000/#/desafio-ti`
 - `http://localhost:8000/#/missoes-windows`
 - `http://localhost:8000/#/descubra-windows`
+- `http://localhost:8000/#/google-apresentacoes`
+
+## Expandir o curso Google Apresentações
+
+As aulas ficam em `js/google-slides-course-data.mjs`. Cada registro contém objetivo, demonstração, pergunta e prática. As demonstrações usam alvos semânticos da interface e ações reutilizáveis como `move`, `click`, `open-menu`, `select-option`, `wait`, `highlight` e `announce`.
+
+Para cadastrar uma aula, adicione o registro ao catálogo, defina seu estado inicial em `createLessonPresentationState`, implemente a ação no redutor quando ela ainda não existir e inclua o `expectedAction` na prática. A atividade só é concluída quando o evento esperado também produz a mudança correspondente no estado do simulador.
 
 ## Uso offline nos Chromebooks
 
@@ -71,6 +79,7 @@ node --test tests/crossword-game.test.mjs
 node --test tests/desafio-ti.test.mjs
 node --test tests/windows-mission.test.mjs
 node --test tests/windows-discovery.test.mjs
+node --test tests/google-slides-course.test.mjs
 ```
 
 ## Publicar no GitHub Pages

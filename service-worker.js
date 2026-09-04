@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v12";
+const CACHE_NAME = "central-jogos-offline-v13";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -26,6 +26,7 @@ const PRECACHE_PATHS = [
   "./desafio-ti-game.css",
   "./windows-mission-game.css",
   "./windows-discovery-game.css",
+  "./google-slides-course.css",
   "./js/app.js",
   "./js/credits-data.js",
   "./js/data.js",
@@ -49,6 +50,9 @@ const PRECACHE_PATHS = [
   "./js/windows-discovery-game.mjs",
   "./js/windows-discovery-core.mjs",
   "./js/windows-discovery-data.mjs",
+  "./js/google-slides-course-game.mjs",
+  "./js/google-slides-course-core.mjs",
+  "./js/google-slides-course-data.mjs",
   "./vendor/three/three.module.min.js",
   "./vendor/three/three.core.min.js",
   "./assets/windows-mission/tecnico-em-acao-card.png",

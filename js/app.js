@@ -6,6 +6,7 @@ import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
 import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
 import { windowsMissionGame } from "./windows-mission-game.mjs?v=1.0.1";
 import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
+import { googleSlidesCourseGame } from "./google-slides-course-game.mjs?v=1.0.0";
 
 (function () {
   "use strict";
@@ -44,6 +45,7 @@ import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
     if (hash.startsWith("#/desafio-ti")) return "desafio-ti";
     if (hash.startsWith("#/missoes-windows")) return "windows-mission";
     if (hash.startsWith("#/descubra-windows")) return "windows-discovery";
+    if (hash.startsWith("#/google-apresentacoes")) return "google-slides-course";
     return "home";
   };
 
@@ -56,6 +58,7 @@ import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
     if (activeRoute === "desafio-ti" && route !== "desafio-ti") desafioTiGame.leave();
     if (activeRoute === "windows-mission" && route !== "windows-mission") windowsMissionGame.leave();
     if (activeRoute === "windows-discovery" && route !== "windows-discovery") windowsDiscoveryGame.leave();
+    if (activeRoute === "google-slides-course" && route !== "google-slides-course") googleSlidesCourseGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -82,8 +85,10 @@ import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
           ? "Técnico em Ação 3D — Missões Windows | Central de Jogos"
         : route === "windows-discovery"
           ? "Descubra o Windows — Aula e Caça-palavras | Central de Jogos"
+        : route === "google-slides-course"
+          ? "Google Apresentações na Prática | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
@@ -93,6 +98,7 @@ import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
     if (route === "desafio-ti" && activeRoute !== "desafio-ti") desafioTiGame.enter();
     if (route === "windows-mission" && activeRoute !== "windows-mission") windowsMissionGame.enter();
     if (route === "windows-discovery" && activeRoute !== "windows-discovery") windowsDiscoveryGame.enter();
+    if (route === "google-slides-course" && activeRoute !== "google-slides-course") googleSlidesCourseGame.enter();
     activeRoute = route;
   };
 
@@ -726,6 +732,7 @@ import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
   desafioTiGame.mount(document.getElementById("desafio-ti-app"));
   windowsMissionGame.mount(document.getElementById("windows-mission-app"));
   windowsDiscoveryGame.mount(document.getElementById("windows-discovery-app"));
+  googleSlidesCourseGame.mount(document.getElementById("google-slides-course-app"));
   classification.ensureState();
   renderRoute();
 
