@@ -62,6 +62,14 @@ As diferenças intencionais são de produto: a implementação exibe a descriç�
 - 30/30 vídeos e 5/5 pôsteres responderam HTTP 200; vídeos com `Content-Type: video/webm`.
 - Sintaxe dos módulos e do service worker validada; `git diff --check` sem erros.
 
+## QA do simulador Google Apresentações
+
+- Captura de referência: `C:/Users/fernando/AppData/Local/Temp/codex-clipboard-48619301-bd49-42dc-82e0-1de341ff1b28.png`.
+- Implementação: rota local `#/google-apresentacoes`, capturada no Chrome em viewport amplo durante a validação desta versão.
+- A comparação visual foi feita com a captura de referência e a tela da implementação no mesmo passe de revisão. A aula 10 exibe `− 24 +` e chega a 28 com quatro cliques em `+`.
+- Menus e submenus de imagem, formas, linha, texto, tamanho, alinhamento e layout foram verificados; foco, teclado, entrada real, seleção real e comentário também.
+- Os ícones são locais (Material Symbols e favicon oficial), sem CDN; a PWA usa `central-jogos-offline-v15`.
+
 ## Resultado
 
 final result: passed

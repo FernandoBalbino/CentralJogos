@@ -6,7 +6,7 @@ import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
 import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
 import { windowsMissionGame } from "./windows-mission-game.mjs?v=1.0.1";
 import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
-import { googleSlidesCourseGame } from "./google-slides-course-game.mjs?v=2.0.0";
+import { googleSlidesCourseGame } from "./google-slides-course-game.mjs?v=3.0.0";
 
 (function () {
   "use strict";

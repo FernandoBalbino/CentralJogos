@@ -61,7 +61,19 @@ test("cada uma das 30 práticas altera o estado e só então é aceita", () => {
   for (const lesson of googleSlidesLessons) {
     let previous = createLessonPresentationState(lesson.id);
     if (lesson.id === 6) previous = reducePresentation(previous, { type: "slide:select", payload: { id: "slide-2" } });
-    const event = { type: lesson.practice.expectedAction, payload: lesson.practice.expectedPayload || {} };
+    if (lesson.id === 12) {
+      previous = reducePresentation(previous, { type: "text:style", payload: { style: "bold", enabled: true } });
+      previous = reducePresentation(previous, { type: "text:style", payload: { style: "italic", enabled: true } });
+    }
+    const payloadByLesson = {
+      7: { value: "Minha apresentação" },
+      8: { value: "Conteúdo escrito pelo aluno" },
+      9: { id: "text-1", selectionLength: 8 },
+      12: { style: "underline", enabled: true },
+      24: { value: "Texto digitado na caixa" },
+      28: { value: "Comentário digitado pelo aluno" }
+    };
+    const event = { type: lesson.practice.expectedAction, payload: lesson.practice.expectedPayload || payloadByLesson[lesson.id] || {} };
     const next = reducePresentation(previous, event);
     assert.notDeepEqual(next, previous, `aula ${lesson.id} não alterou o estado`);
     assert.equal(practiceMatches(lesson, event, previous, next), true, `prática da aula ${lesson.id} não foi aceita`);
@@ -89,7 +101,9 @@ test("texto, imagens e elementos visuais guardam formatação e posição", () =
   state = reducePresentation(state, { type: "text:create", payload: { value: "Conteúdo da aula" } });
   state = reducePresentation(state, { type: "text:font-size", payload: { size: 28 } });
   state = reducePresentation(state, { type: "text:font", payload: { font: "Verdana" } });
-  state = reducePresentation(state, { type: "text:style", payload: {} });
+  state = reducePresentation(state, { type: "text:style", payload: { style: "bold", enabled: true } });
+  state = reducePresentation(state, { type: "text:style", payload: { style: "italic", enabled: true } });
+  state = reducePresentation(state, { type: "text:style", payload: { style: "underline", enabled: true } });
   state = reducePresentation(state, { type: "text:color", payload: { color: "#1a73e8" } });
   state = reducePresentation(state, { type: "text:align", payload: { align: "center" } });
   state = reducePresentation(state, { type: "image:insert", payload: {} });
@@ -122,7 +136,7 @@ test("o desafio final confere dez objetivos no estado real", () => {
   apply("slide:select", { id: "slide-1" });
   apply("text:title", { value: "Minha apresentação" });
   apply("text:create", { value: "Conteúdo da aula" });
-  apply("text:style");
+  apply("text:style", { style: "bold", enabled: true });
   apply("image:insert");
   apply("layout:change", { layout: "title-body" });
   apply("slide:select", { id: "slide-2" });
@@ -135,6 +149,41 @@ test("o desafio final confere dez objetivos no estado real", () => {
   assert.equal(Object.values(validateFinalChallenge(progress.state)).filter(Boolean).length, 10);
   assert.equal(progress.completed, true);
   assert.ok(progress.completedAt);
+});
+
+test("cliques sem entrada real não concluem missões de texto, seleção ou comentário", () => {
+  for (const lessonId of [7, 8, 24, 28]) {
+    const lesson = googleSlidesLessons.find((item) => item.id === lessonId);
+    const previous = createLessonPresentationState(lessonId);
+    for (const value of ["", "  ", "ab"]) {
+      const event = { type: lesson.practice.expectedAction, payload: { value } };
+      const next = reducePresentation(previous, event);
+      assert.deepEqual(next, previous, `aula ${lessonId} aceitou texto insuficiente`);
+      assert.equal(practiceMatches(lesson, event, previous, next), false);
+    }
+  }
+
+  const selectionLesson = googleSlidesLessons.find((item) => item.id === 9);
+  const beforeSelection = createLessonPresentationState(9);
+  const clickOnly = { type: "text:select", payload: { id: "text-1", selectionLength: 0 } };
+  const afterClick = reducePresentation(beforeSelection, clickOnly);
+  assert.deepEqual(afterClick, beforeSelection);
+  assert.equal(practiceMatches(selectionLesson, clickOnly, beforeSelection, afterClick), false);
+});
+
+test("tamanho da fonte progride pelos botões menos e mais, um ponto por clique", () => {
+  const lesson = googleSlidesLessons.find((item) => item.id === 10);
+  let state = createLessonPresentationState(10);
+  assert.equal(state.slides[0].textElements[0].fontSize, 24);
+  for (const size of [25, 26, 27, 28]) {
+    const previous = state;
+    const event = { type: "text:font-size", payload: { size } };
+    state = reducePresentation(previous, event);
+    assert.equal(state.slides[0].textElements[0].fontSize, size);
+    assert.equal(practiceMatches(lesson, event, previous, state), size === 28);
+  }
+  state = reducePresentation(state, { type: "text:font-size", payload: { size: 27 } });
+  assert.equal(state.slides[0].textElements[0].fontSize, 27);
 });
 
 test("sanitização bloqueia aulas fora de ordem e restaura a etapa válida", () => {
@@ -192,7 +241,7 @@ test("conclusões forçadas pelo professor não entram na precisão", () => {
   assert.equal(reset.currentLessonId, 2);
 });
 
-test("rota, desafio, modo professor, acessibilidade e cache v14 estão integrados", async () => {
+test("rota, desafio, modo professor, entrada real, interface fiel e cache v15 estão integrados", async () => {
   const [index, app, game, css, worker] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -208,8 +257,16 @@ test("rota, desafio, modo professor, acessibilidade e cache v14 estão integrado
   assert.match(game, /teacher-challenge/);
   assert.match(game, /new EventTarget\(\)/);
   assert.match(game, /type: event\.type, payload: event\.payload, state: next/);
+  assert.match(game, /contenteditable=\\"true\\"/);
+  assert.match(game, /font-size-increase/);
+  assert.match(game, /selectionLength/);
+  assert.match(game, /menuItem\("Imagem", "menu:image"/);
   assert.match(css, /gsc-challenge-checklist/);
+  assert.match(css, /Material Symbols Outlined/);
+  assert.match(css, /gsc-font-size-control/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(worker, /central-jogos-offline-v14/);
+  assert.match(worker, /central-jogos-offline-v15/);
   assert.match(worker, /google-slides-course-data\.mjs/);
+  assert.match(worker, /material-symbols-outlined\.ttf/);
+  assert.match(worker, /google-slides\.ico/);
 });

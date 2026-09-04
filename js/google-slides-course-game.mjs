@@ -17,7 +17,9 @@ import {
 } from "./google-slides-course-core.mjs";
 
 const ICONS = "./assets/side-game/icons";
+const SLIDES_ASSETS = "./assets/google-slides";
 const icon = (name, alt = "") => `<img src="${ICONS}/${name}.svg" alt="${alt}">`;
+const materialIcon = (name) => `<span class="gsc-ms" aria-hidden="true">${name}</span>`;
 const wait = (duration) => new Promise((resolve) => window.setTimeout(resolve, duration));
 
 const escapeHtml = (value) => String(value ?? "")
@@ -35,6 +37,11 @@ class GoogleSlidesCourseGame {
     this.bus = new EventTarget();
     this.simulatorState = createPresentationState();
     this.openMenu = null;
+    this.editor = null;
+    this.dialog = null;
+    this.pendingBackground = "#ffffff";
+    this.commentDraft = "";
+    this.dragState = null;
     this.demoPlaying = false;
     this.demoRunId = 0;
     this.questionFeedback = null;
@@ -49,6 +56,12 @@ class GoogleSlidesCourseGame {
     this.handleClick = this.handleClick.bind(this);
     this.handleKeydown = this.handleKeydown.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleInput = this.handleInput.bind(this);
+    this.handleFocusout = this.handleFocusout.bind(this);
+    this.handleSelectionChange = this.handleSelectionChange.bind(this);
+    this.handlePointerDown = this.handlePointerDown.bind(this);
+    this.handlePointerMove = this.handlePointerMove.bind(this);
+    this.handlePointerUp = this.handlePointerUp.bind(this);
     this.handleCourseAction = this.handleCourseAction.bind(this);
     this.bus.addEventListener("course-action", this.handleCourseAction);
   }
@@ -75,6 +88,12 @@ class GoogleSlidesCourseGame {
     this.root?.addEventListener("click", this.handleClick);
     this.root?.addEventListener("keydown", this.handleKeydown);
     this.root?.addEventListener("change", this.handleChange);
+    this.root?.addEventListener("input", this.handleInput);
+    this.root?.addEventListener("focusout", this.handleFocusout);
+    this.root?.addEventListener("pointerdown", this.handlePointerDown);
+    document.addEventListener("selectionchange", this.handleSelectionChange);
+    document.addEventListener("pointermove", this.handlePointerMove);
+    document.addEventListener("pointerup", this.handlePointerUp);
     document.addEventListener("central-offline-status", (event) => {
       const status = this.root?.querySelector("[data-gs-offline]");
       const label = status?.querySelector("span");
@@ -96,6 +115,9 @@ class GoogleSlidesCourseGame {
     document.body.classList.remove("google-slides-course-active");
     this.pauseDemo();
     this.openMenu = null;
+    this.editor = null;
+    this.dialog = null;
+    this.dragState = null;
     this.teacherOpen = false;
     this.teacherPreview = null;
     this.teacherChallengePreview = null;
@@ -133,6 +155,8 @@ class GoogleSlidesCourseGame {
     this.practiceMessage = "";
     this.practiceMessageKind = "guidance";
     this.openMenu = null;
+    this.editor = null;
+    this.dialog = null;
     this.saveState();
     this.render();
   }
@@ -221,6 +245,7 @@ class GoogleSlidesCourseGame {
       </main>
       ${this.teacherPanel()}
     </div>`;
+    this.focusActiveEditor();
     if (stage === "watch" && lesson.demo.type === "webm") this.attachVideoDemo(lesson, progress);
   }
 
@@ -318,6 +343,7 @@ class GoogleSlidesCourseGame {
         </aside>
       </main>
     </div>`;
+    this.focusActiveEditor();
   }
 
   renderResult() {
@@ -342,7 +368,7 @@ class GoogleSlidesCourseGame {
     </div>`;
   }
 
-  renderSimulator(state, mode) {
+  renderLegacySimulator(state, mode) {
     const challengeProgress = this.teacherChallengePreview || this.state.finalChallenge;
     const interactive = mode === "challenge" ? !challengeProgress.completed : mode === "practice" && !this.currentProgress()?.practiceCompleted;
     const tab = interactive ? "0" : "-1";
@@ -416,6 +442,231 @@ class GoogleSlidesCourseGame {
     </div>`;
   }
 
+  renderSimulator(state, mode) {
+    const challengeProgress = this.teacherChallengePreview || this.state.finalChallenge;
+    const interactive = mode === "challenge" ? !challengeProgress.completed : mode === "practice" && !this.currentProgress()?.practiceCompleted;
+    const tab = interactive ? "0" : "-1";
+    const selected = state.slides.find((slide) => slide.id === state.selectedSlideId);
+    const selectedText = selected?.textElements.find((text) => text.id === state.selectedTextId) || null;
+    const branchOpen = (...names) => names.includes(this.openMenu);
+    const attr = (name, value) => value === null || value === undefined || value === "" ? "" : " " + name + "=\"" + escapeHtml(value) + "\"";
+    const actionButton = (label, action, content, options = {}) => {
+      const classes = options.className ? attr("class", options.className) : "";
+      const target = options.target ? attr("data-demo-target", options.target) : "";
+      const extra = options.extra || "";
+      const disabled = options.disabled ? " disabled" : "";
+      return "<button type=\"button\" tabindex=\"" + tab + "\" aria-label=\"" + escapeHtml(label) + "\" data-sim-action=\"" + escapeHtml(action) + "\"" + target + classes + disabled + " " + extra + ">" + content + "</button>";
+    };
+    const toolButton = (label, action, symbol, options = {}) => actionButton(label, action, materialIcon(symbol), { ...options, className: "gsc-icon-tool " + (options.className || "") });
+    const topMenu = (key, label, target = "") => actionButton(label, "menu:" + key, label, {
+      target,
+      className: "gsc-app-menu-button",
+      extra: "aria-haspopup=\"menu\" aria-expanded=\"" + String(branchOpen(key, ...(key === "insert" ? ["image", "shape", "shape-basic"] : key === "format" ? ["format-text", "format-size"] : key === "slide" ? ["layout", "slide-move"] : []))) + "\""
+    });
+    const menuItem = (label, action = "unsupported", options = {}) => {
+      const target = options.target ? attr("data-demo-target", options.target) : "";
+      const hint = options.hint ? attr("data-hint", options.hint) : "";
+      const submenu = options.submenu ? "<span class=\"gsc-menu-arrow\" aria-hidden=\"true\">›</span>" : "";
+      const shortcut = options.shortcut ? "<kbd>" + escapeHtml(options.shortcut) + "</kbd>" : "";
+      return "<button type=\"button\" tabindex=\"" + tab + "\" role=\"menuitem\" data-sim-action=\"" + escapeHtml(action) + "\"" + target + hint + "><span>" + escapeHtml(label) + "</span>" + shortcut + submenu + "</button>";
+    };
+    const menu = (key, label, items, className = "") => "<div class=\"gsc-floating-menu gsc-menu-" + key + " " + className + "\" role=\"menu\" data-sim-menu=\"" + key + "\" aria-label=\"" + escapeHtml(label) + "\">" + items.join("") + "</div>";
+    const textStyle = (text) => "font-size:" + text.fontSize + "px;font-family:" + escapeHtml(text.font) + ";font-weight:" + (text.bold ? 700 : 400) + ";font-style:" + (text.italic ? "italic" : "normal") + ";text-decoration:" + (text.underline ? "underline" : "none") + ";color:" + escapeHtml(text.color) + ";text-align:" + escapeHtml(text.align);
+    const editorMarkup = (kind, value, options = {}) => "<div class=\"gsc-live-editor " + escapeHtml(options.className || "") + "\" contenteditable=\"true\" role=\"textbox\" aria-label=\"" + escapeHtml(options.label || "Editar texto") + "\" spellcheck=\"true\" data-sim-editor=\"" + escapeHtml(kind) + "\"" + attr("data-text-id", options.textId) + attr("data-demo-target", options.target) + attr("style", options.style) + ">" + escapeHtml(value) + "</div>";
+    const activeEditor = this.editor;
+    const titleMarkup = activeEditor?.kind === "title"
+      ? editorMarkup("title", activeEditor.draft, { className: "gsc-title-placeholder has-content", label: "Editar título do slide", target: "title-placeholder" })
+      : actionButton(selected?.title ? "Editar título: " + selected.title : "Adicionar título", "edit:title", escapeHtml(selected?.title || "Clique para adicionar um título"), { target: "title-placeholder", className: "gsc-title-placeholder " + (selected?.title ? "has-content" : "") });
+    const bodyMarkup = selected?.textElements.length
+      ? selected.textElements.map((text, index) => activeEditor?.kind === "text" && activeEditor.textId === text.id
+        ? editorMarkup("text", activeEditor.draft, { className: "gsc-text-element is-editing role-" + text.role, label: "Editar texto do slide", textId: text.id, target: index === 0 ? "text-element-1" : "", style: textStyle(text) })
+        : actionButton("Editar e selecionar texto: " + text.value, "edit:text", escapeHtml(text.value), { target: index === 0 ? "text-element-1" : "", className: "gsc-text-element " + (state.selectedTextId === text.id ? "is-selected " : "") + "role-" + text.role, extra: attr("data-text-id", text.id) + attr("style", textStyle(text)) })
+      ).join("")
+      : activeEditor?.kind === "body"
+        ? editorMarkup("body", activeEditor.draft, { className: "gsc-subtitle-placeholder has-content", label: "Digite o texto do slide", target: "body-placeholder" })
+        : actionButton("Adicionar texto", "edit:body", "Clique para adicionar texto", { target: "body-placeholder", className: "gsc-subtitle-placeholder" });
+    const freeTextEditor = activeEditor?.kind === "textbox" ? editorMarkup("textbox", activeEditor.draft, { className: "gsc-text-element is-editing role-textbox", label: "Digite na caixa de texto", target: "slide-canvas" }) : "";
+    const imageMarkup = selected?.images.map((image) => {
+      const isSelected = state.selectedImageId === image.id;
+      const imageStyle = "left:" + image.x + "%;top:" + image.y + "%;width:" + (image.width * image.scale) + "%;height:" + (image.height * image.scale) + "%";
+      return "<div class=\"gsc-sim-image " + (isSelected ? "is-selected" : "") + "\" role=\"button\" tabindex=\"" + tab + "\" aria-label=\"Imagem inserida. Use as setas para mover e Shift mais setas para redimensionar.\" data-sim-action=\"image:select\" data-image-id=\"" + escapeHtml(image.id) + "\" style=\"" + imageStyle + "\" data-demo-target=\"image-move\"><img src=\"./assets/items/projetor.jpg\" alt=\"Projetor em uma sala de aula\">" + (isSelected ? "<span class=\"gsc-image-handle gsc-handle-nw\" aria-hidden=\"true\"></span><span class=\"gsc-image-handle gsc-handle-ne\" aria-hidden=\"true\"></span><button type=\"button\" tabindex=\"" + tab + "\" class=\"gsc-image-handle gsc-handle-se\" aria-label=\"Redimensionar imagem\" data-resize-handle data-demo-target=\"image-resize\"></button><span class=\"gsc-image-handle gsc-handle-sw\" aria-hidden=\"true\"></span>" : "") + "</div>";
+    }).join("") || "";
+    const shapesMarkup = selected?.shapes.map((shape) => shape.kind === "arrow"
+      ? "<span class=\"gsc-sim-arrow gsc-ms\" style=\"left:" + shape.x + "%;top:" + shape.y + "%\" aria-label=\"Seta inserida\">east</span>"
+      : "<span class=\"gsc-sim-shape\" style=\"left:" + shape.x + "%;top:" + shape.y + "%\" aria-label=\"Forma retangular inserida\"></span>"
+    ).join("") || "";
+    const canvas = selected ? "<div class=\"gsc-slide-canvas layout-" + escapeHtml(selected.layout) + " theme-" + escapeHtml(state.theme || "padrao") + "\" style=\"background:" + escapeHtml(selected.background) + "\">"
+      + actionButton("Área branca do slide", activeEditor?.kind === "textbox-ready" ? "edit:textbox" : "canvas:focus", "", { target: "slide-canvas", className: "gsc-canvas-focus-layer " + (state.focusedRegion === "canvas" ? "is-focused" : "") })
+      + titleMarkup + bodyMarkup + freeTextEditor + imageMarkup + shapesMarkup
+      + (selected.transition ? "<span class=\"gsc-canvas-chip\">Transição: " + escapeHtml(selected.transition) + "</span>" : "")
+      + "</div>"
+      : "<div class=\"gsc-empty-slide\"><strong>Nenhum slide</strong><span>Use + para adicionar um slide.</span></div>";
+
+    const baseToolbar = "<div class=\"gsc-split-tool\">"
+      + actionButton("Adicionar novo slide", "slide:create", materialIcon("add"), { target: "new-slide", className: "gsc-icon-tool gsc-new-slide-main" })
+      + actionButton("Escolher layout do novo slide", "menu:layout", materialIcon("arrow_drop_down"), { className: "gsc-icon-tool gsc-new-slide-menu", extra: "aria-haspopup=\"menu\"" })
+      + "</div>"
+      + toolButton("Desfazer", "unsupported", "undo", { className: "gsc-optional-tool", extra: "data-hint=\"Use Desfazer para reverter a última ação.\"" })
+      + toolButton("Refazer", "unsupported", "redo", { className: "gsc-optional-tool", extra: "data-hint=\"Use Refazer para restaurar uma ação desfeita.\"" })
+      + toolButton("Imprimir", "unsupported", "print", { className: "gsc-optional-tool", extra: "data-hint=\"A impressão não é necessária nesta atividade.\"" })
+      + toolButton("Copiar formatação", "unsupported", "format_paint", { className: "gsc-optional-tool", extra: "data-hint=\"Copiar formatação não é necessário nesta atividade.\"" })
+      + actionButton("Zoom", "unsupported", "<span>100%</span>" + materialIcon("arrow_drop_down"), { className: "gsc-zoom-tool gsc-optional-tool", extra: "data-hint=\"O zoom não altera o conteúdo do slide.\"" })
+      + toolButton("Selecionar", "unsupported", "near_me", { className: "is-active-tool", extra: "data-hint=\"A ferramenta Selecionar está ativa.\"" })
+      + toolButton("Caixa de texto", "tool:textbox", "title", { target: "text-box" })
+      + toolButton("Inserir imagem", "menu:image", "image", { target: "insert-image", extra: "aria-haspopup=\"menu\"" })
+      + toolButton("Linha", "menu:line", "timeline", { target: "line", extra: "aria-haspopup=\"menu\"" });
+    const textToolbar = selectedText ? "<span class=\"gsc-tool-divider\"></span>"
+      + actionButton("Fonte " + selectedText.font, "menu:font", "<span>" + escapeHtml(selectedText.font) + "</span>" + materialIcon("arrow_drop_down"), { target: "font-family", className: "gsc-font-tool", extra: "aria-haspopup=\"menu\"" })
+      + "<div class=\"gsc-font-size-control\">"
+      + actionButton("Diminuir tamanho da fonte", "text:font-size-decrease", materialIcon("remove"), { target: "font-size-decrease", className: "gsc-icon-tool" })
+      + "<input type=\"number\" min=\"6\" max=\"400\" value=\"" + selectedText.fontSize + "\" tabindex=\"" + tab + "\" aria-label=\"Tamanho da fonte\" data-font-size-input data-demo-target=\"font-size-field\">"
+      + actionButton("Aumentar tamanho da fonte", "text:font-size-increase", materialIcon("add"), { target: "font-size-increase", className: "gsc-icon-tool" })
+      + "</div>"
+      + actionButton("Negrito", "text:style", "<b>B</b>", { target: "bold", className: "gsc-letter-tool " + (selectedText.bold ? "is-pressed" : ""), extra: "data-style=\"bold\" aria-pressed=\"" + String(selectedText.bold) + "\"" })
+      + actionButton("Itálico", "text:style", "<i>I</i>", { target: "italic", className: "gsc-letter-tool " + (selectedText.italic ? "is-pressed" : ""), extra: "data-style=\"italic\" aria-pressed=\"" + String(selectedText.italic) + "\"" })
+      + actionButton("Sublinhado", "text:style", "<u>U</u>", { target: "underline", className: "gsc-letter-tool " + (selectedText.underline ? "is-pressed" : ""), extra: "data-style=\"underline\" aria-pressed=\"" + String(selectedText.underline) + "\"" })
+      + actionButton("Cor do texto", "menu:text-color", "<span class=\"gsc-color-a\">A<i style=\"background:" + escapeHtml(selectedText.color) + "\"></i></span>" + materialIcon("arrow_drop_down"), { target: "text-color", className: "gsc-color-tool", extra: "aria-haspopup=\"menu\"" })
+      + toolButton("Inserir link", "unsupported", "link", { extra: "data-hint=\"O link não é necessário nesta atividade.\"" })
+      + toolButton("Adicionar comentário", "dialog:comment", "add_comment", { target: "comment" })
+      + actionButton("Alinhar", "menu:align", materialIcon(selectedText.align === "center" ? "format_align_center" : "format_align_left") + materialIcon("arrow_drop_down"), { target: "text-align", className: "gsc-align-tool", extra: "aria-haspopup=\"menu\"" })
+      : "<span class=\"gsc-tool-divider\"></span>"
+      + actionButton("Plano de fundo", "dialog:background", "Plano de fundo", { target: "background", className: "gsc-text-tool" })
+      + actionButton("Layout", "menu:layout", "Layout", { target: "layout", className: "gsc-text-tool", extra: "aria-haspopup=\"menu\"" })
+      + actionButton("Tema", "menu:theme", "Tema", { target: "theme", className: "gsc-text-tool" })
+      + actionButton("Transição", "menu:motion", "Transição", { target: "transition", className: "gsc-text-tool" });
+
+    const insertItems = [
+      menuItem("Caixa de texto", "tool:textbox", { shortcut: "Ctrl+Alt+Shift+4" }),
+      menuItem("Imagem", "menu:image", { target: "insert-image", submenu: true }),
+      menuItem("Áudio"),
+      menuItem("Vídeo"),
+      menuItem("Forma", "menu:shape", { target: "insert-shape", submenu: true }),
+      menuItem("Tabela", "unsupported", { submenu: true }),
+      menuItem("Gráfico", "unsupported", { submenu: true }),
+      menuItem("Diagrama"),
+      menuItem("Word art"),
+      menuItem("Linha", "menu:line", { submenu: true }),
+      menuItem("Comentário", "dialog:comment", { shortcut: "Ctrl+Alt+M" }),
+      menuItem("Animação", "panel:motion", { target: "animate" }),
+      menuItem("Link", "unsupported", { shortcut: "Ctrl+K" }),
+      menuItem("Números de slide")
+    ];
+    const formatItems = [
+      menuItem("Texto", "menu:format-text", { target: "format-text", submenu: true }),
+      menuItem("Alinhar e recuar", "menu:align", { submenu: true }),
+      menuItem("Espaçamento entre linhas e parágrafos", "unsupported", { submenu: true }),
+      menuItem("Marcadores e numeração", "unsupported", { submenu: true }),
+      menuItem("Bordas e linhas", "unsupported", { submenu: true }),
+      menuItem("Opções de formatação", "unsupported")
+    ];
+    const slideItems = [
+      menuItem("Novo slide", "slide:create", { shortcut: "Ctrl+M" }),
+      menuItem("Aplicar layout", "menu:layout", { submenu: true }),
+      menuItem("Duplicar slide", "slide:duplicate", { target: "duplicate-slide", shortcut: "Ctrl+D" }),
+      menuItem("Excluir slide", "slide:delete", { target: "delete-slide", shortcut: "Backspace" }),
+      menuItem("Pular slide"),
+      menuItem("Mover slide", "menu:slide-move", { target: "reorder-slide", submenu: true }),
+      menuItem("Alterar plano de fundo", "dialog:background"),
+      menuItem("Alterar tema", "menu:theme"),
+      menuItem("Transição", "panel:motion"),
+      menuItem("Editar tema")
+    ];
+    let overlays = "";
+    if (branchOpen("file")) overlays += menu("file", "Menu Arquivo", [
+      menuItem("Novo", "unsupported", { submenu: true }), menuItem("Abrir", "unsupported", { shortcut: "Ctrl+O" }),
+      menuItem("Importar slides"), menuItem("Fazer uma cópia"), menuItem("Fazer download", "unsupported", { submenu: true }),
+      menuItem("Histórico de versões", "unsupported", { submenu: true }), menuItem("Disponibilizar off-line"), menuItem("Imprimir", "unsupported", { shortcut: "Ctrl+P" })
+    ]);
+    if (branchOpen("edit")) overlays += menu("edit", "Menu Editar", [
+      menuItem("Desfazer", "unsupported", { shortcut: "Ctrl+Z" }), menuItem("Refazer", "unsupported", { shortcut: "Ctrl+Y" }),
+      menuItem("Recortar", "unsupported", { shortcut: "Ctrl+X" }), menuItem("Copiar", "unsupported", { shortcut: "Ctrl+C" }),
+      menuItem("Colar", "unsupported", { shortcut: "Ctrl+V" }), menuItem("Colar sem formatação", "unsupported", { shortcut: "Ctrl+Shift+V" }),
+      menuItem("Selecionar tudo", "unsupported", { shortcut: "Ctrl+A" }), menuItem("Localizar e substituir", "unsupported", { shortcut: "Ctrl+H" })
+    ]);
+    if (branchOpen("view")) overlays += menu("view", "Menu Ver", [
+      menuItem("Apresentação", "presentation:start"), menuItem("Movimento", "panel:motion"), menuItem("Criador de tema"),
+      menuItem("Guias", "unsupported", { submenu: true }), menuItem("Zoom", "unsupported", { submenu: true })
+    ]);
+    if (branchOpen("insert", "image", "shape", "shape-basic")) overlays += menu("insert", "Menu Inserir", insertItems);
+    if (branchOpen("format", "format-text", "format-size")) overlays += menu("format", "Menu Formatar", formatItems);
+    if (branchOpen("slide", "layout", "slide-move")) overlays += menu("slide", "Menu Slide", slideItems);
+    if (branchOpen("arrange")) overlays += menu("arrange", "Menu Organizar", [
+      menuItem("Ordem", "unsupported", { submenu: true }), menuItem("Alinhar", "unsupported", { submenu: true }),
+      menuItem("Distribuir", "unsupported", { submenu: true }), menuItem("Centralizar na página", "unsupported", { submenu: true }),
+      menuItem("Girar", "unsupported", { submenu: true }), menuItem("Agrupar"), menuItem("Desagrupar")
+    ]);
+    if (branchOpen("tools")) overlays += menu("tools", "Menu Ferramentas", [
+      menuItem("Verificar ortografia"), menuItem("Dicionário"), menuItem("Preferências"), menuItem("Acessibilidade")
+    ]);
+    if (branchOpen("extensions")) overlays += menu("extensions", "Menu Extensões", [menuItem("Complementos", "unsupported", { submenu: true }), menuItem("Apps Script")]);
+    if (branchOpen("help")) overlays += menu("help", "Menu Ajuda", [menuItem("Ajuda"), menuItem("Treinamento"), menuItem("Atualizações"), menuItem("Atalhos do teclado", "unsupported", { shortcut: "Ctrl+/" })]);
+    if (branchOpen("image")) overlays += menu("image", "Submenu Imagem", [
+      menuItem("Fazer upload do computador", "image:insert", { target: "image-upload" }),
+      menuItem("Imagens e GIFs"), menuItem("Drive e Fotos"), menuItem("Câmera"), menuItem("Por URL")
+    ], "gsc-submenu");
+    if (branchOpen("shape", "shape-basic")) overlays += menu("shape", "Submenu Forma", [
+      menuItem("Formas", "menu:shape-basic", { target: "shape-category", submenu: true }),
+      menuItem("Setas", "unsupported", { submenu: true }), menuItem("Balões", "unsupported", { submenu: true }), menuItem("Equação", "unsupported", { submenu: true })
+    ], "gsc-submenu");
+    if (branchOpen("shape-basic")) overlays += menu("shape-basic", "Formas básicas", [
+      menuItem("Retângulo", "shape:insert", { target: "shape-rectangle" }), menuItem("Retângulo arredondado"),
+      menuItem("Círculo"), menuItem("Triângulo"), menuItem("Losango"), menuItem("Pentágono")
+    ], "gsc-submenu gsc-third-menu");
+    if (branchOpen("line")) overlays += menu("line", "Menu Linha", [
+      menuItem("Linha"), menuItem("Seta", "line:insert", { target: "line-arrow" }), menuItem("Conector angular"),
+      menuItem("Conector curvo"), menuItem("Curva"), menuItem("Polilinha"), menuItem("Rabisco")
+    ], "gsc-toolbar-menu");
+    if (branchOpen("font")) overlays += menu("font", "Menu Fonte", [
+      menuItem("Arial", "text:font", { hint: "Arial" }), menuItem("Verdana", "text:font", { target: "font-verdana", hint: "Verdana" }),
+      menuItem("Roboto", "text:font", { hint: "Roboto" }), menuItem("Times New Roman", "text:font", { hint: "Times New Roman" }), menuItem("Mais fontes")
+    ], "gsc-toolbar-menu");
+    if (branchOpen("format-text", "format-size")) overlays += menu("format-text", "Submenu Texto", [
+      menuItem("Negrito", "text:style", { shortcut: "Ctrl+B", hint: "bold" }), menuItem("Itálico", "text:style", { shortcut: "Ctrl+I", hint: "italic" }),
+      menuItem("Sublinhado", "text:style", { shortcut: "Ctrl+U", hint: "underline" }), menuItem("Tachado"),
+      menuItem("Tamanho", "menu:format-size", { target: "format-size", submenu: true }), menuItem("Maiúsculas e minúsculas", "unsupported", { submenu: true })
+    ], "gsc-submenu");
+    if (branchOpen("format-size")) overlays += menu("format-size", "Submenu Tamanho", [
+      menuItem("Aumentar tamanho da fonte", "text:font-size-increase", { shortcut: "Ctrl+Shift+." }),
+      menuItem("Diminuir tamanho da fonte", "text:font-size-decrease", { shortcut: "Ctrl+Shift+," })
+    ], "gsc-submenu gsc-third-menu");
+    if (branchOpen("text-color")) overlays += "<div class=\"gsc-color-palette\" role=\"menu\" data-sim-menu=\"text-color\" aria-label=\"Paleta Cor do texto\"><span>Cor do texto</span><button type=\"button\" tabindex=\"" + tab + "\" role=\"menuitem\" aria-label=\"Preto\" data-sim-action=\"text:color\" data-color=\"#202124\" style=\"--swatch:#202124\"></button><button type=\"button\" tabindex=\"" + tab + "\" role=\"menuitem\" aria-label=\"Vermelho\" data-sim-action=\"text:color\" data-color=\"#d93025\" style=\"--swatch:#d93025\"></button><button type=\"button\" tabindex=\"" + tab + "\" role=\"menuitem\" aria-label=\"Azul\" data-sim-action=\"text:color\" data-color=\"#1a73e8\" data-demo-target=\"text-color-blue\" style=\"--swatch:#1a73e8\"></button><button type=\"button\" tabindex=\"" + tab + "\" role=\"menuitem\" aria-label=\"Verde\" data-sim-action=\"text:color\" data-color=\"#188038\" style=\"--swatch:#188038\"></button></div>";
+    if (branchOpen("align")) overlays += menu("align", "Menu Alinhar", [
+      menuItem("À esquerda", "text:align", { hint: "left" }), menuItem("Centralizar", "text:align", { target: "align-center", hint: "center" }),
+      menuItem("À direita", "text:align", { hint: "right" }), menuItem("Justificado", "text:align", { hint: "justify" })
+    ], "gsc-toolbar-menu");
+    if (branchOpen("layout")) overlays += menu("layout", "Menu Layout", [
+      menuItem("Slide de título", "layout:change", { hint: "title" }), menuItem("Título e corpo", "layout:change", { target: "layout-title-body", hint: "title-body" }),
+      menuItem("Título e duas colunas", "layout:change", { hint: "two-columns" }), menuItem("Somente título", "layout:change", { hint: "title-only" }),
+      menuItem("Em branco", "layout:change", { hint: "blank" })
+    ], "gsc-toolbar-menu gsc-layout-menu");
+    if (branchOpen("slide-move")) overlays += menu("slide-move", "Submenu Mover slide", [
+      menuItem("Mover slide para cima"), menuItem("Mover slide para baixo"), menuItem("Mover slide para o início", "slide:reorder", { target: "reorder-slide" }), menuItem("Mover slide para o final")
+    ], "gsc-submenu");
+    if (branchOpen("theme")) overlays += "<aside class=\"gsc-side-editor\" aria-label=\"Painel Tema\"><header><strong>Tema</strong>" + actionButton("Fechar painel Tema", "close-overlay", materialIcon("close"), { className: "gsc-icon-tool" }) + "</header><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"theme:change\" data-theme=\"simples-claro\"><i class=\"theme-light\"></i><span>Simples claro</span></button><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"theme:change\" data-theme=\"dourado\" data-demo-target=\"theme-dourado\"><i class=\"theme-gold\"></i><span>Dourado</span></button><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"theme:change\" data-theme=\"azul\"><i class=\"theme-blue\"></i><span>Azul moderno</span></button></aside>";
+    if (branchOpen("motion")) overlays += "<aside class=\"gsc-side-editor gsc-motion-panel\" aria-label=\"Painel Movimento\"><header><strong>Movimento</strong>" + actionButton("Fechar painel Movimento", "close-overlay", materialIcon("close"), { className: "gsc-icon-tool" }) + "</header><label>Transição de slide</label><select tabindex=\"" + tab + "\" data-transition-select aria-label=\"Transição de slide\"><option value=\"nenhuma\">Nenhuma</option><option value=\"dissolver\">Dissolver</option><option value=\"deslizar\">Deslizar da direita</option><option value=\"virar\">Virar</option></select><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"transition:change\" data-transition=\"dissolver\" data-demo-target=\"transition-dissolve\">Aplicar Dissolver</button><hr><label>Animações de objeto</label><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"animation:add\" data-animation=\"aparecer\" data-demo-target=\"add-animation\">+ Adicionar animação</button><small>Aparecer · Ao clicar</small></aside>";
+    if (this.dialog === "background") overlays += "<div class=\"gsc-dialog-backdrop\"><section class=\"gsc-sim-dialog\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"gsc-background-title\"><h3 id=\"gsc-background-title\">Plano de fundo</h3><label>Cor</label><div class=\"gsc-background-colors\"><button type=\"button\" tabindex=\"" + tab + "\" aria-label=\"Branco\" data-sim-action=\"background:choose\" data-color=\"#ffffff\" style=\"--swatch:#ffffff\"></button><button type=\"button\" tabindex=\"" + tab + "\" aria-label=\"Amarelo-claro\" data-sim-action=\"background:choose\" data-color=\"#fff2cc\" data-demo-target=\"background-yellow\" style=\"--swatch:#fff2cc\"></button><button type=\"button\" tabindex=\"" + tab + "\" aria-label=\"Azul-claro\" data-sim-action=\"background:choose\" data-color=\"#d9eaf7\" style=\"--swatch:#d9eaf7\"></button></div><footer><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"dialog:cancel\">Cancelar</button><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"background:apply\" data-demo-target=\"background-done\">Concluído</button></footer></section></div>";
+    if (this.dialog === "comment") overlays += "<section class=\"gsc-comment-composer\" role=\"dialog\" aria-label=\"Adicionar comentário\"><textarea tabindex=\"" + tab + "\" aria-label=\"Comentário\" placeholder=\"Adicionar comentário\" data-comment-input data-demo-target=\"comment-field\">" + escapeHtml(this.commentDraft) + "</textarea><div><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"dialog:cancel\">Cancelar</button><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"comment:submit\" data-demo-target=\"comment-submit\">Comentar</button></div></section>";
+
+    return "<div class=\"gsc-simulator gsc-slides-faithful " + (interactive ? "is-interactive" : "is-demo") + " " + (state.presenting ? "is-presenting" : "") + "\" data-simulator aria-label=\"Simulação local do Google Apresentações\">"
+      + "<div class=\"gsc-app-titlebar\">"
+      + actionButton("Identificar Google Apresentações", "app:identify", "<img src=\"" + SLIDES_ASSETS + "/google-slides.ico\" alt=\"\">", { target: "slides-mark", className: "gsc-slides-mark " + (state.identifiedApp ? "is-identified" : "") })
+      + "<div class=\"gsc-file-identity\"><div><strong>Apresentação sem título</strong>" + toolButton("Adicionar aos favoritos", "unsupported", "star", { extra: "data-hint=\"Favoritar não é necessário nesta atividade.\"" }) + toolButton("Mover", "unsupported", "drive_file_move", { extra: "data-hint=\"Mover o arquivo não é necessário nesta atividade.\"" }) + "<span class=\"gsc-saved-icon\" title=\"Salvo no Drive\">" + materialIcon("cloud_done") + "</span></div>"
+      + "<div class=\"gsc-menu-row\" role=\"menubar\" aria-label=\"Menus do Google Apresentações\"><button type=\"button\" tabindex=\"" + tab + "\" class=\"gsc-menu-search\" aria-label=\"Pesquisar nos menus\" data-sim-action=\"unsupported\" data-hint=\"Digite Alt+/ no Chromebook para pesquisar comandos.\">" + materialIcon("search") + "<span>Menus</span></button>"
+      + topMenu("file", "Arquivo") + topMenu("edit", "Editar") + topMenu("view", "Ver") + topMenu("insert", "Inserir", "insert-menu") + topMenu("format", "Formatar", "format-menu") + topMenu("slide", "Slide", "slide-menu") + topMenu("arrange", "Organizar") + topMenu("tools", "Ferramentas") + topMenu("extensions", "Extensões") + topMenu("help", "Ajuda") + "</div></div>"
+      + "<div class=\"gsc-title-actions\">" + toolButton("Histórico de versões", "unsupported", "history", { extra: "data-hint=\"O histórico não é necessário nesta atividade.\"" }) + toolButton("Abrir comentários", "dialog:comment", "comment", { target: "comment" }) + toolButton("Apresentar para uma reunião", "unsupported", "videocam", { extra: "data-hint=\"A chamada de vídeo não é necessária nesta atividade.\"" }) + actionButton("Iniciar apresentação", "presentation:start", "<span>Apresentação de slides</span>" + materialIcon("arrow_drop_down"), { target: "present", className: "gsc-present-button" }) + actionButton("Compartilhar apresentação", "share:open", materialIcon("lock") + "<span>Compartilhar</span>", { target: "share", className: "gsc-share-button" }) + "</div></div>"
+      + "<div class=\"gsc-toolbar\" role=\"toolbar\" aria-label=\"Barra de ferramentas\">" + baseToolbar + textToolbar + "<span class=\"gsc-toolbar-spacer\"></span>" + actionButton("Opções de formatação", "unsupported", "Opções de formatação", { className: "gsc-format-options", extra: "data-hint=\"Selecione um objeto para ver suas opções de formatação.\"" }) + "</div>"
+      + "<div class=\"gsc-slide-workspace\"><aside class=\"gsc-thumbnails " + (state.focusedRegion === "thumbnails" ? "is-focused" : "") + "\" aria-label=\"Painel de miniaturas\">"
+      + actionButton("Identificar painel de miniaturas", "thumbnails:focus", "Miniaturas", { target: "thumbnails-panel", className: "gsc-thumbnails-label" })
+      + state.slides.map((slide, index) => actionButton("Selecionar slide " + (index + 1), "slide:select", "<span>" + (index + 1) + "</span><i><b>" + escapeHtml(slide.title.slice(0, 1)) + "</b><small></small></i>", { target: "slide-thumb-" + (index + 1), className: slide.id === state.selectedSlideId ? "is-selected" : "", extra: attr("data-slide-id", slide.id) })).join("")
+      + "</aside><div class=\"gsc-canvas-area\">" + canvas + "</div></div>"
+      + overlays
+      + (state.comments.length ? "<span class=\"gsc-comment-badge\">" + materialIcon("comment") + " " + state.comments.length + "</span>" : "")
+      + (state.shareOpen ? "<div class=\"gsc-share-popover\" role=\"dialog\" aria-label=\"Compartilhar Apresentação sem título\"><strong>Compartilhar “Apresentação sem título”</strong><span>Acesso geral: restrito</span><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"close-share\">Concluído</button></div>" : "")
+      + (state.presenting ? "<div class=\"gsc-present-overlay\" role=\"status\"><strong>" + escapeHtml(selected?.title || "Minha apresentação") + "</strong><span>Apresentação iniciada</span></div>" : "")
+      + (mode === "demo" ? "<img class=\"gsc-demo-cursor\" data-demo-cursor src=\"./assets/windows-discovery/cursor.png\" alt=\"\"><span class=\"gsc-click-ring\" data-click-ring aria-hidden=\"true\"></span>" : "")
+      + "</div>";
+  }
+
   renderVideoDemo(lesson) {
     const poster = lesson.demo.poster ? ` poster="${escapeHtml(lesson.demo.poster)}"` : "";
     return `<div class="gsc-video-demo">
@@ -463,6 +714,7 @@ class GoogleSlidesCourseGame {
     if (!host) return;
     const challenge = Boolean(this.teacherChallengePreview || this.state.view === "challenge");
     host.innerHTML = this.renderSimulator(this.simulatorState, challenge ? "challenge" : this.currentStage() === "practice" ? "practice" : "demo");
+    this.focusActiveEditor();
   }
 
   demoCaption(lesson, completedSteps) {
@@ -501,8 +753,28 @@ class GoogleSlidesCourseGame {
         if (step.action === "drag") target.classList.add("is-demo-dragged");
         await wait(instant ? 45 : step.action === "drag" ? 320 : 180);
       }
+      if (step.action === "click" && step.target === "background") {
+        this.dialog = "background";
+        this.pendingBackground = "#ffffff";
+        this.refreshSimulator();
+      } else if (step.action === "click" && step.target === "background-yellow") {
+        this.pendingBackground = "#fff2cc";
+      } else if (step.action === "click" && step.target === "comment") {
+        this.dialog = "comment";
+        this.commentDraft = "";
+        this.refreshSimulator();
+      } else if (step.action === "type" && step.target === "comment-field") {
+        this.commentDraft = "Revise este slide";
+        this.refreshSimulator();
+      } else if (step.action === "click" && step.target === "text-box") {
+        this.editor = { kind: "textbox-ready", draft: "" };
+      } else if (step.action === "click" && step.target === "slide-canvas" && this.editor?.kind === "textbox-ready") {
+        this.editor = { kind: "textbox", draft: "" };
+      }
       if (step.effect) {
         this.simulatorState = reducePresentation(this.simulatorState, step.effect);
+        this.editor = null;
+        if (["background-done", "comment-submit"].includes(step.target)) this.dialog = null;
         this.refreshSimulator();
       }
       await wait(instant ? 40 : 180);
@@ -519,6 +791,12 @@ class GoogleSlidesCourseGame {
     if (step.action === "select-option") {
       if (target) target.classList.add("is-demo-clicked");
       await wait(instant ? 40 : 180);
+      if (step.target === "animate" && !step.effect) {
+        this.openMenu = "motion";
+        this.refreshSimulator();
+        await wait(instant ? 40 : 180);
+        return;
+      }
       if (step.effect) this.simulatorState = reducePresentation(this.simulatorState, step.effect);
       this.openMenu = null;
       this.refreshSimulator();
@@ -593,6 +871,8 @@ class GoogleSlidesCourseGame {
     progress.demoStep = 0;
     this.simulatorState = createLessonPresentationState(lesson.id);
     this.openMenu = null;
+    this.editor = null;
+    this.dialog = null;
     this.saveState();
     this.renderLesson();
   }
@@ -634,7 +914,7 @@ class GoogleSlidesCourseGame {
     this.renderLesson();
   }
 
-  handleSimulatorAction(button) {
+  handleLegacySimulatorAction(button) {
     const challenge = Boolean(this.teacherChallengePreview || this.state.view === "challenge");
     if (!challenge && this.currentStage() !== "practice") return;
     const progress = challenge ? this.teacherChallengePreview || this.state.finalChallenge : this.currentProgress();
@@ -697,6 +977,286 @@ class GoogleSlidesCourseGame {
     this.bus.dispatchEvent(new CustomEvent("course-action", {
       detail: { lesson: this.currentLesson(), type: event.type, payload: event.payload, state: next, previous }
     }));
+  }
+
+  interactiveContext() {
+    const challenge = Boolean(this.teacherChallengePreview || this.state.view === "challenge");
+    const progress = challenge ? this.teacherChallengePreview || this.state.finalChallenge : this.currentProgress();
+    return { challenge, progress, state: challenge ? progress.state : progress.practiceState };
+  }
+
+  focusActiveEditor() {
+    const editor = this.root?.querySelector("[data-sim-editor]");
+    if (!editor || !this.editor) return;
+    editor.focus();
+    const selection = window.getSelection?.();
+    if (!selection) return;
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  openTextEditor(kind, button = null) {
+    const { state } = this.interactiveContext();
+    const slide = state.slides.find((item) => item.id === state.selectedSlideId);
+    if (!slide) return;
+    if (kind === "textbox-ready") {
+      this.editor = { kind, draft: "" };
+    } else if (kind === "title") {
+      this.editor = { kind, draft: slide.title || "" };
+    } else if (kind === "body") {
+      this.editor = { kind, draft: "" };
+    } else if (kind === "text") {
+      const textId = button?.dataset.textId;
+      const text = slide.textElements.find((item) => item.id === textId);
+      if (!text) return;
+      state.selectedTextId = text.id;
+      state.textSelection = null;
+      this.editor = { kind, textId: text.id, draft: text.value };
+    } else if (kind === "textbox") {
+      this.editor = { kind, draft: "" };
+    }
+    this.openMenu = null;
+    this.dialog = null;
+    if (this.interactiveContext().challenge) this.renderChallenge();
+    else this.renderLesson();
+  }
+
+  commitEditor() {
+    if (!this.editor || this.editor.kind === "textbox-ready") return;
+    const draft = String(this.editor.draft || "").replace(/\s+/g, " ").trim();
+    const kind = this.editor.kind;
+    this.editor = null;
+    if (draft.length < 3) {
+      this.practiceMessageKind = "guidance";
+      this.practiceMessage = "Digite pelo menos três caracteres antes de sair do campo.";
+      if (this.interactiveContext().challenge) this.renderChallenge();
+      else this.renderLesson();
+      return;
+    }
+    const type = kind === "title" ? "text:title" : kind === "body" ? "text:create" : kind === "textbox" ? "textbox:insert" : null;
+    if (type) this.applySimulatorEvent({ type, payload: { value: draft } });
+    else if (kind === "text") {
+      const { challenge } = this.interactiveContext();
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+    }
+  }
+
+  applySimulatorEvent(event) {
+    const { challenge, progress, state: previous } = this.interactiveContext();
+    if (!event || !event.type) return;
+    const next = reducePresentation(previous, event);
+    this.openMenu = null;
+    this.dialog = null;
+    if (challenge) {
+      const updated = updateFinalChallenge(progress, event);
+      if (this.teacherChallengePreview) this.teacherChallengePreview = updated;
+      else this.state.finalChallenge = updated;
+      this.simulatorState = updated.state;
+      this.saveState();
+      this.renderChallenge();
+      return;
+    }
+    progress.practiceState = next;
+    this.bus.dispatchEvent(new CustomEvent("course-action", {
+      detail: { lesson: this.currentLesson(), type: event.type, payload: event.payload || {}, state: next, previous }
+    }));
+  }
+
+  handleSimulatorAction(button) {
+    const { challenge, progress, state } = this.interactiveContext();
+    if (!challenge && this.currentStage() !== "practice") return;
+    if (progress.completed || progress.practiceCompleted) return;
+    const action = button.dataset.simAction;
+    if (!action) return;
+    if (action.startsWith("menu:")) {
+      const menuName = action.slice(5);
+      this.openMenu = this.openMenu === menuName ? null : menuName;
+      this.dialog = null;
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      this.root.querySelector("[data-sim-menu=\"" + menuName + "\"] [role=\"menuitem\"], .gsc-side-editor button")?.focus();
+      return;
+    }
+    if (action === "close-overlay") {
+      this.openMenu = null;
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      return;
+    }
+    if (action === "dialog:background") {
+      this.dialog = "background";
+      this.pendingBackground = state.slides.find((item) => item.id === state.selectedSlideId)?.background || "#ffffff";
+      this.openMenu = null;
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      this.root.querySelector("#gsc-background-title")?.focus();
+      return;
+    }
+    if (action === "dialog:comment") {
+      this.dialog = "comment";
+      this.commentDraft = "";
+      this.openMenu = null;
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      this.root.querySelector("[data-comment-input]")?.focus();
+      return;
+    }
+    if (action === "dialog:cancel") {
+      this.dialog = null;
+      this.commentDraft = "";
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      return;
+    }
+    if (action === "background:choose") {
+      this.pendingBackground = button.dataset.color || "#ffffff";
+      button.closest(".gsc-background-colors")?.querySelectorAll("button").forEach((item) => item.classList.toggle("is-selected", item === button));
+      return;
+    }
+    if (action === "background:apply") {
+      this.applySimulatorEvent({ type: "background:change", payload: { color: this.pendingBackground } });
+      return;
+    }
+    if (action === "comment:submit") {
+      const value = String(this.commentDraft || "").trim();
+      if (value.length < 3) {
+        this.practiceMessageKind = "guidance";
+        this.practiceMessage = "Digite um comentário com pelo menos três caracteres.";
+        this.root.querySelector("[data-comment-input]")?.focus();
+        return;
+      }
+      this.commentDraft = "";
+      this.applySimulatorEvent({ type: "comment:add", payload: { value } });
+      return;
+    }
+    if (action === "close-share") {
+      state.shareOpen = false;
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      return;
+    }
+    if (action === "panel:motion") {
+      this.openMenu = "motion";
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      return;
+    }
+    if (action === "tool:textbox") {
+      this.openTextEditor("textbox-ready");
+      return;
+    }
+    if (action === "edit:textbox") {
+      this.openTextEditor("textbox");
+      return;
+    }
+    if (action === "edit:title") {
+      this.openTextEditor("title");
+      return;
+    }
+    if (action === "edit:body") {
+      this.openTextEditor("body");
+      return;
+    }
+    if (action === "edit:text") {
+      this.openTextEditor("text", button);
+      return;
+    }
+    if (action === "image:select") {
+      const slide = state.slides.find((item) => item.id === state.selectedSlideId);
+      if (slide?.images.some((item) => item.id === button.dataset.imageId)) state.selectedImageId = button.dataset.imageId;
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      return;
+    }
+    if (action === "unsupported") {
+      this.practiceMessageKind = "guidance";
+      this.practiceMessage = button.dataset.hint || "Esse comando existe no Google Apresentações, mas não realiza a tarefa desta aula.";
+      if (challenge) this.renderChallenge();
+      else this.renderLesson();
+      return;
+    }
+    const selectedIndex = state.slides.findIndex((slide) => slide.id === state.selectedSlideId);
+    const text = state.slides.find((slide) => slide.id === state.selectedSlideId)?.textElements.find((item) => item.id === state.selectedTextId);
+    let event = null;
+    if (action === "slide:select") event = { type: action, payload: { id: button.dataset.slideId } };
+    else if (action === "slide:delete") event = { type: action, payload: { deletedSlideId: state.selectedSlideId } };
+    else if (action === "slide:reorder") event = { type: action, payload: { id: state.selectedSlideId, toIndex: selectedIndex === 0 && state.slides.length > 1 ? 1 : 0 } };
+    else if (action === "text:font-size-increase" && text) event = { type: "text:font-size", payload: { size: text.fontSize + 1 } };
+    else if (action === "text:font-size-decrease" && text) event = { type: "text:font-size", payload: { size: text.fontSize - 1 } };
+    else if (action === "text:font") event = { type: action, payload: { font: button.dataset.hint || "Verdana" } };
+    else if (action === "text:style") event = { type: action, payload: { style: button.dataset.style || button.dataset.hint || "bold", enabled: true } };
+    else if (action === "text:color") event = { type: action, payload: { color: button.dataset.color || "#1a73e8" } };
+    else if (action === "text:align") event = { type: action, payload: { align: button.dataset.hint || "center" } };
+    else if (action === "layout:change") event = { type: action, payload: { layout: button.dataset.hint || "title-body" } };
+    else if (action === "theme:change") event = { type: action, payload: { theme: button.dataset.theme || "dourado" } };
+    else if (action === "transition:change") event = { type: action, payload: { transition: button.dataset.transition || "dissolver" } };
+    else if (action === "animation:add") event = { type: action, payload: { animation: button.dataset.animation || "aparecer" } };
+    else if (action === "image:insert") event = { type: action, payload: { source: "upload" } };
+    else if (action === "shape:insert") event = { type: action, payload: { kind: "rectangle" } };
+    else if (action === "line:insert") event = { type: action, payload: { kind: "arrow" } };
+    else if (["slide:create", "slide:duplicate", "thumbnails:focus", "canvas:focus", "app:identify", "share:open", "presentation:start"].includes(action)) event = { type: action, payload: {} };
+    if (event) this.applySimulatorEvent(event);
+  }
+
+  handleInput(event) {
+    if (event.target.matches("[data-sim-editor]") && this.editor) this.editor.draft = event.target.textContent || "";
+    if (event.target.matches("[data-comment-input]")) this.commentDraft = event.target.value;
+  }
+
+  handleFocusout(event) {
+    if (!event.target.matches("[data-sim-editor]")) return;
+    window.setTimeout(() => {
+      if (this.editor && !this.root?.contains(document.activeElement)) this.commitEditor();
+      else if (this.editor && !document.activeElement?.matches?.("[data-sim-editor]")) this.commitEditor();
+    }, 0);
+  }
+
+  handleSelectionChange() {
+    if (!this.active || this.editor?.kind !== "text") return;
+    const editor = this.root?.querySelector("[data-sim-editor=\"text\"]");
+    const selection = window.getSelection?.();
+    if (!editor || !selection || selection.isCollapsed || !selection.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return;
+    const length = selection.toString().trim().length;
+    if (length > 0) {
+      const textId = this.editor.textId;
+      this.editor = null;
+      this.applySimulatorEvent({ type: "text:select", payload: { id: textId, selectionLength: length } });
+    }
+  }
+
+  handlePointerDown(event) {
+    if (!this.active) return;
+    const handle = event.target.closest("[data-resize-handle]");
+    const image = event.target.closest(".gsc-sim-image");
+    if (!image || !this.interactiveContext().state.selectedImageId) return;
+    this.dragState = {
+      mode: handle ? "resize" : "move",
+      startX: event.clientX,
+      startY: event.clientY,
+      imageId: image.dataset.imageId,
+      moved: false
+    };
+    image.setPointerCapture?.(event.pointerId);
+  }
+
+  handlePointerMove(event) {
+    if (!this.dragState) return;
+    if (Math.hypot(event.clientX - this.dragState.startX, event.clientY - this.dragState.startY) > 8) this.dragState.moved = true;
+  }
+
+  handlePointerUp() {
+    if (!this.dragState) return;
+    const drag = this.dragState;
+    this.dragState = null;
+    if (!drag.moved) return;
+    if (drag.mode === "resize") this.applySimulatorEvent({ type: "image:resize", payload: { scale: 1.25 } });
+    else this.applySimulatorEvent({ type: "image:move", payload: { x: 62, y: 48 } });
   }
 
   handleCourseAction(customEvent) {
@@ -789,6 +1349,10 @@ class GoogleSlidesCourseGame {
       this.teacherModuleFilter = event.target.value;
       this.render();
       this.root.querySelector("#gsc-module-filter")?.focus();
+    } else if (event.target.matches("[data-font-size-input]")) {
+      this.applySimulatorEvent({ type: "text:font-size", payload: { size: Number(event.target.value) } });
+    } else if (event.target.matches("[data-transition-select]") && event.target.value !== "nenhuma") {
+      this.applySimulatorEvent({ type: "transition:change", payload: { transition: event.target.value } });
     }
   }
 
@@ -872,6 +1436,19 @@ class GoogleSlidesCourseGame {
   }
 
   handleKeydown(event) {
+    const editor = event.target.closest?.("[data-sim-editor]");
+    if (editor && event.key === "Escape") {
+      event.preventDefault();
+      this.commitEditor();
+      return;
+    }
+    const image = event.target.closest?.(".gsc-sim-image");
+    if (image && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+      event.preventDefault();
+      if (event.shiftKey) this.applySimulatorEvent({ type: "image:resize", payload: { scale: event.key === "ArrowLeft" || event.key === "ArrowDown" ? 0.9 : 1.25 } });
+      else this.applySimulatorEvent({ type: "image:move", payload: { x: event.key === "ArrowLeft" ? 24 : 62, y: event.key === "ArrowUp" ? 30 : 48 } });
+      return;
+    }
     if (event.key === "Escape") {
       if (this.openMenu) {
         const menu = this.openMenu;
@@ -886,6 +1463,11 @@ class GoogleSlidesCourseGame {
       return;
     }
     const menuItem = event.target.closest('[data-sim-menu] [role="menuitem"]');
+    if (menuItem && event.key === "ArrowRight" && menuItem.dataset.simAction?.startsWith("menu:")) {
+      event.preventDefault();
+      this.handleSimulatorAction(menuItem);
+      return;
+    }
     if (menuItem && ["ArrowDown", "ArrowUp"].includes(event.key)) {
       event.preventDefault();
       const items = [...menuItem.closest("[data-sim-menu]").querySelectorAll('[role="menuitem"]')];

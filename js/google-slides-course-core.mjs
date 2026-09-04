@@ -12,7 +12,7 @@ const makeText = (id, value = "Conteúdo da aula", role = "body") => ({
   id,
   role,
   value,
-  fontSize: 18,
+  fontSize: 24,
   font: "Arial",
   bold: false,
   italic: false,
@@ -23,7 +23,7 @@ const makeText = (id, value = "Conteúdo da aula", role = "body") => ({
   y: 55
 });
 
-const makeImage = (id = "image-1") => ({ id, x: 28, y: 44, width: 28, height: 26, scale: 1 });
+const makeImage = (id = "image-1", source = "upload") => ({ id, source, x: 28, y: 44, width: 28, height: 26, scale: 1 });
 
 const makeSlide = (id) => ({
   id: `slide-${id}`,
@@ -40,6 +40,7 @@ export const createPresentationState = (slideCount = 1, selectedSlideId = "slide
   slides: Array.from({ length: Math.max(0, slideCount) }, (_, index) => makeSlide(index + 1)),
   selectedSlideId: slideCount ? selectedSlideId : null,
   selectedTextId: null,
+  textSelection: null,
   selectedImageId: null,
   focusedRegion: null,
   identifiedApp: false,
@@ -57,7 +58,7 @@ export const createPresentationState = (slideCount = 1, selectedSlideId = "slide
 const selectedSlide = (state) => state.slides.find((slide) => slide.id === state.selectedSlideId);
 const selectedText = (state) => {
   const slide = selectedSlide(state);
-  return slide?.textElements.find((item) => item.id === state.selectedTextId) || slide?.textElements[0] || null;
+  return slide?.textElements.find((item) => item.id === state.selectedTextId) || null;
 };
 const selectedImage = (state) => {
   const slide = selectedSlide(state);
@@ -71,7 +72,9 @@ export const createLessonPresentationState = (lessonId) => {
   if ([9, 10, 11, 12, 13, 14, 27].includes(lessonId)) {
     slide.title = "Tecnologia na escola";
     slide.textElements.push(makeText("text-1"));
-    state.selectedTextId = lessonId >= 10 && lessonId <= 14 ? "text-1" : null;
+    const startsWithTextSelected = (lessonId >= 10 && lessonId <= 14) || lessonId === 27;
+    state.selectedTextId = startsWithTextSelected ? "text-1" : null;
+    state.textSelection = startsWithTextSelected ? { id: "text-1", start: 0, end: slide.textElements[0].value.length } : null;
   }
   if ([21, 22].includes(lessonId)) {
     slide.images.push(makeImage());
@@ -110,6 +113,7 @@ export const reducePresentation = (state, event) => {
     if (current.slides.some((item) => item.id === event.payload?.id)) {
       current.selectedSlideId = event.payload.id;
       current.selectedTextId = null;
+      current.textSelection = null;
       current.selectedImageId = null;
       current.focusedRegion = "thumbnails";
     }
@@ -120,6 +124,7 @@ export const reducePresentation = (state, event) => {
       current.slides.splice(index, 1);
       current.selectedSlideId = current.slides[Math.min(index, current.slides.length - 1)]?.id || null;
       current.selectedTextId = null;
+      current.textSelection = null;
       current.selectedImageId = null;
       current.focusedRegion = "thumbnails";
     }
@@ -140,23 +145,35 @@ export const reducePresentation = (state, event) => {
       current.reordered = true;
     }
   } else if (event.type === "text:title" && slide) {
-    slide.title = event.payload?.value || "Minha apresentação";
+    const value = String(event.payload?.value || "").trim();
+    if (value.length >= 3) slide.title = value.slice(0, 120);
   } else if (event.type === "text:create" && slide) {
-    const id = `text-${current.nextElementNumber}`;
-    slide.textElements.push(makeText(id, event.payload?.value || "Conteúdo da aula"));
-    current.selectedTextId = id;
-    current.nextElementNumber += 1;
+    const value = String(event.payload?.value || "").trim();
+    if (value.length >= 3) {
+      const id = `text-${current.nextElementNumber}`;
+      slide.textElements.push(makeText(id, value.slice(0, 500)));
+      current.selectedTextId = id;
+      current.textSelection = null;
+      current.nextElementNumber += 1;
+    }
   } else if (event.type === "text:select" && slide) {
-    if (slide.textElements.some((item) => item.id === event.payload?.id)) current.selectedTextId = event.payload.id;
+    const text = slide.textElements.find((item) => item.id === event.payload?.id);
+    const selectionLength = Math.max(0, Number(event.payload?.selectionLength) || 0);
+    if (text && selectionLength > 0) {
+      current.selectedTextId = text.id;
+      current.textSelection = { id: text.id, start: 0, end: Math.min(text.value.length, selectionLength) };
+    }
   } else if (event.type === "text:font-size") {
     const text = selectedText(current);
-    if (text) text.fontSize = Number(event.payload?.size) || 28;
+    const size = Number(event.payload?.size);
+    if (text && Number.isFinite(size)) text.fontSize = Math.max(6, Math.min(400, Math.round(size)));
   } else if (event.type === "text:font") {
     const text = selectedText(current);
     if (text) text.font = event.payload?.font || "Verdana";
   } else if (event.type === "text:style") {
     const text = selectedText(current);
-    if (text) Object.assign(text, { bold: true, italic: true, underline: true });
+    const style = event.payload?.style;
+    if (text && ["bold", "italic", "underline"].includes(style)) text[style] = event.payload?.enabled ?? !text[style];
   } else if (event.type === "text:color") {
     const text = selectedText(current);
     if (text) text.color = event.payload?.color || "#1a73e8";
@@ -167,7 +184,7 @@ export const reducePresentation = (state, event) => {
   else if (event.type === "background:change" && slide) slide.background = event.payload?.color || "#fff2cc";
   else if (event.type === "theme:change") current.theme = event.payload?.theme || "dourado";
   else if (event.type === "image:insert" && slide) {
-    const image = makeImage(`image-${current.nextElementNumber}`);
+    const image = makeImage(`image-${current.nextElementNumber}`, event.payload?.source || "upload");
     slide.images.push(image);
     current.selectedImageId = image.id;
     current.nextElementNumber += 1;
@@ -181,10 +198,14 @@ export const reducePresentation = (state, event) => {
     slide.shapes.push({ id: `shape-${current.nextElementNumber}`, kind: event.payload?.kind || "rectangle", x: 56, y: 22 });
     current.nextElementNumber += 1;
   } else if (event.type === "textbox:insert" && slide) {
-    const id = `text-${current.nextElementNumber}`;
-    slide.textElements.push(makeText(id, event.payload?.value || "Nova caixa de texto", "textbox"));
-    current.selectedTextId = id;
-    current.nextElementNumber += 1;
+    const value = String(event.payload?.value || "").trim();
+    if (value.length >= 3) {
+      const id = `text-${current.nextElementNumber}`;
+      slide.textElements.push(makeText(id, value.slice(0, 500), "textbox"));
+      current.selectedTextId = id;
+      current.textSelection = null;
+      current.nextElementNumber += 1;
+    }
   } else if (event.type === "line:insert" && slide) {
     slide.shapes.push({ id: `shape-${current.nextElementNumber}`, kind: event.payload?.kind || "arrow", x: 48, y: 72 });
     current.nextElementNumber += 1;
@@ -194,7 +215,8 @@ export const reducePresentation = (state, event) => {
   } else if (event.type === "animation:add") {
     current.animations.push({ id: `animation-${current.animations.length + 1}`, type: event.payload?.animation || "aparecer" });
   } else if (event.type === "comment:add") {
-    current.comments.push({ id: `comment-${current.comments.length + 1}`, value: event.payload?.value || "Revise este slide" });
+    const value = String(event.payload?.value || "").trim();
+    if (value.length >= 3) current.comments.push({ id: `comment-${current.comments.length + 1}`, value: value.slice(0, 500) });
   } else if (event.type === "share:open") current.shareOpen = true;
   else if (event.type === "presentation:start") current.presenting = true;
 
@@ -218,12 +240,15 @@ export const presentationChangedForAction = (previous, next, event) => {
     case "slide:delete": return previous.slides.some((item) => item.id === event.payload?.deletedSlideId) && !next.slides.some((item) => item.id === event.payload?.deletedSlideId) && next.slides.length === previous.slides.length - 1;
     case "slide:duplicate": return next.slides.length === previous.slides.length + 1 && next.selectedSlideId !== previous.selectedSlideId;
     case "slide:reorder": return !previous.reordered && next.reordered && next.slides[Number(event.payload?.toIndex) || 0]?.id === event.payload?.id;
-    case "text:title": return beforeSlide?.title !== afterSlide?.title && afterSlide?.title === event.payload?.value;
-    case "text:create": return afterSlide?.textElements.length === (beforeSlide?.textElements.length || 0) + 1;
-    case "text:select": return previous.selectedTextId !== next.selectedTextId && next.selectedTextId === event.payload?.id;
+    case "text:title": return beforeSlide?.title !== afterSlide?.title && afterSlide?.title === String(event.payload?.value || "").trim() && afterSlide.title.length >= 3;
+    case "text:create": return afterSlide?.textElements.length === (beforeSlide?.textElements.length || 0) + 1 && afterSlide.textElements.at(-1)?.value === String(event.payload?.value || "").trim();
+    case "text:select": return next.selectedTextId === event.payload?.id && next.textSelection?.id === event.payload?.id && next.textSelection.end > next.textSelection.start;
     case "text:font-size": return beforeText?.fontSize !== afterText?.fontSize && afterText?.fontSize === event.payload?.size;
     case "text:font": return beforeText?.font !== afterText?.font && afterText?.font === event.payload?.font;
-    case "text:style": return !beforeText?.bold && afterText?.bold && afterText.italic && afterText.underline;
+    case "text:style": {
+      const style = event.payload?.style;
+      return ["bold", "italic", "underline"].includes(style) && beforeText?.[style] !== afterText?.[style] && afterText?.[style] === true;
+    }
     case "text:color": return beforeText?.color !== afterText?.color && afterText?.color === event.payload?.color;
     case "text:align": return beforeText?.align !== afterText?.align && afterText?.align === event.payload?.align;
     case "layout:change": return beforeSlide?.layout !== afterSlide?.layout && afterSlide?.layout === event.payload?.layout;
@@ -233,11 +258,11 @@ export const presentationChangedForAction = (previous, next, event) => {
     case "image:resize": return beforeImage?.scale !== afterImage?.scale && afterImage?.scale === event.payload?.scale;
     case "image:move": return (beforeImage?.x !== afterImage?.x || beforeImage?.y !== afterImage?.y) && afterImage?.x === event.payload?.x && afterImage?.y === event.payload?.y;
     case "shape:insert": return afterSlide?.shapes.length === (beforeSlide?.shapes.length || 0) + 1 && afterSlide.shapes.at(-1)?.kind === event.payload?.kind;
-    case "textbox:insert": return afterSlide?.textElements.length === (beforeSlide?.textElements.length || 0) + 1 && afterSlide.textElements.at(-1)?.role === "textbox";
+    case "textbox:insert": return afterSlide?.textElements.length === (beforeSlide?.textElements.length || 0) + 1 && afterSlide.textElements.at(-1)?.role === "textbox" && afterSlide.textElements.at(-1)?.value === String(event.payload?.value || "").trim();
     case "line:insert": return afterSlide?.shapes.length === (beforeSlide?.shapes.length || 0) + 1 && afterSlide.shapes.at(-1)?.kind === event.payload?.kind;
     case "transition:change": return previous.transition !== next.transition && next.transition === event.payload?.transition;
     case "animation:add": return next.animations.length === previous.animations.length + 1;
-    case "comment:add": return next.comments.length === previous.comments.length + 1;
+    case "comment:add": return next.comments.length === previous.comments.length + 1 && next.comments.at(-1)?.value === String(event.payload?.value || "").trim();
     case "share:open": return !previous.shareOpen && next.shareOpen;
     case "presentation:start": return !previous.presenting && next.presenting;
     default: return false;
@@ -248,7 +273,16 @@ export const practiceMatches = (lesson, event, previous, next) => {
   if (!lesson || event?.type !== lesson.practice.expectedAction) return false;
   const expectedPayload = lesson.practice.expectedPayload || {};
   const payloadMatches = Object.entries(expectedPayload).every(([key, value]) => event.payload?.[key] === value);
-  return payloadMatches && presentationChangedForAction(previous, next, event);
+  if (!payloadMatches || !presentationChangedForAction(previous, next, event)) return false;
+  const slide = selectedSlide(next);
+  const text = selectedText(next);
+  if (lesson.id === 7) return slide?.title.trim().length >= 3;
+  if (lesson.id === 8) return slide?.textElements.some((item) => item.role === "body" && item.value.trim().length >= 3);
+  if (lesson.id === 9) return next.textSelection?.end > next.textSelection?.start;
+  if (lesson.id === 12) return Boolean(text?.bold && text?.italic && text?.underline);
+  if (lesson.id === 24) return slide?.textElements.some((item) => item.role === "textbox" && item.value.trim().length >= 3);
+  if (lesson.id === 28) return next.comments.at(-1)?.value.trim().length >= 3;
+  return true;
 };
 
 const sanitizeText = (item, index) => ({ ...makeText(`text-${index + 1}`), ...item, id: typeof item?.id === "string" ? item.id : `text-${index + 1}` });
@@ -270,6 +304,9 @@ const sanitizePresentation = (value, fallback) => {
     slides,
     selectedSlideId,
     selectedTextId: slide?.textElements.some((item) => item.id === value.selectedTextId) ? value.selectedTextId : null,
+    textSelection: value.textSelection && slide?.textElements.some((item) => item.id === value.textSelection.id)
+      ? { id: value.textSelection.id, start: Math.max(0, Number(value.textSelection.start) || 0), end: Math.max(0, Number(value.textSelection.end) || 0) }
+      : null,
     selectedImageId: slide?.images.some((item) => item.id === value.selectedImageId) ? value.selectedImageId : null,
     focusedRegion: ["canvas", "thumbnails"].includes(value.focusedRegion) ? value.focusedRegion : null,
     identifiedApp: Boolean(value.identifiedApp),
