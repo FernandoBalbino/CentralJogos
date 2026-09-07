@@ -143,7 +143,7 @@ test("rota, ciclo de vida, cache e cartão do Jogo 09 estão integrados", async 
   assert.match(app, /windowsDiscoveryGame\.mount/);
   assert.match(app, /windowsDiscoveryGame\.enter/);
   assert.match(app, /windowsDiscoveryGame\.leave/);
-  assert.match(worker, /central-jogos-offline-v18/);
+  assert.match(worker, /central-jogos-offline-v20/);
   assert.match(worker, /WINDOWS_DISCOVERY_MEDIA/);
   assert.match(worker, /type: "progress"/);
   assert.match(css, /grid-template-columns: minmax\(0, 1\.85fr\)/);

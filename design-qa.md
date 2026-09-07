@@ -114,6 +114,19 @@ Data: 2026-09-07
 - O atalho de texto duplicado aplicado anteriormente aos controles foi removido; Reproduzir, Pausar e Repetir agora usam a mesma marcação de ícone + rótulo da trilha Google Apresentações.
 - Sintaxe dos módulos e do Service Worker aprovada; `node --test tests/*.mjs`: 80 testes aprovados, 0 falhas. Cache offline atualizado para `central-jogos-offline-v18` com o cursor incluído no precache.
 
+### Auditoria das interações das 30 missões — 2026-09-07
+
+- Missões 1–7, reconhecimento e seleção: cada clique agora produz realce persistente, mensagem textual da ação e resumo da célula, linha ou coluna ativa.
+- Missões 8–11 e 28–30, digitação, edição e fórmulas: um clique abre o editor dentro da célula com caret azul visível; digitar e pressionar Enter confirma a ação, devolve o foco à célula e mostra o resultado calculado quando houver fórmula.
+- Missão 12, navegação: a célula mantém o foco depois de cada renderização e a lista de passos confirma separadamente seta, Tab e Enter.
+- Missões 13–16, seleções: linha, coluna, intervalo e células separadas recebem preenchimento e contorno azul mais fortes. Na missão 16, A1 e C3 permanecem marcadas, os cabeçalhos correspondentes são realçados e o rodapé confirma `2 células · A1 + C3`.
+- Missões 17–18, área de transferência: a origem copiada ou recortada recebe contorno verde tracejado; a lista de passos diferencia origem e destino.
+- Missões 19–27, formatação e estrutura: botões aplicados ficam ativos, a grade reflete imediatamente estilo, cor, preenchimento, alinhamento, bordas, inserções e formatos numéricos; ações compostas têm checklist próprio.
+- As 27 categorias de ação aceitas pelo simulador possuem feedback visual e textual. As 30 missões continuam com instrução específica e validação determinística.
+- No navegador integrado, a missão 8 foi concluída clicando A1 uma única vez, digitando `Aluno` e pressionando Enter; não houve clique sustentado. A missão 16 foi concluída com Ctrl+clique em C3, exibindo A1 e C3 simultaneamente, checklist 2/2, foco acessível em C3 e zero overflow horizontal.
+- A grade deixou de expor células como botões pressionáveis/checkboxes para leitores de tela. Cada célula agora informa endereço, seleção e estado ativo pelo nome acessível; `aria-pressed` permanece apenas nos controles de formatação apropriados.
+- A troca de prévias do Modo Professor limpa legenda, menus, editor e cursor da missão anterior. O cache foi elevado para `central-jogos-offline-v20` e os arquivos da trilha receberam novas versões de URL.
+
 ## Resultado
 
 final result: passed

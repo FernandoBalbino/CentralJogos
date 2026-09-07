@@ -178,7 +178,7 @@ test("progresso permanece sequencial, sanitizado e compatível", () => {
   assert.deepEqual(courseStats(restored), { completedLessons: 0, correctAnswers: 0, questionAttempts: 0, accuracy: 0, completedPractices: 0, teacherCompleted: 0, finalChallengeCompleted: false });
 });
 
-test("rota, recursos, cache v18, fullscreen, senha, cursor e interface de respostas estão integrados", async () => {
+test("rota, recursos, cache v20, foco de célula, fullscreen, senha e cursor estão integrados", async () => {
   const [index, app, game, css, worker] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -203,6 +203,24 @@ test("rota, recursos, cache v18, fullscreen, senha, cursor e interface de respos
   assert.match(game, /assets\/windows-discovery\/cursor\.png/);
   assert.match(game, /moveDemoCursor/);
   assert.match(game, /pulseDemoClick/);
+  assert.match(game, /isDirectCellEntryContext/);
+  assert.match(game, /focusActiveCell/);
+  assert.match(game, /beginCellEditing/);
+  assert.match(game, /\["cell:input", "cell:edit", "formula:input"\]/);
+  assert.match(game, /input\.startsWith\("="\) \? "formula:input"/);
+  assert.match(game, /Seleção múltipla confirmada/);
+  assert.match(game, /gsh-selection-summary/);
+  assert.match(game, /gsh-practice-checklist/);
+  assert.match(game, /C3 adicionada com Ctrl\+clique/);
+  assert.match(game, /aria-label="Célula \$\{address\}\$\{selected/);
+  assert.doesNotMatch(game, /data-cell="\$\{address\}"[^>]+aria-pressed/);
+  assert.match(game, /this\.demoCaptionOverride = ""/);
+  const feedbackStart = game.indexOf("const messages = {");
+  const feedbackEnd = game.indexOf("};", feedbackStart);
+  const feedbackMapSource = game.slice(feedbackStart, feedbackEnd);
+  for (const actionType of GOOGLE_SHEETS_PRACTICE_ACTIONS) {
+    assert.ok(feedbackMapSource.includes(`"${actionType}"`), `feedback visual ausente para ${actionType}`);
+  }
   assert.match(game, /gsc-answer-list/);
   assert.doesNotMatch(game, /gsc-question-options/);
   assert.match(game, /gsc-teacher-panel/);
@@ -214,8 +232,11 @@ test("rota, recursos, cache v18, fullscreen, senha, cursor e interface de respos
   assert.match(css, /overflow-x: auto/);
   assert.match(css, /@media \(max-width: 1100px\)/);
   assert.match(css, /\.gsh-demo-cursor/);
+  assert.match(css, /\.gsh-cell:focus-visible/);
+  assert.match(css, /\.gsh-status-bar/);
+  assert.match(css, /\.gsh-cell\.is-selected:not\(\.is-active\)/);
   assert.doesNotMatch(css, /\.gsh-demo-cursor\s*\{\s*display:\s*none/);
-  assert.match(worker, /central-jogos-offline-v18/);
+  assert.match(worker, /central-jogos-offline-v20/);
   assert.match(worker, /google-sheets-course-data\.mjs/);
   assert.match(worker, /roboto-400\.ttf/);
   assert.match(worker, /chromebook-keyboard\.webp/);

@@ -283,10 +283,50 @@ class GoogleSheetsCourseGame {
   }
 
   practicePanel(lesson, progress) {
+    const directEntryTip = ["cell:input", "cell:edit"].includes(lesson.practice.expectedAction)
+      ? `<p class="gsh-entry-tip">${materialIcon("edit")} <span><strong>Clique uma vez na célula.</strong> O cursor de texto aparecerá; digite e pressione Enter.</span></p>`
+      : lesson.practice.expectedAction === "formula:input"
+        ? `<p class="gsh-entry-tip">${materialIcon("functions")} <span><strong>Clique na célula indicada</strong> e digite a fórmula, ou use a barra de fórmulas. Pressione Enter para confirmar.</span></p>`
+        : "";
     return `<span class="gsc-stage-kicker">Etapa 3</span><h2>Faça você mesmo</h2>
       <div class="gsc-task-card"><span>Sua tarefa</span><strong>${escapeHtml(lesson.practice.instruction)}</strong></div>
       ${this.keyboardAid(lesson)}
+      ${directEntryTip}
+      ${this.practiceChecklist(lesson, this.simulatorState)}
       ${progress.practiceCompleted ? `<div class="gsc-feedback is-success" role="status"><strong>✓ Prática concluída</strong><p>${escapeHtml(lesson.practice.successMessage)}</p></div><button class="gsc-primary gsc-next-stage" type="button" data-action="next-lesson">${lesson.id === googleSheetsLessons.length ? "Ir para o desafio final" : "Próxima aula"} ${icon("arrow_forward")}</button>` : '<p class="gsc-practice-hint" role="status">Use o simulador. A etapa avança somente quando a ação pedida estiver correta.</p>'}`;
+  }
+
+  practiceChecklist(lesson, state) {
+    const input = (address) => state.cells[address]?.input || "";
+    let items = [];
+    if (lesson.id === 12) items = [
+      ["Mover com uma seta", state.navigationKeys.some((key) => key.startsWith("Arrow"))],
+      ["Avançar com Tab", state.navigationKeys.includes("Tab")],
+      ["Descer com Enter", state.navigationKeys.includes("Enter")]
+    ];
+    else if (lesson.id === 16) items = [
+      ["A1 selecionada", state.selectedCells.includes("A1")],
+      ["C3 adicionada com Ctrl+clique", state.selectedCells.includes("A1") && state.selectedCells.includes("C3")]
+    ];
+    else if (lesson.id === 17) items = [
+      ["A1 copiada com Ctrl+C", state.clipboard?.mode === "copy" && state.clipboard?.source === "A1"],
+      ["Conteúdo colado em B1", Boolean(input("A1")) && input("A1") === input("B1")]
+    ];
+    else if (lesson.id === 18) items = [
+      ["A1 recortada com Ctrl+X", state.clipboard?.mode === "cut" || (!input("A1") && Boolean(input("B1")))],
+      ["Conteúdo movido para B1", !input("A1") && Boolean(input("B1"))]
+    ];
+    else if (lesson.id === 19) items = [
+      ["Negrito aplicado", state.appliedStyles.includes("bold")],
+      ["Itálico aplicado", state.appliedStyles.includes("italic")],
+      ["Sublinhado aplicado", state.appliedStyles.includes("underline")]
+    ];
+    else if (lesson.id === 25) items = [
+      ["Uma linha inserida", state.insertedRows >= 1],
+      ["Uma coluna inserida", state.insertedColumns >= 1]
+    ];
+    if (!items.length) return "";
+    return `<div class="gsh-practice-checklist" aria-label="Progresso da tarefa"><strong>Passos da tarefa</strong><ul>${items.map(([label, done]) => `<li class="${done ? "is-done" : ""}">${materialIcon(done ? "check_circle" : "radio_button_unchecked")}<span>${escapeHtml(label)}</span></li>`).join("")}</ul></div>`;
   }
 
   renderChallenge() {
@@ -309,6 +349,56 @@ class GoogleSheetsCourseGame {
     this.root.innerHTML = `<div class="gsc-shell gsh-shell">${this.topbar({ title: "Trilha concluída" })}<main class="gsc-result"><span class="gsc-eyebrow"><i></i> Missão cumprida</span><h1>Você concluiu o Google Planilhas na Prática!</h1><p>Você aprendeu a organizar, formatar e calcular informações em uma planilha.</p><div class="gsc-stat-grid"><article><strong>30</strong><span>aulas concluídas</span></article><article><strong>${stats.accuracy}%</strong><span>de precisão</span></article><article><strong>10/10</strong><span>objetivos finais</span></article></div><div class="gsc-result-actions"><a class="gsc-primary" href="#/">Voltar aos jogos</a><button class="gsc-secondary" type="button" data-action="restart-course">Refazer a trilha</button></div></main>${this.teacherLayer()}</div>`;
   }
 
+  selectionSummary(state) {
+    if (state.selectedRow) return `Linha ${state.selectedRow} inteira`;
+    if (state.selectedColumn) return `Coluna ${state.selectedColumn} inteira`;
+    if (state.selectedRange) return `${state.selectedRange.start}:${state.selectedRange.end} · ${state.selectedCells.length} células`;
+    if (state.selectedCells.length > 1) return `${state.selectedCells.length} células · ${state.selectedCells.join(" + ")}`;
+    return `Célula ${state.activeCell}`;
+  }
+
+  actionFeedback(state) {
+    const action = state.lastAction;
+    if (!action) return `Célula ativa: ${state.activeCell}. Clique em uma célula ou controle para começar.`;
+    const payload = action.payload || {};
+    const value = (address) => displayCellValue(state.cells[address]);
+    const messages = {
+      "app:identify": "Aplicativo Google Planilhas identificado.",
+      "row:identify": `Linha ${payload.row} identificada.`,
+      "column:identify": `Coluna ${payload.column} identificada.`,
+      "cell:identify": `Célula ${payload.cell} identificada pelo endereço.`,
+      "name-box:identify": `Caixa de nome identificada: ela mostra ${state.activeCell}.`,
+      "formula-bar:identify": "Barra de fórmulas identificada.",
+      "cell:select": `${payload.cell} está ativa e pronta para receber uma ação.`,
+      "cell:input": `Conteúdo registrado em ${payload.cell}: ${value(payload.cell)}.`,
+      "cell:edit": `Conteúdo de ${payload.cell} atualizado para ${value(payload.cell)}.`,
+      "formula:input": `Fórmula calculada em ${payload.cell}: resultado ${value(payload.cell)}.`,
+      "cell:clear": `Conteúdo de ${payload.cell || state.activeCell} apagado; a célula continua na grade.`,
+      "navigation:key": `Seleção movida para ${state.activeCell} com ${payload.key}.`,
+      "row:select": `Linha ${payload.row} selecionada por inteiro.`,
+      "column:select": `Coluna ${payload.column} selecionada por inteiro.`,
+      "range:select": `Intervalo ${payload.start}:${payload.end} selecionado com ${state.selectedCells.length} células.`,
+      "multi:select": `Seleção múltipla confirmada: ${state.selectedCells.join(" + ")}.`,
+      "clipboard:copy": `${state.clipboard?.source || state.activeCell} copiada. Agora escolha o destino e pressione Ctrl+V.`,
+      "clipboard:cut": `${state.clipboard?.source || state.activeCell} recortada. Agora escolha o destino e pressione Ctrl+V.`,
+      "clipboard:paste": `Conteúdo ${payload.mode === "cut" ? "movido" : "copiado"} para ${state.activeCell}.`,
+      "format:style": `${payload.style === "bold" ? "Negrito" : payload.style === "italic" ? "Itálico" : "Sublinhado"} aplicado à seleção.`,
+      "format:font-size": `Tamanho da fonte alterado para ${payload.size}.`,
+      "format:text-color": "Cor azul aplicada ao texto selecionado.",
+      "format:fill-color": "Preenchimento amarelo-claro aplicado à seleção.",
+      "format:align": "Conteúdo centralizado na seleção.",
+      "format:border": "Todas as bordas foram aplicadas à seleção.",
+      "sheet:insert": `${payload.kind === "row" ? "Linha" : "Coluna"} inserida com sucesso.`,
+      "format:number": `Formato de ${payload.format === "currency" ? "moeda" : "porcentagem"} aplicado à seleção.`
+    };
+    return messages[action.type] || `Ação aplicada em ${state.activeCell}.`;
+  }
+
+  simulatorStatus(state) {
+    const hasAction = Boolean(state.lastAction);
+    return `<div class="gsh-status-bar ${hasAction ? "has-action" : ""}" role="status" aria-live="polite" aria-atomic="true"><span class="gsh-status-message">${materialIcon(hasAction ? "check_circle" : "info")}<strong>${escapeHtml(this.actionFeedback(state))}</strong></span><span class="gsh-selection-summary">${materialIcon("select_all")} ${escapeHtml(this.selectionSummary(state))}</span></div>`;
+  }
+
   renderSimulator(state, mode) {
     const columns = Math.min(state.columns, 14);
     const rows = Math.min(state.rows, 14);
@@ -316,7 +406,8 @@ class GoogleSheetsCourseGame {
     const columnHeaders = Array.from({ length: columns }, (_, index) => {
       const column = indexToColumn(index);
       const selected = state.selectedColumn === column || state.selectedCells.some((address) => address.startsWith(column));
-      return `<button class="gsh-column-header ${selected ? "is-selected" : ""}" type="button" data-column="${column}" data-demo-target="column-header-${column}">${column}</button>`;
+      const identified = state.identifiedRegion === `column-${column}`;
+      return `<button class="gsh-column-header ${selected ? "is-selected" : ""} ${identified ? "is-identified" : ""}" type="button" data-column="${column}" data-demo-target="column-header-${column}" aria-label="Coluna ${column}${selected ? ", selecionada" : ""}">${column}</button>`;
     }).join("");
     const gridRows = Array.from({ length: rows }, (_, rowIndex) => {
       const row = rowIndex + 1;
@@ -329,14 +420,16 @@ class GoogleSheetsCourseGame {
         const active = state.activeCell === address;
         const style = `--cell-fill:${format.fillColor || "#fff"};--cell-color:${format.textColor || "#202124"};--cell-size:${format.fontSize || 10}px;--cell-align:${format.align || "left"}`;
         if (this.editingCell === address && mode !== "demo" && mode !== "preview") return `<div class="gsh-cell is-active" data-address="${address}" style="${style}"><input class="gsh-cell-editor" data-cell-editor="${address}" value="${escapeHtml(cell?.input || "")}" aria-label="Editar célula ${address}"></div>`;
-        return `<button class="gsh-cell ${selected ? "is-selected" : ""} ${active ? "is-active" : ""} ${format.border === "all" ? "has-border" : ""}" type="button" data-cell="${address}" data-demo-target="cell-${address}" style="${style};font-weight:${format.bold ? 700 : 400};font-style:${format.italic ? "italic" : "normal"};text-decoration:${format.underline ? "underline" : "none"}" title="${address}">${escapeHtml(displayCellValue(cell))}</button>`;
+        const clipboardClass = state.clipboard?.source === address ? state.clipboard.mode === "cut" ? "is-cut" : "is-copied" : "";
+        return `<button class="gsh-cell ${selected ? "is-selected" : ""} ${active ? "is-active" : ""} ${format.border === "all" ? "has-border" : ""} ${clipboardClass}" type="button" data-cell="${address}" data-demo-target="cell-${address}" style="${style};font-weight:${format.bold ? 700 : 400};font-style:${format.italic ? "italic" : "normal"};text-decoration:${format.underline ? "underline" : "none"}" title="${address}" aria-label="Célula ${address}${selected ? ", selecionada" : ""}${active ? ", ativa" : ""}">${escapeHtml(displayCellValue(cell))}</button>`;
       }).join("");
-      return `<button class="gsh-row-header ${rowSelected ? "is-selected" : ""}" type="button" data-row="${row}" data-demo-target="row-header-${row}">${row}</button>${cells}`;
+      const identified = state.identifiedRegion === `row-${row}`;
+      return `<button class="gsh-row-header ${rowSelected ? "is-selected" : ""} ${identified ? "is-identified" : ""}" type="button" data-row="${row}" data-demo-target="row-header-${row}" aria-label="Linha ${row}${rowSelected ? ", selecionada" : ""}">${row}</button>${cells}`;
     }).join("");
     return `<section class="gsh-simulator" data-gsh-simulator data-mode="${mode}" tabindex="0" aria-label="Simulador do Google Planilhas">
       <div class="gsh-app-strip">${materialIcon("apps")}</div>
       <div class="gsh-document-header">
-        <button class="gsh-logo-button" type="button" data-sim-action="identify-app" data-demo-target="sheets-mark" aria-label="Ícone do Google Planilhas"><img src="${SHEETS_ASSETS}/google-sheets.ico" alt=""></button>
+        <button class="gsh-logo-button ${state.identifiedRegion === "app" ? "is-identified" : ""}" type="button" data-sim-action="identify-app" data-demo-target="sheets-mark" aria-label="Ícone do Google Planilhas"><img src="${SHEETS_ASSETS}/google-sheets.ico" alt=""></button>
         <div class="gsh-file-area"><div class="gsh-file-title"><span>Planilha sem título</span>${materialIcon("star")}</div><nav class="gsh-menu-bar" aria-label="Menus do Google Planilhas">${["Arquivo", "Editar", "Ver", "Inserir", "Formatar", "Dados", "Ferramentas", "Extensões", "Ajuda"].map((label) => `<button type="button" data-menu="${label.toLowerCase()}" ${label === "Inserir" ? 'data-demo-target="insert-menu"' : label === "Formatar" ? 'data-demo-target="format-menu"' : ""}>${label}</button>`).join("")}</nav></div>
         <button class="gsh-header-more" type="button" aria-label="Mais opções">${materialIcon("menu")}</button>
       </div>
@@ -344,15 +437,15 @@ class GoogleSheetsCourseGame {
         <button class="gsh-search-menus" type="button">${materialIcon("search")}<span>Menus</span></button>
         ${this.toolButton("undo", "Desfazer")}${this.toolButton("redo", "Refazer")}${this.toolButton("print", "Imprimir")}${this.toolButton("format_paint", "Copiar formatação")}
         <button type="button" class="gsh-zoom">100% ${materialIcon("arrow_drop_down")}</button><span class="gsh-divider"></span>
-        <button type="button" data-sheet-event="format:number" data-format="currency" data-demo-target="currency" aria-label="Moeda">R$</button>
-        <button type="button" data-sheet-event="format:number" data-format="percent" data-demo-target="percent" aria-label="Porcentagem">%</button>
+        <button type="button" class="${activeCell?.format?.numberFormat === "currency" ? "is-active" : ""}" data-sheet-event="format:number" data-format="currency" data-demo-target="currency" aria-label="Moeda" aria-pressed="${activeCell?.format?.numberFormat === "currency"}">R$</button>
+        <button type="button" class="${activeCell?.format?.numberFormat === "percent" ? "is-active" : ""}" data-sheet-event="format:number" data-format="percent" data-demo-target="percent" aria-label="Porcentagem" aria-pressed="${activeCell?.format?.numberFormat === "percent"}">%</button>
         ${this.toolButton("decimal_decrease", "Diminuir casas decimais")}${this.toolButton("decimal_increase", "Aumentar casas decimais")}
         <button type="button" class="gsh-number-menu">123</button><span class="gsh-divider"></span>
         <button type="button" class="gsh-font-menu">Padrão ${materialIcon("arrow_drop_down")}</button>
         <button type="button" class="gsh-text-button" aria-label="Diminuir tamanho">−</button><button type="button" class="gsh-font-size" data-sheet-event="format:font-size" data-size="14" data-demo-target="font-size">${activeCell?.format?.fontSize || 10}</button><button type="button" class="gsh-text-button" aria-label="Aumentar tamanho">+</button>
-        <button type="button" class="gsh-letter-button" data-sheet-event="format:style" data-style="bold" data-demo-target="bold" aria-label="Negrito"><b>B</b></button>
-        <button type="button" class="gsh-letter-button" data-sheet-event="format:style" data-style="italic" data-demo-target="italic" aria-label="Itálico"><i>I</i></button>
-        <button type="button" class="gsh-letter-button" data-sheet-event="format:style" data-style="underline" data-demo-target="underline" aria-label="Sublinhado"><u>S</u></button>
+        <button type="button" class="gsh-letter-button ${activeCell?.format?.bold ? "is-active" : ""}" data-sheet-event="format:style" data-style="bold" data-demo-target="bold" aria-label="Negrito" aria-pressed="${Boolean(activeCell?.format?.bold)}"><b>B</b></button>
+        <button type="button" class="gsh-letter-button ${activeCell?.format?.italic ? "is-active" : ""}" data-sheet-event="format:style" data-style="italic" data-demo-target="italic" aria-label="Itálico" aria-pressed="${Boolean(activeCell?.format?.italic)}"><i>I</i></button>
+        <button type="button" class="gsh-letter-button ${activeCell?.format?.underline ? "is-active" : ""}" data-sheet-event="format:style" data-style="underline" data-demo-target="underline" aria-label="Sublinhado" aria-pressed="${Boolean(activeCell?.format?.underline)}"><u>S</u></button>
         <button type="button" class="gsh-color-button" data-menu="text-color" data-demo-target="text-color" aria-label="Cor do texto">A<span></span></button>
         <button type="button" data-menu="fill-color" data-demo-target="fill-color" aria-label="Cor de preenchimento">${materialIcon("format_color_fill")}</button>
         <button type="button" data-menu="borders" data-demo-target="borders" aria-label="Bordas">${materialIcon("grid_on")}</button>
@@ -361,8 +454,9 @@ class GoogleSheetsCourseGame {
         ${this.toolButton("vertical_align_bottom", "Alinhamento vertical")}${this.toolButton("wrap_text", "Quebra de texto")}${this.toolButton("text_rotation_none", "Rotação do texto")}
         <span class="gsh-divider"></span>${this.toolButton("link", "Inserir link")}${this.toolButton("add_comment", "Adicionar comentário")}${this.toolButton("insert_chart", "Inserir gráfico")}${this.toolButton("filter_alt", "Criar filtro")}${this.toolButton("table_view", "Tabelas")}${this.toolButton("functions", "Funções")}
       </div></div>
-      <div class="gsh-formula-row"><button type="button" class="gsh-name-box" data-sim-action="identify-name-box" data-demo-target="name-box">${escapeHtml(state.activeCell)}${materialIcon("arrow_drop_down")}</button><span class="gsh-fx" aria-hidden="true">fx</span><input type="text" data-formula-input data-demo-target="formula-bar" aria-label="Barra de fórmulas" value="${escapeHtml(activeCell?.input || "")}"></div>
+      <div class="gsh-formula-row"><button type="button" class="gsh-name-box ${state.identifiedRegion === "name-box" ? "is-identified" : ""}" data-sim-action="identify-name-box" data-demo-target="name-box">${escapeHtml(state.activeCell)}${materialIcon("arrow_drop_down")}</button><span class="gsh-fx" aria-hidden="true">fx</span><input class="${state.identifiedRegion === "formula-bar" ? "is-identified" : ""}" type="text" data-formula-input data-demo-target="formula-bar" aria-label="Barra de fórmulas" value="${escapeHtml(activeCell?.input || "")}"></div>
       <div class="gsh-grid-scroll" data-grid-scroll><div class="gsh-grid" style="--sheet-columns:${columns}"><div class="gsh-corner"></div>${columnHeaders}${gridRows}</div></div>
+      ${mode === "practice" || mode === "challenge" ? this.simulatorStatus(state) : ""}
       ${this.renderMenus()}
       ${mode === "demo" ? `<img class="gsc-demo-cursor gsh-demo-cursor" data-demo-cursor src="./assets/windows-discovery/cursor.png" alt="" style="transform:translate(${this.demoCursorPosition.x}px, ${this.demoCursorPosition.y}px);opacity:${this.demoCursorPosition.visible ? 1 : 0}"><span class="gsc-click-ring" data-click-ring aria-hidden="true"></span>` : ""}
     </section>`;
@@ -455,6 +549,37 @@ class GoogleSheetsCourseGame {
     const toolbar = host.querySelector(".gsh-toolbar-scroll");
     if (grid) { grid.scrollLeft = scroll.gridLeft; grid.scrollTop = scroll.gridTop; }
     if (toolbar) toolbar.scrollLeft = scroll.toolbarLeft;
+  }
+
+  isDirectCellEntryContext() {
+    if (this.state.view === "challenge" || this.teacherChallengePreview) return true;
+    if (this.currentStage() !== "practice") return false;
+    return ["cell:input", "cell:edit", "formula:input"].includes(this.currentLesson().practice.expectedAction);
+  }
+
+  focusActiveCell() {
+    const address = this.simulatorState?.activeCell;
+    if (!address) return;
+    const cell = this.root?.querySelector(`[data-cell="${CSS.escape(address)}"]`);
+    if (!cell) return;
+    try { cell.focus({ preventScroll: true }); } catch { cell.focus(); }
+  }
+
+  beginCellEditing(address, { initialText = null, selectContent = false } = {}) {
+    const challenge = this.state.view === "challenge" || this.teacherChallengePreview;
+    if (!challenge && this.currentStage() !== "practice") return;
+    this.editingCell = address;
+    this.simulatorState.activeCell = address;
+    this.refreshSimulator();
+    const input = this.root?.querySelector(`[data-cell-editor="${CSS.escape(address)}"]`);
+    if (!input) return;
+    if (initialText != null) input.value = initialText;
+    try { input.focus({ preventScroll: true }); } catch { input.focus(); }
+    if (selectContent) input.select();
+    else {
+      const end = input.value.length;
+      input.setSelectionRange(end, end);
+    }
   }
 
   async executeDemoStep(step, instant = false) {
@@ -676,10 +801,16 @@ class GoogleSheetsCourseGame {
   }
 
   openTeacherPreview(lessonId) {
+    this.pauseDemo();
     this.teacherOpen = false;
     this.teacherPreview = { lessonId, stage: "watch", progress: createLessonProgress(lessonId) };
     this.teacherChallengePreview = false;
     this.simulatorState = this.teacherPreview.progress.practiceState;
+    this.demoCaptionOverride = "";
+    this.openMenu = null;
+    this.openSubmenu = null;
+    this.editingCell = null;
+    this.demoCursorPosition = { x: 38, y: 155, visible: false };
     this.renderLesson();
   }
   openTeacherChallenge() {
@@ -716,9 +847,12 @@ class GoogleSheetsCourseGame {
     }
     if (event.target.matches("[data-cell-editor]")) {
       const address = event.target.dataset.cellEditor;
+      const input = event.target.value;
       const previous = this.simulatorState.cells[address]?.input || "";
       this.editingCell = null;
-      this.applySimulatorEvent({ type: previous ? "cell:edit" : "cell:input", payload: { cell: address, input: event.target.value } });
+      const type = input.startsWith("=") ? "formula:input" : previous ? "cell:edit" : "cell:input";
+      this.applySimulatorEvent({ type, payload: { cell: address, input } });
+      this.focusActiveCell();
     }
   }
 
@@ -780,8 +914,15 @@ class GoogleSheetsCourseGame {
       this.applySimulatorEvent({ type: this.currentLesson().id === 3 ? "column:identify" : "column:select", payload: { column: button.dataset.column } }); return;
     }
     if (button.dataset.cell && !this.rangeAnchor) {
-      if (event.ctrlKey) this.applySimulatorEvent({ type: "multi:select", payload: { cell: button.dataset.cell, ctrlKey: true } });
-      else this.applySimulatorEvent({ type: this.currentLesson().id === 4 ? "cell:identify" : "cell:select", payload: { cell: button.dataset.cell } });
+      const address = button.dataset.cell;
+      if (event.ctrlKey) {
+        this.applySimulatorEvent({ type: "multi:select", payload: { cell: address, ctrlKey: true } });
+        this.focusActiveCell();
+      } else {
+        this.applySimulatorEvent({ type: this.currentLesson().id === 4 ? "cell:identify" : "cell:select", payload: { cell: address } });
+        if (this.isDirectCellEntryContext()) this.beginCellEditing(address, { selectContent: Boolean(this.simulatorState.cells[address]?.input) });
+        else this.focusActiveCell();
+      }
     }
   }
 
@@ -809,10 +950,7 @@ class GoogleSheetsCourseGame {
     const cell = event.target.closest("[data-cell]");
     if (!cell || this.currentStage() !== "practice") return;
     event.preventDefault();
-    this.editingCell = cell.dataset.cell;
-    this.simulatorState.activeCell = cell.dataset.cell;
-    this.refreshSimulator();
-    this.root.querySelector(`[data-cell-editor="${CSS.escape(cell.dataset.cell)}"]`)?.focus();
+    this.beginCellEditing(cell.dataset.cell);
   }
 
   handleKeydown(event) {
@@ -831,20 +969,24 @@ class GoogleSheetsCourseGame {
       event.preventDefault();
       const type = event.key.toLowerCase() === "c" ? "clipboard:copy" : event.key.toLowerCase() === "x" ? "clipboard:cut" : "clipboard:paste";
       this.applySimulatorEvent({ type, payload: type === "clipboard:paste" ? { target: this.simulatorState.activeCell } : {} });
+      this.focusActiveCell();
       return;
     }
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "Enter"].includes(event.key)) {
-      event.preventDefault(); this.applySimulatorEvent({ type: "navigation:key", payload: { key: event.key } }); return;
+      event.preventDefault();
+      this.applySimulatorEvent({ type: "navigation:key", payload: { key: event.key } });
+      this.focusActiveCell();
+      return;
     }
     if (["Backspace", "Delete"].includes(event.key)) {
-      event.preventDefault(); this.applySimulatorEvent({ type: "cell:clear", payload: { cell: this.simulatorState.activeCell } }); return;
+      event.preventDefault();
+      this.applySimulatorEvent({ type: "cell:clear", payload: { cell: this.simulatorState.activeCell } });
+      this.focusActiveCell();
+      return;
     }
     if (event.key.length === 1 && !event.altKey && !event.metaKey && !event.ctrlKey && this.currentStage() === "practice") {
       event.preventDefault();
-      this.editingCell = this.simulatorState.activeCell;
-      this.refreshSimulator();
-      const input = this.root.querySelector(`[data-cell-editor="${CSS.escape(this.editingCell)}"]`);
-      if (input) { input.value = event.key; input.focus(); input.setSelectionRange(1, 1); }
+      this.beginCellEditing(this.simulatorState.activeCell, { initialText: event.key });
     }
   }
 }

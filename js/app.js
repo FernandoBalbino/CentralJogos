@@ -7,7 +7,7 @@ import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
 import { windowsMissionGame } from "./windows-mission-game.mjs?v=1.0.1";
 import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
 import { googleSlidesCourseGame } from "./google-slides-course-game.mjs?v=3.0.0";
-import { googleSheetsCourseGame } from "./google-sheets-course-game.mjs?v=1.0.3";
+import { googleSheetsCourseGame } from "./google-sheets-course-game.mjs?v=1.0.5";
 
 (function () {
   "use strict";
