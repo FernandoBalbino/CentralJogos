@@ -70,6 +70,39 @@ As diferenças intencionais são de produto: a implementação exibe a descriç�
 - Menus e submenus de imagem, formas, linha, texto, tamanho, alinhamento e layout foram verificados; foco, teclado, entrada real, seleção real e comentário também.
 - Os ícones são locais (Material Symbols e favicon oficial), sem CDN; a PWA usa `central-jogos-offline-v15`.
 
+## QA do simulador Google Planilhas
+
+Data: 2026-09-07
+
+### Comparison input
+
+- Referência fornecida: `C:\Users\Pichau\AppData\Local\Temp\codex-clipboard-1d655fb8-c53d-43ec-8265-ac18143eda88.png` (Google Planilhas em português, estado inicial com A1 selecionada).
+- Protótipo verificado no navegador integrado: `http://127.0.0.1:4174/#/google-planilhas`, captura CUA da aba 3, com a prévia e a primeira missão no mesmo estado inicial. A comparação foi feita lado a lado, normalizando o recorte do simulador para a moldura da referência.
+
+### Superfícies verificadas
+
+- Barras do aplicativo, cabeçalho “Planilha sem título”, menus em português, toolbar, caixa de nome, `fx`, barra de fórmulas e grade com cabeçalhos A–N/1–14.
+- Célula A1 selecionada com borda azul e alça, cores cinza do Sheets, logo verde e tipografia Roboto local.
+- Rolagem horizontal independente da toolbar e da grade; menus e submenu reposicionados dentro do espaço disponível.
+- Fluxo da aula: aviso destacado “Para começar esta aula, clique em Reproduzir.”, controles visíveis, painel `Assista → Responda → Faça`, foco e teclado.
+- Layout responsivo: `min-width: 0`, empilhamento até 1100 px, rolagem vertical em viewport baixo e sem overflow horizontal do documento.
+- Tela cheia com fallback, diálogo de senha do professor, mensagens de erro e desbloqueio somente em memória.
+
+### Evidências funcionais
+
+- `node --test tests/*.mjs`: 80 testes aprovados, 0 falhas.
+- `node --check`: módulos da trilha, `js/app.js` e `service-worker.js` sem erros de sintaxe.
+- Console do navegador integrado: sem erros.
+- Viewport observado: 1920×1080; `document.documentElement.scrollWidth === clientWidth` e `body.scrollWidth === body.clientWidth` (1920 px) durante a primeira missão.
+- Recursos locais e `service-worker.js` responderam HTTP 200 no servidor local; cache `central-jogos-offline-v17` confirmado.
+- Senha incorreta mantém o painel fechado e mostra “Senha incorreta.”; `vinho123` abre as ferramentas; recarregar fecha o desbloqueio.
+
+### Ajustes finais
+
+- Rótulos de Reproduzir/Repetir receberam uma camada de texto explícita para permanecerem legíveis em telas estreitas.
+- Badge da prévia foi elevado acima do simulador para não ser recortado.
+- O portal foi atualizado para 11 jogos e o card “Google Planilhas na Prática” foi integrado à rota `#/google-planilhas`.
+
 ## Resultado
 
 final result: passed

@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v16";
+const CACHE_NAME = "central-jogos-offline-v17";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -27,6 +27,7 @@ const PRECACHE_PATHS = [
   "./windows-mission-game.css",
   "./windows-discovery-game.css",
   "./google-slides-course.css",
+  "./google-sheets-course.css",
   "./js/app.js",
   "./js/credits-data.js",
   "./js/data.js",
@@ -53,12 +54,22 @@ const PRECACHE_PATHS = [
   "./js/google-slides-course-game.mjs",
   "./js/google-slides-course-core.mjs",
   "./js/google-slides-course-data.mjs",
+  "./js/google-sheets-course-game.mjs",
+  "./js/google-sheets-course-core.mjs",
+  "./js/google-sheets-course-data.mjs",
   "./vendor/three/three.module.min.js",
   "./vendor/three/three.core.min.js",
   "./assets/windows-mission/tecnico-em-acao-card.png",
   "./assets/windows-discovery/scene-desktop.png",
   "./assets/google-slides/google-slides.ico",
   "./assets/google-slides/material-symbols-outlined.ttf",
+  "./assets/google-sheets/google-sheets.ico",
+  "./assets/google-sheets/material-symbols-outlined.ttf",
+  "./assets/google-sheets/roboto-400.ttf",
+  "./assets/google-sheets/roboto-500.ttf",
+  "./assets/google-sheets/roboto-700.ttf",
+  "./assets/google-sheets/chromebook-keyboard.webp",
+  "./assets/google-sheets/chromebook-touchpad.webp",
   "./assets/fonts/atkinson-hyperlegible-400-latin.woff2",
   "./assets/fonts/atkinson-hyperlegible-700-latin.woff2",
   "./assets/fonts/fredoka-500-700-latin.woff2",
