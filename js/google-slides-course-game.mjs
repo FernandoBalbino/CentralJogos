@@ -18,9 +18,19 @@ import {
 
 const ICONS = "./assets/side-game/icons";
 const SLIDES_ASSETS = "./assets/google-slides";
+const TEACHER_PASSWORD_HASH = "6bbe9df04e5d43cb2db41c795b9a4f4d84349cf9e889597b310cf8fe13f6c59f";
+const MENU_TARGET_HIGHLIGHT_MS = 220;
+const MENU_OPEN_HOLD_MS = 1000;
+const OPTION_HIGHLIGHT_MS = 500;
+const OPTION_SETTLE_MS = 350;
+const DEMO_SCROLL_SETTLE_MS = 260;
 const icon = (name, alt = "") => `<img src="${ICONS}/${name}.svg" alt="${alt}">`;
 const materialIcon = (name) => `<span class="gsc-ms" aria-hidden="true">${name}</span>`;
 const wait = (duration) => new Promise((resolve) => window.setTimeout(resolve, duration));
+const hashText = async (value) => {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+};
 
 const escapeHtml = (value) => String(value ?? "")
   .replaceAll("&", "&amp;")
@@ -48,13 +58,18 @@ class GoogleSlidesCourseGame {
     this.practiceMessage = "";
     this.practiceMessageKind = "guidance";
     this.teacherOpen = false;
+    this.teacherUnlocked = false;
+    this.teacherAuthOpen = false;
+    this.teacherAuthError = "";
     this.teacherConfirmReset = false;
     this.teacherPreview = null;
     this.teacherChallengePreview = null;
     this.teacherModuleFilter = "all";
     this.reducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
     this.handleClick = this.handleClick.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
     this.handleKeydown = this.handleKeydown.bind(this);
+    this.handleFullscreenChange = this.handleFullscreenChange.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleInput = this.handleInput.bind(this);
     this.handleFocusout = this.handleFocusout.bind(this);
@@ -86,6 +101,7 @@ class GoogleSlidesCourseGame {
   mount(root) {
     this.root = root;
     this.root?.addEventListener("click", this.handleClick);
+    this.root?.addEventListener("submit", this.handleSubmit);
     this.root?.addEventListener("keydown", this.handleKeydown);
     this.root?.addEventListener("change", this.handleChange);
     this.root?.addEventListener("input", this.handleInput);
@@ -94,6 +110,7 @@ class GoogleSlidesCourseGame {
     document.addEventListener("selectionchange", this.handleSelectionChange);
     document.addEventListener("pointermove", this.handlePointerMove);
     document.addEventListener("pointerup", this.handlePointerUp);
+    document.addEventListener("fullscreenchange", this.handleFullscreenChange);
     document.addEventListener("central-offline-status", (event) => {
       const status = this.root?.querySelector("[data-gs-offline]");
       const label = status?.querySelector("span");
@@ -119,8 +136,14 @@ class GoogleSlidesCourseGame {
     this.dialog = null;
     this.dragState = null;
     this.teacherOpen = false;
+    this.teacherAuthOpen = false;
+    this.teacherAuthError = "";
     this.teacherPreview = null;
     this.teacherChallengePreview = null;
+    const courseScreen = this.root?.closest("#google-slides-course-screen") || this.root;
+    if (document.fullscreenElement && (document.fullscreenElement === courseScreen || courseScreen?.contains(document.fullscreenElement))) {
+      document.exitFullscreen?.().catch(() => {});
+    }
     this.saveState();
   }
 
@@ -132,6 +155,24 @@ class GoogleSlidesCourseGame {
     if (state === "ready") return "Pronto para usar offline";
     if (state === "error") return "Modo offline incompleto";
     return "Preparando modo offline";
+  }
+
+  requestCourseFullscreen() {
+    const courseScreen = this.root?.closest("#google-slides-course-screen") || this.root;
+    if (!courseScreen || document.fullscreenElement) return Promise.resolve(Boolean(document.fullscreenElement));
+    if (!document.fullscreenEnabled || !courseScreen.requestFullscreen) return Promise.resolve(false);
+    return courseScreen.requestFullscreen().then(() => true).catch(() => false);
+  }
+
+  handleFullscreenChange() {
+    const button = this.root?.querySelector('[data-action="enter-fullscreen"]');
+    if (button) button.hidden = Boolean(document.fullscreenElement);
+  }
+
+  focusDemoStart() {
+    window.setTimeout(() => {
+      this.root?.querySelector('[data-action="toggle-demo"], [data-action="toggle-video-demo"], [data-action="next-demo-step"]')?.focus();
+    }, 0);
   }
 
   currentLesson() {
@@ -184,7 +225,8 @@ class GoogleSlidesCourseGame {
       <div class="gsc-brand"><span class="gsc-brand-icon" aria-hidden="true">▰</span><div><small>Curso interativo</small><strong>${escapeHtml(title)}</strong></div></div>
       ${progress}
       <div class="gsc-top-actions">
-        ${this.teacherPreview || this.teacherChallengePreview ? '<button class="gsc-teacher-button is-preview" type="button" data-action="exit-teacher-preview">Sair da prévia</button>' : '<button class="gsc-teacher-button" type="button" data-action="open-teacher">Modo Professor</button>'}
+        ${showProgress || challenge ? `<button class="gsc-fullscreen-button" type="button" data-action="enter-fullscreen" ${document.fullscreenElement ? "hidden" : ""}>${icon("fullscreen")}<span>Entrar em tela cheia</span></button>` : ""}
+        ${this.teacherPreview || this.teacherChallengePreview ? '<button class="gsc-teacher-button is-preview" type="button" data-action="exit-teacher-preview">Sair da prévia</button>' : `<button class="gsc-teacher-button" type="button" data-action="open-teacher" aria-haspopup="dialog">${icon("vpn_key")}<span>Modo Professor</span></button>`}
         <div class="gsc-offline" data-gs-offline data-state="${this.offlineState()}">${icon("wifi")}<span>${escapeHtml(this.offlineLabel())}</span><button type="button" data-action="retry-offline">Tentar novamente</button></div>
       </div>
     </header>`;
@@ -197,11 +239,7 @@ class GoogleSlidesCourseGame {
     this.openMenu = null;
     this.root.innerHTML = `<div class="gsc-shell gsc-intro-shell">
       ${this.topbar()}
-      <main class="gsc-intro">
-        <section class="gsc-intro-simulator" aria-label="Prévia do simulador do Google Apresentações">
-          ${this.renderSimulator(this.simulatorState, "preview")}
-          <div class="gsc-intro-badge"><strong>30 aulas + desafio final</strong><span>Assista · Responda · Faça</span></div>
-        </section>
+      <section class="gsc-intro">
         <section class="gsc-intro-copy">
           <span class="gsc-eyebrow"><i></i> Aprenda fazendo</span>
           <h1>Domine suas apresentações.</h1>
@@ -213,7 +251,11 @@ class GoogleSlidesCourseGame {
           ${started ? `<p class="gsc-resume-note">${stats.completedLessons} de ${googleSlidesLessons.length} aulas concluídas neste Chromebook.</p>` : ""}
           <p class="gsc-save-note">${icon("check_circle")} Seu progresso fica salvo somente neste dispositivo.</p>
         </section>
-      </main>
+        <section class="gsc-intro-simulator" aria-label="Prévia do simulador do Google Apresentações">
+          ${this.renderSimulator(this.simulatorState, "preview")}
+          <div class="gsc-intro-badge"><strong>30 aulas + desafio final</strong><span>Assista · Responda · Faça</span></div>
+        </section>
+      </section>
       ${this.teacherPanel()}
     </div>`;
   }
@@ -227,7 +269,7 @@ class GoogleSlidesCourseGame {
       : progress.practiceState;
     this.root.innerHTML = `<div class="gsc-shell gsc-lesson-shell ${this.teacherPreview ? "is-teacher-preview" : ""}">
       ${this.topbar({ showProgress: true })}
-      <main class="gsc-lesson-layout">
+      <section class="gsc-lesson-layout">
         <section class="gsc-simulator-column" aria-labelledby="gsc-simulator-title">
           <div class="gsc-simulator-heading">
             <div><span class="gsc-eyebrow"><i></i> ${stage === "practice" ? "Agora é com você" : "Observe a ação"}</span><h1 id="gsc-simulator-title">${escapeHtml(lesson.title)}</h1></div>
@@ -242,7 +284,7 @@ class GoogleSlidesCourseGame {
             ${stage === "watch" ? this.watchPanel(lesson, progress) : stage === "question" ? this.questionPanel(lesson, progress) : this.practicePanel(lesson, progress)}
           </div>
         </aside>
-      </main>
+      </section>
       ${this.teacherPanel()}
     </div>`;
     this.focusActiveEditor();
@@ -274,24 +316,27 @@ class GoogleSlidesCourseGame {
   }
 
   demoControls(lesson, progress) {
+    const instruction = !progress.watched
+      ? `<p class="gsc-play-instruction" role="status">${icon("play_arrow")} <span>Para começar esta aula, clique em <strong>${this.reducedMotion ? "Próximo passo" : "Reproduzir"}</strong>.</span></p>`
+      : "";
     if (lesson.demo.type === "webm") {
-      return `<div class="gsc-demo-controls" aria-label="Controles da demonstração em vídeo">
+      return `<div class="gsc-demo-launch">${instruction}<div class="gsc-demo-controls" role="group" aria-label="Controles da demonstração em vídeo">
         <button class="is-primary" type="button" data-action="toggle-video-demo">${icon("play_arrow")} <span data-demo-play-label>${progress.watched ? "Reproduzir novamente" : "Reproduzir"}</span></button>
         <button type="button" data-action="repeat-video-demo">${icon("restart_alt")} Repetir demonstração</button>
-      </div>`;
+      </div></div>`;
     }
     if (this.reducedMotion) {
-      return `<div class="gsc-demo-controls" aria-label="Controles da demonstração passo a passo">
+      return `<div class="gsc-demo-launch">${instruction}<div class="gsc-demo-controls" role="group" aria-label="Controles da demonstração passo a passo">
         <button type="button" data-action="previous-demo-step" ${progress.demoStep ? "" : "disabled"}>${icon("arrow_back")} Anterior</button>
         <button type="button" data-action="repeat-demo">${icon("restart_alt")} Recomeçar</button>
         <button class="is-primary" type="button" data-action="next-demo-step" ${progress.demoStep >= lesson.demo.steps.length ? "disabled" : ""}>Próximo passo ${icon("arrow_forward")}</button>
-      </div>`;
+      </div></div>`;
     }
     const playLabel = this.demoPlaying ? "Pausar" : progress.demoStep >= demoStepCount(lesson.demo) ? "Reproduzir novamente" : progress.demoStep ? "Continuar" : "Reproduzir";
-    return `<div class="gsc-demo-controls" aria-label="Controles da demonstração">
+    return `<div class="gsc-demo-launch">${instruction}<div class="gsc-demo-controls" role="group" aria-label="Controles da demonstração">
       <button class="is-primary" type="button" data-action="toggle-demo">${icon(this.demoPlaying ? "pause" : "play_arrow")} <span data-demo-play-label>${playLabel}</span></button>
       <button type="button" data-action="repeat-demo">${icon("restart_alt")} Repetir demonstração</button>
-    </div>`;
+    </div></div>`;
   }
 
   questionPanel(lesson, progress) {
@@ -328,7 +373,7 @@ class GoogleSlidesCourseGame {
     const completedGoals = Object.values(progress.goals).filter(Boolean).length;
     this.root.innerHTML = `<div class="gsc-shell gsc-lesson-shell ${this.teacherChallengePreview ? "is-teacher-preview" : ""}">
       ${this.topbar({ challenge: true })}
-      <main class="gsc-lesson-layout gsc-challenge-layout">
+      <section class="gsc-lesson-layout gsc-challenge-layout">
         <section class="gsc-simulator-column" aria-labelledby="gsc-simulator-title">
           <div class="gsc-simulator-heading"><div><span class="gsc-eyebrow"><i></i> Missão final</span><h1 id="gsc-simulator-title">${escapeHtml(googleSlidesFinalChallenge.title)}</h1></div>${this.teacherChallengePreview ? '<span class="gsc-preview-chip">Prévia sem salvar</span>' : ""}</div>
           <div data-simulator-host>${this.renderSimulator(this.simulatorState, "challenge")}</div>
@@ -341,7 +386,7 @@ class GoogleSlidesCourseGame {
           <ul class="gsc-challenge-checklist" aria-label="Objetivos do desafio">${googleSlidesFinalChallenge.goals.map((goal) => `<li class="${progress.goals[goal.id] ? "is-done" : ""}"><span>${progress.goals[goal.id] ? "✓" : "○"}</span>${escapeHtml(goal.label)}</li>`).join("")}</ul>
           ${progress.completed ? `<div class="gsc-feedback is-success" role="status"><strong>✓ Missão concluída!</strong><p>Sua apresentação cumpriu todos os objetivos.</p></div><button class="gsc-primary gsc-next-stage" type="button" data-action="finish-course">Ver conclusão ${icon("arrow_forward")}</button>` : '<p class="gsc-practice-hint" role="status">Use as ferramentas no simulador. O checklist é atualizado após cada ação real.</p>'}
         </aside>
-      </main>
+      </section>
     </div>`;
     this.focusActiveEditor();
   }
@@ -350,7 +395,7 @@ class GoogleSlidesCourseGame {
     const stats = courseStats(this.state);
     this.root.innerHTML = `<div class="gsc-shell gsc-result-shell">
       ${this.topbar({ title: "Curso concluído" })}
-      <main class="gsc-result">
+      <section class="gsc-result">
         <div class="gsc-result-mark" aria-hidden="true">✓</div>
         <span class="gsc-eyebrow"><i></i> 30 aulas + desafio final</span>
         <h1>Curso concluído!</h1>
@@ -363,7 +408,7 @@ class GoogleSlidesCourseGame {
         </div>
         ${stats.teacherCompleted ? `<p class="gsc-teacher-note">${stats.teacherCompleted} ${stats.teacherCompleted === 1 ? "aula foi concluída" : "aulas foram concluídas"} pelo professor e não entrou na precisão.</p>` : ""}
         <div class="gsc-result-actions"><button class="gsc-primary" type="button" data-action="review-course">${icon("restart_alt")} Rever treinamento</button><a class="gsc-secondary" href="#/">Voltar aos jogos</a></div>
-      </main>
+      </section>
       ${this.teacherPanel()}
     </div>`;
   }
@@ -461,7 +506,7 @@ class GoogleSlidesCourseGame {
     const topMenu = (key, label, target = "") => actionButton(label, "menu:" + key, label, {
       target,
       className: "gsc-app-menu-button",
-      extra: "aria-haspopup=\"menu\" aria-expanded=\"" + String(branchOpen(key, ...(key === "insert" ? ["image", "shape", "shape-basic"] : key === "format" ? ["format-text", "format-size"] : key === "slide" ? ["layout", "slide-move"] : []))) + "\""
+      extra: "role=\"menuitem\" aria-haspopup=\"menu\" aria-expanded=\"" + String(branchOpen(key, ...(key === "insert" ? ["image", "shape", "shape-basic"] : key === "format" ? ["format-text", "format-size"] : key === "slide" ? ["layout", "slide-move"] : []))) + "\""
     });
     const menuItem = (label, action = "unsupported", options = {}) => {
       const target = options.target ? attr("data-demo-target", options.target) : "";
@@ -647,14 +692,14 @@ class GoogleSlidesCourseGame {
     if (this.dialog === "background") overlays += "<div class=\"gsc-dialog-backdrop\"><section class=\"gsc-sim-dialog\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"gsc-background-title\"><h3 id=\"gsc-background-title\">Plano de fundo</h3><label>Cor</label><div class=\"gsc-background-colors\"><button type=\"button\" tabindex=\"" + tab + "\" aria-label=\"Branco\" data-sim-action=\"background:choose\" data-color=\"#ffffff\" style=\"--swatch:#ffffff\"></button><button type=\"button\" tabindex=\"" + tab + "\" aria-label=\"Amarelo-claro\" data-sim-action=\"background:choose\" data-color=\"#fff2cc\" data-demo-target=\"background-yellow\" style=\"--swatch:#fff2cc\"></button><button type=\"button\" tabindex=\"" + tab + "\" aria-label=\"Azul-claro\" data-sim-action=\"background:choose\" data-color=\"#d9eaf7\" style=\"--swatch:#d9eaf7\"></button></div><footer><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"dialog:cancel\">Cancelar</button><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"background:apply\" data-demo-target=\"background-done\">Concluído</button></footer></section></div>";
     if (this.dialog === "comment") overlays += "<section class=\"gsc-comment-composer\" role=\"dialog\" aria-label=\"Adicionar comentário\"><textarea tabindex=\"" + tab + "\" aria-label=\"Comentário\" placeholder=\"Adicionar comentário\" data-comment-input data-demo-target=\"comment-field\">" + escapeHtml(this.commentDraft) + "</textarea><div><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"dialog:cancel\">Cancelar</button><button type=\"button\" tabindex=\"" + tab + "\" data-sim-action=\"comment:submit\" data-demo-target=\"comment-submit\">Comentar</button></div></section>";
 
-    return "<div class=\"gsc-simulator gsc-slides-faithful " + (interactive ? "is-interactive" : "is-demo") + " " + (state.presenting ? "is-presenting" : "") + "\" data-simulator aria-label=\"Simulação local do Google Apresentações\">"
+    return "<div class=\"gsc-simulator gsc-slides-faithful " + (interactive ? "is-interactive" : "is-demo") + " " + (state.presenting ? "is-presenting" : "") + "\" data-simulator role=\"region\" aria-label=\"Simulação local do Google Apresentações\">"
       + "<div class=\"gsc-app-titlebar\">"
       + actionButton("Identificar Google Apresentações", "app:identify", "<img src=\"" + SLIDES_ASSETS + "/google-slides.ico\" alt=\"\">", { target: "slides-mark", className: "gsc-slides-mark " + (state.identifiedApp ? "is-identified" : "") })
       + "<div class=\"gsc-file-identity\"><div><strong>Apresentação sem título</strong>" + toolButton("Adicionar aos favoritos", "unsupported", "star", { extra: "data-hint=\"Favoritar não é necessário nesta atividade.\"" }) + toolButton("Mover", "unsupported", "drive_file_move", { extra: "data-hint=\"Mover o arquivo não é necessário nesta atividade.\"" }) + "<span class=\"gsc-saved-icon\" title=\"Salvo no Drive\">" + materialIcon("cloud_done") + "</span></div>"
-      + "<div class=\"gsc-menu-row\" role=\"menubar\" aria-label=\"Menus do Google Apresentações\"><button type=\"button\" tabindex=\"" + tab + "\" class=\"gsc-menu-search\" aria-label=\"Pesquisar nos menus\" data-sim-action=\"unsupported\" data-hint=\"Digite Alt+/ no Chromebook para pesquisar comandos.\">" + materialIcon("search") + "<span>Menus</span></button>"
+      + "<div class=\"gsc-menu-row\" role=\"menubar\" tabindex=\"0\" aria-label=\"Menus do Google Apresentações\"><button type=\"button\" tabindex=\"" + tab + "\" role=\"menuitem\" class=\"gsc-menu-search\" aria-label=\"Pesquisar nos menus\" data-sim-action=\"unsupported\" data-hint=\"Digite Alt+/ no Chromebook para pesquisar comandos.\">" + materialIcon("search") + "<span>Menus</span></button>"
       + topMenu("file", "Arquivo") + topMenu("edit", "Editar") + topMenu("view", "Ver") + topMenu("insert", "Inserir", "insert-menu") + topMenu("format", "Formatar", "format-menu") + topMenu("slide", "Slide", "slide-menu") + topMenu("arrange", "Organizar") + topMenu("tools", "Ferramentas") + topMenu("extensions", "Extensões") + topMenu("help", "Ajuda") + "</div></div>"
       + "<div class=\"gsc-title-actions\">" + toolButton("Histórico de versões", "unsupported", "history", { extra: "data-hint=\"O histórico não é necessário nesta atividade.\"" }) + toolButton("Abrir comentários", "dialog:comment", "comment", { target: "comment" }) + toolButton("Apresentar para uma reunião", "unsupported", "videocam", { extra: "data-hint=\"A chamada de vídeo não é necessária nesta atividade.\"" }) + actionButton("Iniciar apresentação", "presentation:start", "<span>Apresentação de slides</span>" + materialIcon("arrow_drop_down"), { target: "present", className: "gsc-present-button" }) + actionButton("Compartilhar apresentação", "share:open", materialIcon("lock") + "<span>Compartilhar</span>", { target: "share", className: "gsc-share-button" }) + "</div></div>"
-      + "<div class=\"gsc-toolbar\" role=\"toolbar\" aria-label=\"Barra de ferramentas\">" + baseToolbar + textToolbar + "<span class=\"gsc-toolbar-spacer\"></span>" + actionButton("Opções de formatação", "unsupported", "Opções de formatação", { className: "gsc-format-options", extra: "data-hint=\"Selecione um objeto para ver suas opções de formatação.\"" }) + "</div>"
+      + "<div class=\"gsc-toolbar\" role=\"toolbar\" tabindex=\"0\" aria-label=\"Barra de ferramentas\">" + baseToolbar + textToolbar + "<span class=\"gsc-toolbar-spacer\"></span>" + actionButton("Opções de formatação", "unsupported", "Opções de formatação", { className: "gsc-format-options", extra: "data-hint=\"Selecione um objeto para ver suas opções de formatação.\"" }) + "</div>"
       + "<div class=\"gsc-slide-workspace\"><aside class=\"gsc-thumbnails " + (state.focusedRegion === "thumbnails" ? "is-focused" : "") + "\" aria-label=\"Painel de miniaturas\">"
       + actionButton("Identificar painel de miniaturas", "thumbnails:focus", "Miniaturas", { target: "thumbnails-panel", className: "gsc-thumbnails-label" })
       + state.slides.map((slide, index) => actionButton("Selecionar slide " + (index + 1), "slide:select", "<span>" + (index + 1) + "</span><i><b>" + escapeHtml(slide.title.slice(0, 1)) + "</b><small></small></i>", { target: "slide-thumb-" + (index + 1), className: slide.id === state.selectedSlideId ? "is-selected" : "", extra: attr("data-slide-id", slide.id) })).join("")
@@ -723,6 +768,31 @@ class GoogleSlidesCourseGame {
     return announcements.at(-1)?.text || "Pressione Reproduzir e acompanhe o cursor.";
   }
 
+  async ensureDemoTargetVisible(target, instant = false) {
+    if (!target) return;
+    const scroller = target.closest(".gsc-menu-row, .gsc-toolbar, .gsc-floating-menu");
+    if (!scroller) return;
+    const targetBox = target.getBoundingClientRect();
+    const scrollerBox = scroller.getBoundingClientRect();
+    const horizontalDelta = targetBox.left < scrollerBox.left
+      ? targetBox.left - scrollerBox.left - 8
+      : targetBox.right > scrollerBox.right
+        ? targetBox.right - scrollerBox.right + 8
+        : 0;
+    const verticalDelta = targetBox.top < scrollerBox.top
+      ? targetBox.top - scrollerBox.top - 8
+      : targetBox.bottom > scrollerBox.bottom
+        ? targetBox.bottom - scrollerBox.bottom + 8
+        : 0;
+    if (!horizontalDelta && !verticalDelta) return;
+    scroller.scrollTo({
+      left: Math.max(0, Math.min(scroller.scrollWidth - scroller.clientWidth, scroller.scrollLeft + horizontalDelta)),
+      top: Math.max(0, Math.min(scroller.scrollHeight - scroller.clientHeight, scroller.scrollTop + verticalDelta)),
+      behavior: instant || this.reducedMotion ? "auto" : "smooth"
+    });
+    await wait(instant ? 20 : DEMO_SCROLL_SETTLE_MS);
+  }
+
   async executeDemoStep(step, instant = false) {
     const simulator = this.root?.querySelector("[data-simulator]");
     if (!simulator) return;
@@ -738,6 +808,7 @@ class GoogleSlidesCourseGame {
     }
 
     if (step.action === "move" && target && cursor) {
+      await this.ensureDemoTargetVisible(target, instant);
       const simulatorBox = simulator.getBoundingClientRect();
       const targetBox = target.getBoundingClientRect();
       cursor.style.transitionDuration = `${duration}ms`;
@@ -782,25 +853,31 @@ class GoogleSlidesCourseGame {
     }
 
     if (step.action === "open-menu") {
+      await this.ensureDemoTargetVisible(target, instant);
+      if (target) {
+        target.classList.add("is-demo-clicked");
+        await wait(instant ? 45 : MENU_TARGET_HIGHLIGHT_MS);
+      }
       this.openMenu = step.menu;
       this.refreshSimulator();
-      await wait(instant ? 50 : 280);
+      await wait(instant ? 50 : MENU_OPEN_HOLD_MS);
       return;
     }
 
     if (step.action === "select-option") {
+      await this.ensureDemoTargetVisible(target, instant);
       if (target) target.classList.add("is-demo-clicked");
-      await wait(instant ? 40 : 180);
+      await wait(instant ? 40 : OPTION_HIGHLIGHT_MS);
       if (step.target === "animate" && !step.effect) {
         this.openMenu = "motion";
         this.refreshSimulator();
-        await wait(instant ? 40 : 180);
+        await wait(instant ? 40 : MENU_OPEN_HOLD_MS);
         return;
       }
       if (step.effect) this.simulatorState = reducePresentation(this.simulatorState, step.effect);
       this.openMenu = null;
       this.refreshSimulator();
-      await wait(instant ? 40 : 180);
+      await wait(instant ? 40 : OPTION_SETTLE_MS);
       return;
     }
 
@@ -1307,6 +1384,7 @@ class GoogleSlidesCourseGame {
   }
 
   teacherPanel() {
+    if (this.teacherAuthOpen && !this.teacherPreview && !this.teacherChallengePreview) return this.teacherPasswordDialog();
     if (!this.teacherOpen || this.teacherPreview || this.teacherChallengePreview) return "";
     const stats = courseStats(this.state);
     const modules = [...new Set(googleSlidesLessons.map((lesson) => lesson.module))];
@@ -1321,6 +1399,21 @@ class GoogleSlidesCourseGame {
           return `<article><div><span>Aula ${String(lesson.id).padStart(2, "0")}</span><strong>${escapeHtml(lesson.title)}</strong><small>${progress.completedByTeacher ? "Concluída pelo professor" : progress.completed ? "Concluída pelo aluno" : "Em andamento"}</small></div><div><button type="button" data-action="teacher-preview" data-lesson-id="${lesson.id}">Abrir prévia</button><button type="button" data-action="teacher-complete" data-lesson-id="${lesson.id}" ${progress.completed ? "disabled" : ""}>Marcar concluída</button><button type="button" data-action="teacher-reset-lesson" data-lesson-id="${lesson.id}">Reiniciar</button></div></article>`;
         }).join("")}</div>
         <footer>${this.teacherConfirmReset ? '<p role="alert">Todo o progresso local será apagado. Confirmar?</p><button class="is-danger" type="button" data-action="teacher-confirm-reset">Sim, reiniciar curso</button><button type="button" data-action="teacher-cancel-reset">Cancelar</button>' : '<button class="is-danger" type="button" data-action="teacher-reset-course">Reiniciar curso inteiro</button>'}</footer>
+      </section>
+    </div>`;
+  }
+
+  teacherPasswordDialog() {
+    return `<div class="gsc-modal-backdrop">
+      <section class="gsc-teacher-panel gsc-teacher-auth" role="dialog" aria-modal="true" aria-labelledby="gsc-teacher-auth-title" aria-describedby="gsc-teacher-auth-copy">
+        <header><div><span class="gsc-stage-kicker">Acesso reservado</span><h2 id="gsc-teacher-auth-title">Modo Professor</h2></div><button type="button" data-action="close-teacher-auth" aria-label="Fechar acesso do professor">×</button></header>
+        <div class="gsc-teacher-auth-copy" id="gsc-teacher-auth-copy">${icon("vpn_key")}<p>Digite a senha para abrir as prévias e os controles do professor.</p></div>
+        <form class="gsc-teacher-auth-form" data-teacher-password-form novalidate>
+          <label for="gsc-teacher-password">Senha do professor</label>
+          <input id="gsc-teacher-password" name="password" type="password" autocomplete="off" required aria-invalid="${this.teacherAuthError ? "true" : "false"}" ${this.teacherAuthError ? 'aria-describedby="gsc-teacher-auth-error"' : ""}>
+          <p class="gsc-teacher-auth-error" id="gsc-teacher-auth-error" role="alert">${escapeHtml(this.teacherAuthError)}</p>
+          <button class="gsc-primary" type="submit">Entrar no Modo Professor</button>
+        </form>
       </section>
     </div>`;
   }
@@ -1342,6 +1435,31 @@ class GoogleSlidesCourseGame {
     this.practiceMessage = "";
     this.openMenu = null;
     this.render();
+  }
+
+  handleSubmit(event) {
+    const form = event.target.closest?.("[data-teacher-password-form]");
+    if (!form) return;
+    event.preventDefault();
+    const password = new FormData(form).get("password") || "";
+    void this.verifyTeacherPassword(String(password));
+  }
+
+  async verifyTeacherPassword(password) {
+    const digest = await hashText(password);
+    if (digest !== TEACHER_PASSWORD_HASH) {
+      this.teacherAuthError = "Senha incorreta.";
+      this.render();
+      window.setTimeout(() => this.root?.querySelector("#gsc-teacher-password")?.focus(), 0);
+      return;
+    }
+    this.teacherUnlocked = true;
+    this.teacherAuthOpen = false;
+    this.teacherAuthError = "";
+    this.teacherOpen = true;
+    this.teacherConfirmReset = false;
+    this.render();
+    window.setTimeout(() => this.root?.querySelector("#gsc-teacher-title")?.focus(), 0);
   }
 
   handleChange(event) {
@@ -1366,10 +1484,12 @@ class GoogleSlidesCourseGame {
     if (!action) return;
 
     if (action === "start-course") {
+      void this.requestCourseFullscreen();
       const allLessonsCompleted = googleSlidesLessons.every((lesson) => this.state.lessons[lesson.id].completed);
       this.state.view = allLessonsCompleted ? this.state.finalChallenge.completed ? "result" : "challenge" : "lesson";
       this.saveState();
       this.render();
+      if (this.state.view === "lesson") this.focusDemoStart();
     } else if (action === "toggle-demo") {
       if (this.demoPlaying) this.pauseDemo();
       else this.playDemo();
@@ -1397,11 +1517,19 @@ class GoogleSlidesCourseGame {
       this.saveState();
       this.render();
     } else if (action === "retry-offline") window.dispatchEvent(new CustomEvent("central-retry-offline"));
+    else if (action === "enter-fullscreen") void this.requestCourseFullscreen();
     else if (action === "open-teacher") {
-      this.teacherOpen = true;
+      this.teacherOpen = this.teacherUnlocked;
+      this.teacherAuthOpen = !this.teacherUnlocked;
+      this.teacherAuthError = "";
       this.teacherConfirmReset = false;
       this.render();
-      this.root.querySelector("#gsc-teacher-title")?.focus();
+      window.setTimeout(() => this.root?.querySelector(this.teacherUnlocked ? "#gsc-teacher-title" : "#gsc-teacher-password")?.focus(), 0);
+    } else if (action === "close-teacher-auth") {
+      this.teacherAuthOpen = false;
+      this.teacherAuthError = "";
+      this.render();
+      this.root.querySelector('[data-action="open-teacher"]')?.focus();
     } else if (action === "close-teacher") {
       this.teacherOpen = false;
       this.render();
@@ -1456,7 +1584,14 @@ class GoogleSlidesCourseGame {
         if (this.teacherChallengePreview || this.state.view === "challenge") this.renderChallenge();
         else this.renderLesson();
         this.root.querySelector(`[data-sim-action="menu:${menu}"]`)?.focus();
+      } else if (this.teacherAuthOpen) {
+        event.preventDefault();
+        this.teacherAuthOpen = false;
+        this.teacherAuthError = "";
+        this.render();
+        this.root.querySelector('[data-action="open-teacher"]')?.focus();
       } else if (this.teacherOpen) {
+        event.preventDefault();
         this.teacherOpen = false;
         this.render();
       }

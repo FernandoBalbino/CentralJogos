@@ -241,7 +241,7 @@ test("conclusões forçadas pelo professor não entram na precisão", () => {
   assert.equal(reset.currentLessonId, 2);
 });
 
-test("rota, desafio, modo professor, entrada real, interface fiel e cache v15 estão integrados", async () => {
+test("rota, desafio, acesso do professor, tela cheia, interface responsiva e cache v16 estão integrados", async () => {
   const [index, app, game, css, worker] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -255,6 +255,16 @@ test("rota, desafio, modo professor, entrada real, interface fiel e cache v15 es
   assert.match(game, /renderChallenge\(\)/);
   assert.match(game, /teacher-module-filter/);
   assert.match(game, /teacher-challenge/);
+  assert.match(game, /TEACHER_PASSWORD_HASH = "6bbe9df04e5d43cb2db41c795b9a4f4d84349cf9e889597b310cf8fe13f6c59f"/);
+  assert.match(game, /this\.teacherUnlocked = false/);
+  assert.match(game, /data-teacher-password-form/);
+  assert.match(game, /Senha incorreta\./);
+  assert.match(game, /requestCourseFullscreen\(\)/);
+  assert.match(game, /closest\("#google-slides-course-screen"\)/);
+  assert.match(game, /gsc-play-instruction/);
+  assert.match(game, /MENU_OPEN_HOLD_MS = 1000/);
+  assert.match(game, /OPTION_HIGHLIGHT_MS = 500/);
+  assert.match(game, /OPTION_SETTLE_MS = 350/);
   assert.match(game, /new EventTarget\(\)/);
   assert.match(game, /type: event\.type, payload: event\.payload, state: next/);
   assert.match(game, /contenteditable=\\"true\\"/);
@@ -264,8 +274,12 @@ test("rota, desafio, modo professor, entrada real, interface fiel e cache v15 es
   assert.match(css, /gsc-challenge-checklist/);
   assert.match(css, /Material Symbols Outlined/);
   assert.match(css, /gsc-font-size-control/);
+  assert.match(css, /@media \(max-width: 1100px\)/);
+  assert.match(css, /grid-template-areas: "copy" "simulator"/);
+  assert.match(css, /overflow-x: auto/);
+  assert.match(css, /gsc-teacher-auth-form/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(worker, /central-jogos-offline-v15/);
+  assert.match(worker, /central-jogos-offline-v16/);
   assert.match(worker, /google-slides-course-data\.mjs/);
   assert.match(worker, /material-symbols-outlined\.ttf/);
   assert.match(worker, /google-slides\.ico/);
