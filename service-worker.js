@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v17";
+const CACHE_NAME = "central-jogos-offline-v18";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -61,6 +61,7 @@ const PRECACHE_PATHS = [
   "./vendor/three/three.core.min.js",
   "./assets/windows-mission/tecnico-em-acao-card.png",
   "./assets/windows-discovery/scene-desktop.png",
+  "./assets/windows-discovery/cursor.png",
   "./assets/google-slides/google-slides.ico",
   "./assets/google-slides/material-symbols-outlined.ttf",
   "./assets/google-sheets/google-sheets.ico",

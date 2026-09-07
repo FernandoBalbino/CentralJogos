@@ -85,26 +85,7 @@ body.google-sheets-course-active #google-sheets-course-screen { min-height: 100v
   white-space: nowrap !important;
 }
 .gsh-shell .gsc-demo-controls button.is-primary { color: #fff !important; }
-.gsh-shell .gsc-demo-controls .gsh-ms,
 .gsh-shell .gsc-demo-controls img { display: inline-block; flex: 0 0 auto; }
-.gsh-shell .gsc-demo-controls .gsh-demo-label {
-  display: inline-block;
-  min-width: 0;
-  color: inherit;
-  font: inherit;
-  line-height: inherit;
-  text-indent: 0;
-  visibility: visible;
-}
-.gsh-shell .gsc-demo-controls button::after {
-  content: attr(data-demo-label);
-  display: inline-block;
-  color: inherit;
-  font: inherit;
-  line-height: inherit;
-  white-space: nowrap;
-}
-.gsh-shell .gsc-demo-controls .gsh-demo-label { display: none; }
 .gsh-intro-simulator { min-width: 0; }
 .gsh-intro-simulator .gsh-intro-badge { z-index: 5; }
 .gsh-intro-simulator .gsh-simulator { height: 474px; }
@@ -358,14 +339,36 @@ body.google-sheets-course-active #google-sheets-course-screen { min-height: 100v
   outline-offset: 2px;
   box-shadow: 0 0 0 7px rgb(251 188 4 / .24);
 }
-.gsh-demo-cursor { display: none; }
+.gsh-simulator .is-demo-clicked { animation: gsc-demo-click .32s ease; }
+.gsh-demo-cursor {
+  position: absolute;
+  z-index: 40;
+  top: -14px;
+  left: -14px;
+  width: 25px;
+  height: 38px;
+  object-fit: contain;
+  filter: drop-shadow(1px 2px 1px rgb(255 255 255 / .9));
+  pointer-events: none;
+  transform-origin: 0 0;
+  transition-property: transform, opacity;
+  transition-timing-function: cubic-bezier(.2, .75, .3, 1);
+}
+.gsh-simulator .gsc-click-ring {
+  z-index: 39;
+  display: block;
+  opacity: 0;
+  transform: scale(.45);
+}
+.gsh-simulator .gsc-click-ring.is-visible { animation: gsh-click-ring .42s ease-out; }
+@keyframes gsh-click-ring {
+  0% { opacity: .95; transform: scale(.35); }
+  100% { opacity: 0; transform: scale(1.35); }
+}
 
 .gsh-keyboard-aid { margin: 14px 0; padding: 10px; border: 1px solid #b7d9c2; border-radius: 12px; background: #f0f8f2; }
 .gsh-keyboard-aid img { display: block; width: 100%; max-height: 180px; object-fit: contain; }
 .gsh-keyboard-aid figcaption { margin-top: 7px; color: #3c5442; font-size: .82rem; }
-.gsh-auth-dialog { width: min(430px, calc(100vw - 28px)); }
-.gsh-teacher-dialog { width: min(960px, calc(100vw - 28px)); }
-
 @media (max-width: 1180px) {
   .gsh-lesson-layout { grid-template-columns: minmax(610px, 1.45fr) minmax(320px, .75fr); }
 }

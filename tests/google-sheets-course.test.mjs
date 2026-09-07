@@ -178,7 +178,7 @@ test("progresso permanece sequencial, sanitizado e compatível", () => {
   assert.deepEqual(courseStats(restored), { completedLessons: 0, correctAnswers: 0, questionAttempts: 0, accuracy: 0, completedPractices: 0, teacherCompleted: 0, finalChallengeCompleted: false });
 });
 
-test("rota, recursos, cache v17, fullscreen, senha e instrução Reproduzir estão integrados", async () => {
+test("rota, recursos, cache v18, fullscreen, senha, cursor e interface de respostas estão integrados", async () => {
   const [index, app, game, css, worker] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -199,11 +199,25 @@ test("rota, recursos, cache v17, fullscreen, senha e instrução Reproduzir est�
   assert.match(game, /MENU_OPEN_HOLD_MS = 1000/);
   assert.match(game, /OPTION_HIGHLIGHT_MS = 500/);
   assert.match(game, /OPTION_SETTLE_MS = 350/);
+  assert.match(game, /data-demo-cursor/);
+  assert.match(game, /assets\/windows-discovery\/cursor\.png/);
+  assert.match(game, /moveDemoCursor/);
+  assert.match(game, /pulseDemoClick/);
+  assert.match(game, /gsc-answer-list/);
+  assert.doesNotMatch(game, /gsc-question-options/);
+  assert.match(game, /gsc-teacher-panel/);
+  assert.match(game, /gsc-modal-backdrop/);
+  assert.doesNotMatch(game, /gsc-teacher-dialog/);
+  assert.doesNotMatch(game, /gsc-dialog-close/);
+  assert.doesNotMatch(game, /gsc-auth-error/);
   assert.match(css, /@font-face/);
   assert.match(css, /overflow-x: auto/);
   assert.match(css, /@media \(max-width: 1100px\)/);
-  assert.match(worker, /central-jogos-offline-v17/);
+  assert.match(css, /\.gsh-demo-cursor/);
+  assert.doesNotMatch(css, /\.gsh-demo-cursor\s*\{\s*display:\s*none/);
+  assert.match(worker, /central-jogos-offline-v18/);
   assert.match(worker, /google-sheets-course-data\.mjs/);
   assert.match(worker, /roboto-400\.ttf/);
   assert.match(worker, /chromebook-keyboard\.webp/);
+  assert.match(worker, /windows-discovery\/cursor\.png/);
 });

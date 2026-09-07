@@ -52,6 +52,7 @@ class GoogleSheetsCourseGame {
     this.demoCaptionOverride = "";
     this.openMenu = null;
     this.openSubmenu = null;
+    this.demoCursorPosition = { x: 38, y: 155, visible: false };
     this.editingCell = null;
     this.rangeAnchor = null;
     this.rangeCurrent = null;
@@ -224,7 +225,7 @@ class GoogleSheetsCourseGame {
       <section class="gsc-lesson-layout gsh-lesson-layout">
         <section class="gsc-simulator-column" aria-labelledby="gsh-simulator-title">
           <div class="gsc-simulator-heading"><div><span class="gsc-eyebrow"><i></i> ${stage === "practice" ? "Agora é com você" : "Observe a ação"}</span><h1 id="gsh-simulator-title">${escapeHtml(lesson.title)}</h1></div>${this.teacherPreview ? '<span class="gsc-preview-chip">Prévia sem salvar</span>' : ""}</div>
-          <div data-simulator-host>${this.renderSimulator(this.simulatorState, stage === "practice" ? "practice" : "demo")}</div>
+          <div data-simulator-host>${this.renderSimulator(this.simulatorState, stage === "practice" ? "practice" : stage === "watch" ? "demo" : "preview")}</div>
           ${stage === "watch" ? this.demoControls(lesson, progress) : ""}
         </section>
         <aside class="gsc-learning-panel">
@@ -268,24 +269,24 @@ class GoogleSheetsCourseGame {
     const instruction = progress.demoStep === 0 && !progress.watched
       ? `<p class="gsc-play-instruction" role="status">${icon("play_arrow")} <span>Para começar esta aula, clique em <strong>${this.reducedMotion ? "Próximo passo" : "Reproduzir"}</strong>.</span></p>` : "";
     return `<div class="gsc-demo-launch">${instruction}<div class="gsc-demo-controls" role="group" aria-label="Controles da demonstração">
-      ${this.reducedMotion ? `<button class="is-primary" type="button" data-action="next-demo-step" data-demo-label="Próximo passo">${icon("arrow_forward")}<span class="gsh-demo-label">Próximo passo</span></button><button type="button" data-action="previous-demo-step" data-demo-label="Voltar um passo"><span class="gsh-demo-label">Voltar um passo</span></button>` : `<button class="is-primary" type="button" data-action="toggle-demo" data-demo-label="${this.demoPlaying ? "Pausar" : "Reproduzir"}">${icon(this.demoPlaying ? "pause" : "play_arrow")}<span class="gsh-demo-label">${this.demoPlaying ? "Pausar" : "Reproduzir"}</span></button>`}
-      <button type="button" data-action="repeat-demo" data-demo-label="Repetir">${icon("restart_alt")}<span class="gsh-demo-label">Repetir</span></button>
+      ${this.reducedMotion ? `<button class="is-primary" type="button" data-action="next-demo-step">${icon("arrow_forward")}<span>Próximo passo</span></button><button type="button" data-action="previous-demo-step"><span>Voltar um passo</span></button>` : `<button class="is-primary" type="button" data-action="toggle-demo">${icon(this.demoPlaying ? "pause" : "play_arrow")}<span>${this.demoPlaying ? "Pausar" : "Reproduzir"}</span></button>`}
+      <button type="button" data-action="repeat-demo">${icon("restart_alt")}<span>Repetir</span></button>
     </div></div>`;
   }
 
   questionPanel(lesson, progress) {
     const done = progress.questionCompleted;
     const incorrect = progress.incorrectAttempts > 0 && !done;
-    return `<span class="gsc-stage-kicker">Etapa 2</span><h2>Responda</h2><p>${escapeHtml(lesson.question.prompt)}</p>
-      <div class="gsc-question-options">${lesson.question.options.map((option, index) => `<button type="button" data-action="answer-question" data-answer="${index}" ${done ? "disabled" : ""}>${String.fromCharCode(65 + index)}. ${escapeHtml(option)}</button>`).join("")}</div>
-      ${done ? `<div class="gsc-stage-success" role="status"><strong>✓ Resposta correta</strong><p>${escapeHtml(lesson.question.explanation)}</p></div><button class="gsc-primary gsc-next-stage" type="button" data-action="go-practice">Ir para a prática ${icon("arrow_forward")}</button>` : incorrect ? `<div class="gsc-stage-feedback is-error" role="alert"><strong>Ainda não.</strong><p>${escapeHtml(lesson.question.hint)}</p></div>` : '<p class="gsc-stage-hint">Escolha uma alternativa para continuar.</p>'}`;
+    return `<span class="gsc-stage-kicker">Etapa 2</span><h2>Responda</h2><p class="gsc-question">${escapeHtml(lesson.question.prompt)}</p>
+      <div class="gsc-answer-list">${lesson.question.options.map((option, index) => `<button type="button" data-action="answer-question" data-answer="${index}" ${done ? "disabled" : ""} class="${done && index === lesson.question.answer ? "is-correct" : ""}"><span>${String.fromCharCode(65 + index)}</span><strong>${escapeHtml(option)}</strong></button>`).join("")}</div>
+      ${done ? `<div class="gsc-feedback is-success" role="status"><strong>✓ Resposta correta</strong><p>${escapeHtml(lesson.question.explanation)}</p></div><button class="gsc-primary gsc-next-stage" type="button" data-action="go-practice">Ir para a prática ${icon("arrow_forward")}</button>` : incorrect ? `<div class="gsc-feedback is-guidance" role="alert"><strong>Ainda não.</strong><p>${escapeHtml(lesson.question.hint)}</p></div>` : '<p class="gsc-stage-hint">Escolha uma alternativa para continuar.</p>'}`;
   }
 
   practicePanel(lesson, progress) {
     return `<span class="gsc-stage-kicker">Etapa 3</span><h2>Faça você mesmo</h2>
       <div class="gsc-task-card"><span>Sua tarefa</span><strong>${escapeHtml(lesson.practice.instruction)}</strong></div>
       ${this.keyboardAid(lesson)}
-      ${progress.practiceCompleted ? `<div class="gsc-stage-success" role="status"><strong>✓ Prática concluída</strong><p>${escapeHtml(lesson.practice.successMessage)}</p></div><button class="gsc-primary gsc-next-stage" type="button" data-action="next-lesson">${lesson.id === googleSheetsLessons.length ? "Ir para o desafio final" : "Próxima aula"} ${icon("arrow_forward")}</button>` : '<div class="gsc-practice-feedback" role="status"><strong>Agora tente.</strong><p>Use o simulador. A etapa avança somente quando a ação pedida estiver correta.</p></div>'}`;
+      ${progress.practiceCompleted ? `<div class="gsc-feedback is-success" role="status"><strong>✓ Prática concluída</strong><p>${escapeHtml(lesson.practice.successMessage)}</p></div><button class="gsc-primary gsc-next-stage" type="button" data-action="next-lesson">${lesson.id === googleSheetsLessons.length ? "Ir para o desafio final" : "Próxima aula"} ${icon("arrow_forward")}</button>` : '<p class="gsc-practice-hint" role="status">Use o simulador. A etapa avança somente quando a ação pedida estiver correta.</p>'}`;
   }
 
   renderChallenge() {
@@ -363,7 +364,7 @@ class GoogleSheetsCourseGame {
       <div class="gsh-formula-row"><button type="button" class="gsh-name-box" data-sim-action="identify-name-box" data-demo-target="name-box">${escapeHtml(state.activeCell)}${materialIcon("arrow_drop_down")}</button><span class="gsh-fx" aria-hidden="true">fx</span><input type="text" data-formula-input data-demo-target="formula-bar" aria-label="Barra de fórmulas" value="${escapeHtml(activeCell?.input || "")}"></div>
       <div class="gsh-grid-scroll" data-grid-scroll><div class="gsh-grid" style="--sheet-columns:${columns}"><div class="gsh-corner"></div>${columnHeaders}${gridRows}</div></div>
       ${this.renderMenus()}
-      <div class="gsh-demo-cursor" aria-hidden="true"></div>
+      ${mode === "demo" ? `<img class="gsc-demo-cursor gsh-demo-cursor" data-demo-cursor src="./assets/windows-discovery/cursor.png" alt="" style="transform:translate(${this.demoCursorPosition.x}px, ${this.demoCursorPosition.y}px);opacity:${this.demoCursorPosition.visible ? 1 : 0}"><span class="gsc-click-ring" data-click-ring aria-hidden="true"></span>` : ""}
     </section>`;
   }
 
@@ -406,6 +407,42 @@ class GoogleSheetsCourseGame {
     this.root.querySelector(`[data-demo-target="${CSS.escape(target)}"]`)?.classList.add("is-demo-target");
   }
 
+  async moveDemoCursor(target, instant = false, duration = 420) {
+    const simulator = this.root?.querySelector("[data-gsh-simulator]");
+    const element = await this.ensureDemoTargetVisible(target, instant);
+    if (!simulator || !element || !simulator.contains(element)) return element;
+    const cursor = simulator.querySelector("[data-demo-cursor]");
+    if (!cursor) return element;
+    const simulatorBox = simulator.getBoundingClientRect();
+    const targetBox = element.getBoundingClientRect();
+    const x = targetBox.left - simulatorBox.left + targetBox.width / 2;
+    const y = targetBox.top - simulatorBox.top + targetBox.height / 2;
+    this.demoCursorPosition = { x, y, visible: true };
+    cursor.style.opacity = "1";
+    cursor.style.transitionDuration = `${instant ? 0 : duration}ms`;
+    cursor.style.transform = `translate(${x}px, ${y}px)`;
+    if (!instant) await wait(duration + 40);
+    return element;
+  }
+
+  async pulseDemoClick(element, instant = false) {
+    if (!element) return;
+    const simulator = this.root?.querySelector("[data-gsh-simulator]");
+    element.classList.add("is-demo-clicked");
+    if (simulator?.contains(element)) {
+      const ring = simulator.querySelector("[data-click-ring]");
+      if (ring) {
+        ring.style.left = `${this.demoCursorPosition.x - 12}px`;
+        ring.style.top = `${this.demoCursorPosition.y - 12}px`;
+        ring.classList.remove("is-visible");
+        void ring.offsetWidth;
+        ring.classList.add("is-visible");
+      }
+    }
+    await wait(instant ? 30 : 180);
+    element.classList.remove("is-demo-clicked");
+  }
+
   refreshSimulator() {
     const host = this.root.querySelector("[data-simulator-host]");
     if (!host) return;
@@ -429,25 +466,47 @@ class GoogleSheetsCourseGame {
       return;
     }
     if (step.action === "wait") { if (!instant) await wait(step.duration || 350); return; }
+    if (step.action === "move") {
+      this.setDemoHighlight(null);
+      await this.moveDemoCursor(step.target, instant, step.duration || 420);
+      return;
+    }
     const target = await this.ensureDemoTargetVisible(step.target, instant);
-    if (["move", "highlight"].includes(step.action)) {
+    if (step.action === "highlight") {
       this.setDemoHighlight(step.target);
-      const fallback = step.action === "highlight" ? MENU_TARGET_HIGHLIGHT_MS : 420;
-      if (!instant) await wait(step.duration || fallback);
+      if (!instant) await wait(step.duration || MENU_TARGET_HIGHLIGHT_MS);
       return;
     }
     if (step.action === "open-menu") {
+      await this.moveDemoCursor(step.target, instant, 260);
+      await this.pulseDemoClick(target, instant);
       this.openMenu = step.menu;
       this.openSubmenu = null;
       this.refreshSimulator();
-      this.setDemoHighlight(step.target);
       return;
     }
     if (step.action === "open-submenu") {
+      await this.moveDemoCursor(step.target, instant, 300);
+      await this.pulseDemoClick(target, instant);
       this.openSubmenu = step.menu;
       this.refreshSimulator();
-      this.setDemoHighlight(step.target);
       return;
+    }
+    if (step.action === "select-option") {
+      await this.moveDemoCursor(step.target, instant, 260);
+      this.setDemoHighlight(step.target);
+      await this.pulseDemoClick(target, instant);
+      if (!instant) await wait(Math.max(0, OPTION_HIGHLIGHT_MS - 180));
+      if (step.effect) this.simulatorState = reduceSpreadsheet(this.simulatorState, step.effect);
+      this.openMenu = null;
+      this.openSubmenu = null;
+      this.refreshSimulator();
+      if (!instant) await wait(OPTION_SETTLE_MS);
+      return;
+    }
+    if (["click", "double-click"].includes(step.action)) {
+      await this.moveDemoCursor(step.target, instant, 220);
+      await this.pulseDemoClick(target, instant);
     }
     if (step.effect) {
       this.simulatorState = reduceSpreadsheet(this.simulatorState, step.effect);
@@ -455,16 +514,25 @@ class GoogleSheetsCourseGame {
     }
     this.setDemoHighlight(step.target);
     if (!instant) {
-      const duration = step.action === "select-option" ? OPTION_HIGHLIGHT_MS + OPTION_SETTLE_MS : step.action === "click" || step.action === "key" || step.action === "type" ? OPTION_SETTLE_MS : 300;
+      const duration = step.action === "click" || step.action === "double-click" || step.action === "key" || step.action === "type" ? OPTION_SETTLE_MS : 300;
       await wait(duration);
     }
-    if (step.action === "select-option") { this.openMenu = null; this.openSubmenu = null; this.refreshSimulator(); }
   }
 
   async playDemo() {
     if (this.demoPlaying || this.reducedMotion) return;
     const lesson = this.currentLesson();
     const progress = this.currentProgress();
+    if (progress.demoStep >= demoStepCount(lesson.demo)) {
+      progress.demoStep = 0;
+      progress.watched = false;
+      this.simulatorState = createLessonSpreadsheetState(lesson.id);
+      this.demoCaptionOverride = "";
+      this.openMenu = null;
+      this.openSubmenu = null;
+      this.demoCursorPosition = { x: 38, y: 155, visible: false };
+      this.refreshSimulator();
+    }
     this.demoPlaying = true;
     const runId = ++this.demoRunId;
     this.updateDemoButtons();
@@ -487,7 +555,7 @@ class GoogleSheetsCourseGame {
   pauseDemo() { this.demoPlaying = false; this.demoRunId += 1; this.updateDemoButtons(); }
   updateDemoButtons() {
     const button = this.root?.querySelector('[data-action="toggle-demo"]');
-    if (button) button.innerHTML = `${icon(this.demoPlaying ? "pause" : "play_arrow")} ${this.demoPlaying ? "Pausar" : "Reproduzir"}`;
+    if (button) button.innerHTML = `${icon(this.demoPlaying ? "pause" : "play_arrow")}<span>${this.demoPlaying ? "Pausar" : "Reproduzir"}</span>`;
   }
   updateDemoProgress() {
     const lesson = this.currentLesson();
@@ -503,6 +571,7 @@ class GoogleSheetsCourseGame {
     progress.demoStep = 0; progress.watched = false;
     this.simulatorState = createLessonSpreadsheetState(this.currentLesson().id);
     this.demoCaptionOverride = ""; this.openMenu = null; this.openSubmenu = null;
+    this.demoCursorPosition = { x: 38, y: 155, visible: false };
     if (!this.teacherPreview) this.saveState();
     this.renderLesson();
     this.root.querySelector(this.reducedMotion ? '[data-action="next-demo-step"]' : '[data-action="toggle-demo"]')?.focus();
@@ -596,14 +665,14 @@ class GoogleSheetsCourseGame {
   }
 
   teacherLayer() {
-    if (this.teacherAuthOpen) return `<div class="gsc-dialog-backdrop"><section class="gsc-teacher-dialog gsh-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="gsh-auth-title"><button class="gsc-dialog-close" type="button" data-action="close-teacher" aria-label="Fechar">×</button><span class="gsc-stage-kicker">Acesso restrito</span><h2 id="gsh-auth-title">Modo Professor</h2><p>Digite a senha para abrir as ferramentas do professor.</p><form class="gsc-teacher-auth-form" data-teacher-password-form><label for="gsh-teacher-password">Senha</label><input id="gsh-teacher-password" name="password" type="password" autocomplete="current-password" required autofocus>${this.teacherAuthError ? `<p class="gsc-auth-error" role="alert">${escapeHtml(this.teacherAuthError)}</p>` : ""}<button class="gsc-primary" type="submit">Entrar</button></form></section></div>`;
+    if (this.teacherAuthOpen) return `<div class="gsc-modal-backdrop"><section class="gsc-teacher-panel gsc-teacher-auth" role="dialog" aria-modal="true" aria-labelledby="gsh-auth-title" aria-describedby="gsh-auth-copy"><header><div><span class="gsc-stage-kicker">Acesso reservado</span><h2 id="gsh-auth-title">Modo Professor</h2></div><button type="button" data-action="close-teacher" aria-label="Fechar acesso do professor">×</button></header><div class="gsc-teacher-auth-copy" id="gsh-auth-copy">${icon("vpn_key")}<p>Digite a senha para abrir as prévias e os controles do professor.</p></div><form class="gsc-teacher-auth-form" data-teacher-password-form novalidate><label for="gsh-teacher-password">Senha do professor</label><input id="gsh-teacher-password" name="password" type="password" autocomplete="off" required aria-invalid="${this.teacherAuthError ? "true" : "false"}" ${this.teacherAuthError ? 'aria-describedby="gsh-teacher-auth-error"' : ""}><p class="gsc-teacher-auth-error" id="gsh-teacher-auth-error" role="alert">${escapeHtml(this.teacherAuthError)}</p><button class="gsc-primary" type="submit">Entrar no Modo Professor</button></form></section></div>`;
     if (!this.teacherOpen || !this.teacherUnlocked) return "";
     const stats = courseStats(this.state);
     const modules = [...new Set(googleSheetsLessons.map((lesson) => lesson.module))];
     const lessons = this.teacherModuleFilter === "all" ? googleSheetsLessons : googleSheetsLessons.filter((lesson) => lesson.module === this.teacherModuleFilter);
-    return `<div class="gsc-dialog-backdrop"><section class="gsc-teacher-dialog gsh-teacher-dialog" role="dialog" aria-modal="true" aria-labelledby="gsh-teacher-title"><button class="gsc-dialog-close" type="button" data-action="close-teacher" aria-label="Fechar">×</button><span class="gsc-stage-kicker">Ferramentas da aula</span><h2 id="gsh-teacher-title">Modo Professor</h2><div class="gsc-teacher-summary"><span><strong>${stats.completedLessons}/30</strong> aulas</span><span><strong>${stats.accuracy}%</strong> precisão</span><span><strong>${stats.completedPractices}</strong> práticas</span></div>
-      <div class="gsc-teacher-tools"><label>Filtrar módulo<select data-teacher-module-filter><option value="all">Todos os módulos</option>${modules.map((module) => `<option value="${escapeHtml(module)}" ${module === this.teacherModuleFilter ? "selected" : ""}>${escapeHtml(module)}</option>`).join("")}</select></label><button type="button" data-action="teacher-challenge">Abrir desafio final</button><button type="button" data-action="teacher-reset-course">${this.confirmReset ? "Confirmar limpeza" : "Limpar todo o progresso"}</button></div>
-      <div class="gsc-teacher-lessons">${lessons.map((lesson) => { const progress = this.state.lessons[lesson.id]; return `<article><div><small>Aula ${lesson.id}</small><strong>${escapeHtml(lesson.title)}</strong><span>${progress.completed ? progress.completedByTeacher ? "Concluída pelo professor" : "Concluída pelo aluno" : "Pendente"}</span></div><div><button type="button" data-action="teacher-preview" data-lesson-id="${lesson.id}">Prévia</button>${progress.completed ? `<button type="button" data-action="teacher-reset-lesson" data-lesson-id="${lesson.id}">Reabrir</button>` : `<button type="button" data-action="teacher-complete-lesson" data-lesson-id="${lesson.id}">Marcar concluída</button>`}</div></article>`; }).join("")}</div></section></div>`;
+    return `<div class="gsc-modal-backdrop"><section class="gsc-teacher-panel" role="dialog" aria-modal="true" aria-labelledby="gsh-teacher-title"><header><div><span class="gsc-stage-kicker">Acompanhamento local</span><h2 id="gsh-teacher-title" tabindex="-1">Modo Professor</h2></div><button type="button" data-action="close-teacher" aria-label="Fechar Modo Professor">×</button></header><div class="gsc-teacher-summary"><strong>${stats.completedLessons}/${googleSheetsLessons.length}</strong><span>aulas concluídas neste Chromebook</span><b>${stats.accuracy}% de precisão</b></div>
+      <div class="gsc-teacher-tools"><label for="gsh-module-filter">Selecionar módulo</label><select id="gsh-module-filter" data-teacher-module-filter><option value="all">Todos os módulos</option>${modules.map((module) => `<option value="${escapeHtml(module)}" ${module === this.teacherModuleFilter ? "selected" : ""}>${escapeHtml(module)}</option>`).join("")}</select><button type="button" data-action="teacher-challenge">Abrir desafio final</button></div>
+      <div class="gsc-teacher-lessons">${lessons.map((lesson) => { const progress = this.state.lessons[lesson.id]; return `<article><div><span>Aula ${String(lesson.id).padStart(2, "0")}</span><strong>${escapeHtml(lesson.title)}</strong><small>${progress.completedByTeacher ? "Concluída pelo professor" : progress.completed ? "Concluída pelo aluno" : "Em andamento"}</small></div><div><button type="button" data-action="teacher-preview" data-lesson-id="${lesson.id}">Abrir prévia</button><button type="button" data-action="teacher-complete-lesson" data-lesson-id="${lesson.id}" ${progress.completed ? "disabled" : ""}>Marcar concluída</button><button type="button" data-action="teacher-reset-lesson" data-lesson-id="${lesson.id}">Reiniciar</button></div></article>`; }).join("")}</div><footer>${this.confirmReset ? '<p role="alert">Todo o progresso local será apagado. Confirmar?</p><button class="is-danger" type="button" data-action="teacher-reset-course">Sim, reiniciar curso</button><button type="button" data-action="teacher-cancel-reset">Cancelar</button>' : '<button class="is-danger" type="button" data-action="teacher-reset-course">Reiniciar curso inteiro</button>'}</footer></section></div>`;
   }
 
   openTeacherPreview(lessonId) {
@@ -691,6 +760,7 @@ class GoogleSheetsCourseGame {
     if (action === "teacher-complete-lesson") { this.state = markLessonCompleteByTeacher(this.state, Number(button.dataset.lessonId)); this.saveState(); this.render(); return; }
     if (action === "teacher-reset-lesson") { this.state = resetLessonInState(this.state, Number(button.dataset.lessonId)); this.saveState(); this.render(); return; }
     if (action === "teacher-reset-course") { if (!this.confirmReset) { this.confirmReset = true; this.render(); } else { this.state = createInitialCourseState(); this.saveState(); this.confirmReset = false; this.render(); } return; }
+    if (action === "teacher-cancel-reset") { this.confirmReset = false; this.render(); return; }
 
     if (button.dataset.menu) {
       this.openMenu = this.openMenu === button.dataset.menu ? null : button.dataset.menu;

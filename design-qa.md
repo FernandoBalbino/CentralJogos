@@ -103,6 +103,17 @@ Data: 2026-09-07
 - Badge da prévia foi elevado acima do simulador para não ser recortado.
 - O portal foi atualizado para 11 jogos e o card “Google Planilhas na Prática” foi integrado à rota `#/google-planilhas`.
 
+### Correção visual e cursor — 2026-09-07
+
+- Referência do problema: `C:\Users\Pichau\AppData\Local\Temp\codex-clipboard-fbf38636-e394-4728-a94e-c56395529778.png`, na qual as alternativas apareciam como botões nativos sem o acabamento da trilha Google Apresentações.
+- Causa visual corrigida: a etapa de pergunta passou a usar `gsc-answer-list`, `gsc-question`, `gsc-feedback` e `gsc-practice-hint`, exatamente as classes consolidadas no curso Google Apresentações. As alternativas voltaram a ter cartões de 52 px, letra em bloco, borda de 2 px, raio de 10 px, estados de foco, erro e acerto.
+- A reprodução agora usa o cursor local `assets/windows-discovery/cursor.png`. O ponteiro se desloca até o alvo, produz indicação de clique e permanece sincronizado com destaque, abertura de menu, abertura de submenu e seleção.
+- A aula 26, “Formatar valores como moeda”, foi reproduzida no navegador integrado em 1280 × 720. O menu Formatar e o submenu Formatos numéricos permaneceram visíveis ao mesmo tempo, com o cursor sobre “Número”, sem overflow horizontal do documento.
+- A pergunta da aula 1 foi verificada em 1936 × 1048 com quatro alternativas em grade, raio de 10 px, ausência das classes antigas e ausência do cursor fora da etapa Assista. `document` e `body` mantiveram overflow horizontal igual a zero.
+- O Modo Professor também foi alinhado à estrutura visual do Google Apresentações: `gsc-modal-backdrop` + `gsc-teacher-panel`, altura máxima de 90 vh e rolagem interna. A medição foi 648 px de altura útil para 3025 px de conteúdo, com as 30 prévias alcançáveis.
+- O atalho de texto duplicado aplicado anteriormente aos controles foi removido; Reproduzir, Pausar e Repetir agora usam a mesma marcação de ícone + rótulo da trilha Google Apresentações.
+- Sintaxe dos módulos e do Service Worker aprovada; `node --test tests/*.mjs`: 80 testes aprovados, 0 falhas. Cache offline atualizado para `central-jogos-offline-v18` com o cursor incluído no precache.
+
 ## Resultado
 
 final result: passed
