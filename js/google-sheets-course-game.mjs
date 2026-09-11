@@ -25,6 +25,17 @@ const MENU_OPEN_HOLD_MS = 1000;
 const OPTION_HIGHLIGHT_MS = 500;
 const OPTION_SETTLE_MS = 350;
 const DEMO_SCROLL_SETTLE_MS = 260;
+const SHEET_MENU_ENTRIES = Object.freeze([
+  ["Arquivo", "arquivo"],
+  ["Editar", "editar"],
+  ["Ver", "ver"],
+  ["Inserir", "insert"],
+  ["Formatar", "format"],
+  ["Dados", "dados"],
+  ["Ferramentas", "ferramentas"],
+  ["Extensões", "extensões"],
+  ["Ajuda", "ajuda"]
+]);
 
 const wait = (duration) => new Promise((resolve) => window.setTimeout(resolve, duration));
 const icon = (name, alt = "") => `<img src="${ICONS}/${name}.svg" alt="${alt}">`;
@@ -293,7 +304,7 @@ class GoogleSheetsCourseGame {
       ${this.keyboardAid(lesson)}
       ${directEntryTip}
       ${this.practiceChecklist(lesson, this.simulatorState)}
-      ${progress.practiceCompleted ? `<div class="gsc-feedback is-success" role="status"><strong>✓ Prática concluída</strong><p>${escapeHtml(lesson.practice.successMessage)}</p></div><button class="gsc-primary gsc-next-stage" type="button" data-action="next-lesson">${lesson.id === googleSheetsLessons.length ? "Ir para o desafio final" : "Próxima aula"} ${icon("arrow_forward")}</button>` : '<p class="gsc-practice-hint" role="status">Use o simulador. A etapa avança somente quando a ação pedida estiver correta.</p>'}`;
+      ${progress.practiceCompleted ? `<div class="gsc-feedback is-success" role="status"><strong>✓ Prática concluída</strong><p>${escapeHtml(lesson.practice.successMessage)}</p></div><button class="gsc-primary gsc-next-stage" type="button" data-action="next-lesson">${lesson.id === googleSheetsLessons.length ? "Ir para o desafio final" : "Próxima aula"} ${icon("arrow_forward")}</button>` : `<p class="gsc-practice-hint" role="status">Use o simulador. A etapa avança somente quando a ação pedida estiver correta.</p><button class="gsc-secondary gsc-restart-lesson" type="button" data-action="restart-lesson">${icon("restart_alt")} Reiniciar esta missão</button>`}`;
   }
 
   practiceChecklist(lesson, state) {
@@ -430,7 +441,7 @@ class GoogleSheetsCourseGame {
       <div class="gsh-app-strip">${materialIcon("apps")}</div>
       <div class="gsh-document-header">
         <button class="gsh-logo-button ${state.identifiedRegion === "app" ? "is-identified" : ""}" type="button" data-sim-action="identify-app" data-demo-target="sheets-mark" aria-label="Ícone do Google Planilhas"><img src="${SHEETS_ASSETS}/google-sheets.ico" alt=""></button>
-        <div class="gsh-file-area"><div class="gsh-file-title"><span>Planilha sem título</span>${materialIcon("star")}</div><nav class="gsh-menu-bar" aria-label="Menus do Google Planilhas">${["Arquivo", "Editar", "Ver", "Inserir", "Formatar", "Dados", "Ferramentas", "Extensões", "Ajuda"].map((label) => `<button type="button" data-menu="${label.toLowerCase()}" ${label === "Inserir" ? 'data-demo-target="insert-menu"' : label === "Formatar" ? 'data-demo-target="format-menu"' : ""}>${label}</button>`).join("")}</nav></div>
+        <div class="gsh-file-area"><div class="gsh-file-title"><span>Planilha sem título</span>${materialIcon("star")}</div><nav class="gsh-menu-bar" aria-label="Menus do Google Planilhas">${SHEET_MENU_ENTRIES.map(([label, menu]) => `<button type="button" data-menu="${menu}" ${label === "Inserir" ? 'data-demo-target="insert-menu"' : label === "Formatar" ? 'data-demo-target="format-menu"' : ""}>${label}</button>`).join("")}</nav></div>
         <button class="gsh-header-more" type="button" aria-label="Mais opções">${materialIcon("menu")}</button>
       </div>
       <div class="gsh-toolbar-scroll"><div class="gsh-toolbar" role="toolbar" aria-label="Barra de ferramentas">
@@ -789,6 +800,28 @@ class GoogleSheetsCourseGame {
     this.root.querySelector('[data-action="toggle-demo"], [data-action="next-demo-step"]')?.focus();
   }
 
+  restartCurrentLesson() {
+    this.pauseDemo();
+    const lessonId = this.currentLesson().id;
+    if (this.teacherPreview) {
+      this.teacherPreview.stage = "watch";
+      this.teacherPreview.progress = createLessonProgress(lessonId);
+    } else {
+      this.state = resetLessonInState(this.state, lessonId);
+      this.saveState();
+    }
+    this.openMenu = null;
+    this.openSubmenu = null;
+    this.editingCell = null;
+    this.rangeAnchor = null;
+    this.rangeCurrent = null;
+    this.demoCaptionOverride = "";
+    this.demoCursorPosition = { x: 38, y: 155, visible: false };
+    this.simulatorState = createLessonSpreadsheetState(lessonId);
+    this.renderLesson();
+    this.root.querySelector('[data-action="toggle-demo"], [data-action="next-demo-step"]')?.focus();
+  }
+
   teacherLayer() {
     if (this.teacherAuthOpen) return `<div class="gsc-modal-backdrop"><section class="gsc-teacher-panel gsc-teacher-auth" role="dialog" aria-modal="true" aria-labelledby="gsh-auth-title" aria-describedby="gsh-auth-copy"><header><div><span class="gsc-stage-kicker">Acesso reservado</span><h2 id="gsh-auth-title">Modo Professor</h2></div><button type="button" data-action="close-teacher" aria-label="Fechar acesso do professor">×</button></header><div class="gsc-teacher-auth-copy" id="gsh-auth-copy">${icon("vpn_key")}<p>Digite a senha para abrir as prévias e os controles do professor.</p></div><form class="gsc-teacher-auth-form" data-teacher-password-form novalidate><label for="gsh-teacher-password">Senha do professor</label><input id="gsh-teacher-password" name="password" type="password" autocomplete="off" required aria-invalid="${this.teacherAuthError ? "true" : "false"}" ${this.teacherAuthError ? 'aria-describedby="gsh-teacher-auth-error"' : ""}><p class="gsc-teacher-auth-error" id="gsh-teacher-auth-error" role="alert">${escapeHtml(this.teacherAuthError)}</p><button class="gsc-primary" type="submit">Entrar no Modo Professor</button></form></section></div>`;
     if (!this.teacherOpen || !this.teacherUnlocked) return "";
@@ -883,6 +916,7 @@ class GoogleSheetsCourseGame {
     if (action === "go-question") { this.setStage("question"); return; }
     if (action === "answer-question") { this.answerQuestion(Number(button.dataset.answer)); return; }
     if (action === "go-practice") { this.setStage("practice"); return; }
+    if (action === "restart-lesson") { this.restartCurrentLesson(); return; }
     if (action === "next-lesson") { this.nextLesson(); return; }
     if (action === "finish-course") { if (!this.teacherChallengePreview) { this.state.view = "result"; this.saveState(); this.renderResult(); } return; }
     if (action === "restart-course") { this.state = createInitialCourseState(); this.saveState(); this.renderIntro(); return; }

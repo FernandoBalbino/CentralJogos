@@ -23,6 +23,7 @@ import {
   practiceMatches,
   recalculateSpreadsheet,
   reduceSpreadsheet,
+  resetLessonInState,
   sanitizeCourseState,
   updateFinalChallenge,
   validateFinalChallenge
@@ -105,9 +106,35 @@ test("cada prática exige a mudança correspondente no simulador", () => {
 
   state = createLessonSpreadsheetState(25);
   state = apply(state, "sheet:insert", { kind: "row" });
+  assert.equal(practiceMatches(googleSheetsLessons[24], { type: "sheet:insert", payload: { kind: "row" } }, createLessonSpreadsheetState(25), state), false);
   const beforeColumn = state;
   state = apply(state, "sheet:insert", { kind: "column" });
   assert.equal(practiceMatches(googleSheetsLessons[24], { type: "sheet:insert", payload: { kind: "column" } }, beforeColumn, state), true);
+});
+
+test("reiniciar uma missão preserva as anteriores e restaura a aula atual", () => {
+  const state = createInitialCourseState();
+  Object.assign(state.lessons[24], {
+    watched: true,
+    questionCompleted: true,
+    practiceCompleted: true,
+    completed: true
+  });
+  Object.assign(state.lessons[25], {
+    watched: true,
+    questionCompleted: true,
+    practiceCompleted: false,
+    practiceState: apply(createLessonSpreadsheetState(25), "sheet:insert", { kind: "row" })
+  });
+
+  const restarted = resetLessonInState(state, 25);
+
+  assert.equal(restarted.lessons[24].completed, true);
+  assert.equal(restarted.lessons[25].watched, false);
+  assert.equal(restarted.lessons[25].practiceState.insertedRows, 0);
+  assert.equal(restarted.currentLessonId, 25);
+  assert.equal(restarted.stage, "watch");
+  assert.equal(restarted.view, "lesson");
 });
 
 test("ações de edição, formatação, fórmulas e inserção preservam estado real", () => {
@@ -178,7 +205,7 @@ test("progresso permanece sequencial, sanitizado e compatível", () => {
   assert.deepEqual(courseStats(restored), { completedLessons: 0, correctAnswers: 0, questionAttempts: 0, accuracy: 0, completedPractices: 0, teacherCompleted: 0, finalChallengeCompleted: false });
 });
 
-test("rota, recursos, cache v20, foco de célula, fullscreen, senha e cursor estão integrados", async () => {
+test("rota, recursos, cache v21, foco de célula, fullscreen, senha e cursor estão integrados", async () => {
   const [index, app, game, css, worker] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -211,6 +238,9 @@ test("rota, recursos, cache v20, foco de célula, fullscreen, senha e cursor est
   assert.match(game, /Seleção múltipla confirmada/);
   assert.match(game, /gsh-selection-summary/);
   assert.match(game, /gsh-practice-checklist/);
+  assert.match(game, /\["Inserir", "insert"\]/);
+  assert.match(game, /data-action="restart-lesson"/);
+  assert.match(game, /restartCurrentLesson\(\)/);
   assert.match(game, /C3 adicionada com Ctrl\+clique/);
   assert.match(game, /aria-label="Célula \$\{address\}\$\{selected/);
   assert.doesNotMatch(game, /data-cell="\$\{address\}"[^>]+aria-pressed/);
@@ -236,7 +266,7 @@ test("rota, recursos, cache v20, foco de célula, fullscreen, senha e cursor est
   assert.match(css, /\.gsh-status-bar/);
   assert.match(css, /\.gsh-cell\.is-selected:not\(\.is-active\)/);
   assert.doesNotMatch(css, /\.gsh-demo-cursor\s*\{\s*display:\s*none/);
-  assert.match(worker, /central-jogos-offline-v20/);
+  assert.match(worker, /central-jogos-offline-v21/);
   assert.match(worker, /google-sheets-course-data\.mjs/);
   assert.match(worker, /roboto-400\.ttf/);
   assert.match(worker, /chromebook-keyboard\.webp/);

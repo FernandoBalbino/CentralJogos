@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v20";
+const CACHE_NAME = "central-jogos-offline-v21";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",

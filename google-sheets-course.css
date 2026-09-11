@@ -75,6 +75,7 @@ body.google-sheets-course-active #google-sheets-course-screen { min-height: 100v
 .gsh-shell .gsc-stage-kicker { color: #137333; }
 .gsh-shell .gsc-task-card { border-color: #34a853; background: #e6f4ea; }
 .gsh-shell .gsc-stage-success { border-color: #81c995; background: #e6f4ea; }
+.gsh-shell .gsc-restart-lesson { width: 100%; margin-top: 10px; }
 .gsh-shell .gsc-demo-controls button {
   min-width: 0;
   color: var(--gsc-navy, #182a43) !important;
