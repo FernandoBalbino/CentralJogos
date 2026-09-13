@@ -160,11 +160,14 @@ test("estado persistido é saneado e não aceita destinos ou fases inventadas", 
     hiddenPlacements: { [DESKTOP_LEVEL_WITHOUT_EXTENSIONS[0].id]: "destino-invalido" }
   });
   assert.equal(state.phase, "desktop-visible");
+  assert.equal(state.introIndex, 0);
   assert.equal(state.guidedIndex, GUIDED_CHALLENGES.length - 1);
   assert.deepEqual(state.connections, { [CONNECTION_FILES[0].id]: "documents" });
   assert.deepEqual(state.visiblePlacements, { [file.id]: file.category });
   assert.deepEqual(state.hiddenPlacements, {});
   assert.equal(sanitizeOrganizerState({ ...initial, phase: "hack" }).phase, "start");
+  assert.equal(sanitizeOrganizerState({ ...initial, introIndex: 999 }).introIndex, FILE_TYPES.length - 1);
+  assert.equal(sanitizeOrganizerState({ ...initial, introIndex: -10 }).introIndex, 0);
 });
 
 test("ícones, vídeos e pôsteres são locais, existem e são leves", async () => {
@@ -188,7 +191,7 @@ test("ícones, vídeos e pôsteres são locais, existem e são leves", async () 
   }
 });
 
-test("integração inclui rota, ciclo de vida, card, tela cheia e cache v22", async () => {
+test("integração inclui rota, seleção acessível, trilha, tela cheia e cache v23", async () => {
   const [html, app, css, game, serviceWorker, readme, attributions] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -207,12 +210,17 @@ test("integração inclui rota, ciclo de vida, card, tela cheia e cache v22", as
   assert.match(game, /requestFullscreen/);
   assert.match(game, /contextmenu/);
   assert.match(game, /pointerdown/);
+  assert.match(game, /dragstart/);
+  assert.match(game, /aria-pressed/);
+  assert.match(game, /Trilha das extensões/);
+  assert.match(game, /PRÓXIMA EXTENSÃO/);
+  assert.match(game, /wfo-temp-line/);
   assert.match(game, /Shift mais F10/);
   assert.match(game, /Tipo de arquivo:/);
   assert.doesNotMatch(game, /title="/);
   assert.match(css, /windows-file-organizer-active/);
   assert.match(css, /prefers-reduced-motion/);
-  assert.match(serviceWorker, /central-jogos-offline-v22/);
+  assert.match(serviceWorker, /central-jogos-offline-v23/);
   assert.match(serviceWorker, /windows-file-organizer-game\.mjs/);
   assert.match(serviceWorker, /drag-file\.webm/);
   assert.match(readme, /#\/organize-windows/);

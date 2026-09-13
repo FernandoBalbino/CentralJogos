@@ -3,6 +3,7 @@ import {
   CONNECTION_FILES,
   DESKTOP_LEVEL_WITH_EXTENSIONS,
   DESKTOP_LEVEL_WITHOUT_EXTENSIONS,
+  FILE_TYPES,
   GUIDED_CHALLENGES,
   WINDOWS_FILE_ORGANIZER_DATA_VERSION
 } from "./windows-file-organizer-data.mjs";
@@ -36,6 +37,7 @@ const sanitizePlacements = (rawPlacements, files) => {
 export const createInitialOrganizerState = (seed = Date.now()) => ({
   version: WINDOWS_FILE_ORGANIZER_STATE_VERSION,
   phase: "start",
+  introIndex: 0,
   connections: {},
   guidedIndex: 0,
   guidedPlacement: null,
@@ -55,9 +57,13 @@ export const sanitizeOrganizerState = (rawState) => {
   const guidedIndex = Number.isInteger(rawState.guidedIndex)
     ? Math.min(Math.max(rawState.guidedIndex, 0), GUIDED_CHALLENGES.length - 1)
     : 0;
+  const introIndex = Number.isInteger(rawState.introIndex)
+    ? Math.min(Math.max(rawState.introIndex, 0), FILE_TYPES.length - 1)
+    : 0;
   return {
     version: WINDOWS_FILE_ORGANIZER_STATE_VERSION,
     phase: PHASES.includes(rawState.phase) ? rawState.phase : "start",
+    introIndex,
     connections,
     guidedIndex,
     guidedPlacement: categoryIds.has(rawState.guidedPlacement) ? rawState.guidedPlacement : null,

@@ -67,6 +67,7 @@ class WindowsFileOrganizerGame {
     this.handlePointerDown = this.handlePointerDown.bind(this);
     this.handlePointerMove = this.handlePointerMove.bind(this);
     this.handlePointerUp = this.handlePointerUp.bind(this);
+    this.handleDragStart = this.handleDragStart.bind(this);
     this.handleFullscreenChange = this.handleFullscreenChange.bind(this);
   }
 
@@ -82,6 +83,7 @@ class WindowsFileOrganizerGame {
     this.root.addEventListener("pointermove", this.handlePointerMove);
     this.root.addEventListener("pointerup", this.handlePointerUp);
     this.root.addEventListener("pointercancel", this.handlePointerUp);
+    this.root.addEventListener("dragstart", this.handleDragStart);
   }
 
   unbindRootEvents() {
@@ -93,6 +95,7 @@ class WindowsFileOrganizerGame {
     this.root?.removeEventListener("pointermove", this.handlePointerMove);
     this.root?.removeEventListener("pointerup", this.handlePointerUp);
     this.root?.removeEventListener("pointercancel", this.handlePointerUp);
+    this.root?.removeEventListener("dragstart", this.handleDragStart);
   }
 
   enter() {
@@ -158,6 +161,7 @@ class WindowsFileOrganizerGame {
     if (!this.launched) {
       document.body.classList.remove("windows-file-organizer-active");
       this.root.innerHTML = this.renderStart();
+      this.disableNativeImageDrag();
       return;
     }
     document.body.classList.add("windows-file-organizer-active");
@@ -184,6 +188,7 @@ class WindowsFileOrganizerGame {
         <div class="wfo-live" aria-live="assertive"></div>
       </div>
     `;
+    this.disableNativeImageDrag();
     window.requestAnimationFrame(() => {
       if (this.state.phase === "connections") this.drawConnectionLines();
       this.restoreFocus();
@@ -233,26 +238,51 @@ class WindowsFileOrganizerGame {
   }
 
   renderIntro() {
+    const index = this.state.introIndex;
+    const type = FILE_TYPES[index];
+    const category = categoryById.get(type.category);
+    const baseName = type.sampleName.slice(0, -type.extension.length);
+    const isFirst = index === 0;
+    const isLast = index === FILE_TYPES.length - 1;
     return `
       <section class="wfo-lesson-screen" aria-labelledby="wfo-intro-title">
         <header class="wfo-lesson-heading">
-          <span class="wfo-kicker">Aprenda rápido</span>
-          <h1 id="wfo-intro-title">A extensão mostra o tipo do arquivo</h1>
-          <p>Ela aparece depois do ponto e ajuda o Windows a escolher o programa certo.</p>
+          <span class="wfo-kicker">Trilha das extensões</span>
+          <h1 id="wfo-intro-title">Aprenda uma extensão de cada vez</h1>
+          <p>Veja o tipo, a pasta e um exemplo antes de avançar.</p>
         </header>
-        <div class="wfo-extension-demo" aria-label="Exemplo: curriculo se transforma em curriculo ponto PDF">
-          <span>curriculo</span><strong>.pdf</strong>
-          <small>A extensão <b>.pdf</b> indica um documento PDF.</small>
+        <div class="wfo-extension-trail" aria-label="Progresso da trilha: extensão ${index + 1} de ${FILE_TYPES.length}">
+          <strong>${index + 1} de ${FILE_TYPES.length}</strong>
+          <ol>
+            ${FILE_TYPES.map((item, itemIndex) => `<li class="${itemIndex < index ? "is-complete" : itemIndex === index ? "is-current" : ""}" ${itemIndex === index ? 'aria-current="step"' : ""}><span>${itemIndex < index ? "✓" : itemIndex + 1}</span><small>${escapeHtml(item.extension)}</small></li>`).join("")}
+          </ol>
         </div>
-        <div class="wfo-type-grid">
-          ${FILE_TYPES.map((type, index) => `
-            <article class="wfo-type-card" style="--delay:${index * 45}ms">
-              <img src="${type.icon}" alt="">
-              <div><strong>${escapeHtml(type.sampleName)}</strong><span>${escapeHtml(type.title)} • ${escapeHtml(categoryById.get(type.category).label)}</span><p>${escapeHtml(type.explanation)}</p></div>
-            </article>
-          `).join("")}
-        </div>
-        <footer class="wfo-stage-actions"><button type="button" class="wfo-primary" data-action="intro-next">PRATICAR AS EXTENSÕES <span aria-hidden="true">→</span></button></footer>
+        <article class="wfo-extension-lesson-card">
+          <div class="wfo-extension-visual" aria-hidden="true">
+            <span class="wfo-extension-number">Extensão ${index + 1}</span>
+            <img src="${type.icon}" alt="">
+            <strong>${escapeHtml(type.extension)}</strong>
+          </div>
+          <div class="wfo-extension-copy">
+            <span class="wfo-kicker">${escapeHtml(type.title)}</span>
+            <h2>${escapeHtml(type.fileTypeLabel)}</h2>
+            <p>${escapeHtml(type.explanation)}</p>
+            <dl>
+              <div><dt>Que tipo é?</dt><dd>${escapeHtml(type.fileTypeLabel)}</dd></div>
+              <div><dt>Em qual pasta?</dt><dd><img src="${FOLDER_ICON}" alt=""> ${escapeHtml(category.label)}</dd></div>
+            </dl>
+            <div class="wfo-extension-example">
+              <span>Exemplo no computador</span>
+              <strong><span>${escapeHtml(baseName)}</span><mark>${escapeHtml(type.extension)}</mark></strong>
+              <small>O que vem depois do último ponto é a extensão.</small>
+            </div>
+          </div>
+        </article>
+        <footer class="wfo-stage-actions wfo-intro-actions">
+          <button type="button" class="wfo-secondary" data-action="intro-previous" ${isFirst ? "disabled" : ""}><span aria-hidden="true">←</span> ANTERIOR</button>
+          <span>Use também as setas ← → do teclado</span>
+          <button type="button" class="wfo-primary" data-action="${isLast ? "intro-next" : "intro-next-item"}">${isLast ? "PRATICAR LIGAÇÕES" : "PRÓXIMA EXTENSÃO"} <span aria-hidden="true">→</span></button>
+        </footer>
       </section>
     `;
   }
@@ -260,10 +290,11 @@ class WindowsFileOrganizerGame {
   renderConnections() {
     const evaluation = this.feedback?.kind === "connections" ? this.feedback.evaluation : null;
     const allConnected = Object.keys(this.state.connections).length === CONNECTION_FILES.length;
+    const selectedConnection = CONNECTION_FILES.find((file) => file.id === this.selectedConnectionFile);
     return `
       <section class="wfo-match-screen" aria-labelledby="wfo-match-title">
         <header class="wfo-compact-heading">
-          <div><span class="wfo-kicker">Etapa 1</span><h1 id="wfo-match-title">Ligue os arquivos às categorias</h1><p>Arraste os pontos ou escolha um arquivo e depois uma categoria. A correção aparece somente no envio.</p></div>
+          <div><span class="wfo-kicker">Etapa 1</span><h1 id="wfo-match-title">Ligue os arquivos às categorias</h1><p><strong>Jeito mais fácil:</strong> clique em um arquivo e depois clique na categoria. Arrastar o ponto azul é opcional.</p></div>
           <div class="wfo-match-tools">
             <button type="button" class="wfo-secondary" data-action="undo-connection" ${this.connectionHistory.length ? "" : "disabled"}>↶ Desfazer</button>
             <button type="button" class="wfo-secondary" data-action="clear-connections" ${Object.keys(this.state.connections).length ? "" : "disabled"}>Limpar ligações</button>
@@ -275,23 +306,23 @@ class WindowsFileOrganizerGame {
               const stateClass = evaluation ? (evaluation.results[fileId] ? "is-correct" : "is-wrong") : "";
               return `<g class="${stateClass}"><path class="wfo-line-hit" data-line-file="${fileId}"></path><path class="wfo-line ${stateClass}" data-line-file="${fileId}"></path>${evaluation?.results[fileId] ? '<text class="wfo-line-check">✓</text>' : ""}</g>`;
             }).join("")}
-            <path class="wfo-temp-line" hidden></path>
+            <path class="wfo-temp-line"></path>
           </svg>
           <div class="wfo-match-column wfo-files-column">
             <h2>Arquivos</h2>
             ${CONNECTION_FILES.map((file) => `
               <div class="wfo-match-item ${this.selectedConnectionFile === file.id ? "is-selected" : ""}">
-                <button type="button" class="wfo-file-label" data-action="select-connection-file" data-file-id="${file.id}" ${evaluation ? "disabled" : ""}>
+                <button type="button" class="wfo-file-label" data-action="select-connection-file" data-file-id="${file.id}" aria-pressed="${this.selectedConnectionFile === file.id}" ${evaluation ? "disabled" : ""}>
                   <img src="${file.icon}" alt=""><span>${escapeHtml(file.displayName)}</span>
                 </button>
-                <button type="button" class="wfo-source-dot" data-source-point="${file.id}" data-file-id="${file.id}" aria-label="Ligar ${escapeHtml(file.displayName)}" ${evaluation ? "disabled" : ""}></button>
+                <button type="button" class="wfo-source-dot" data-action="select-connection-file" data-source-point="${file.id}" data-file-id="${file.id}" aria-label="Selecionar ${escapeHtml(file.displayName)} para ligar" aria-pressed="${this.selectedConnectionFile === file.id}" ${evaluation ? "disabled" : ""}></button>
               </div>
             `).join("")}
           </div>
           <div class="wfo-match-column wfo-categories-column">
             <h2>Categorias</h2>
             ${CATEGORIES.map((category) => `
-              <button type="button" class="wfo-category-target" data-action="select-connection-category" data-category-id="${category.id}" ${evaluation ? "disabled" : ""}>
+              <button type="button" class="wfo-category-target ${selectedConnection ? "is-selection-target" : ""}" data-action="select-connection-category" data-category-id="${category.id}" ${evaluation ? "disabled" : ""}>
                 <span class="wfo-target-dot" data-target-point="${category.id}"></span>
                 <img src="${FOLDER_ICON}" alt=""><strong>${escapeHtml(category.label)}</strong>
               </button>
@@ -302,7 +333,9 @@ class WindowsFileOrganizerGame {
           ${evaluation ? `
             <strong>${evaluation.passed ? "Excelente!" : `Você acertou ${evaluation.correctCount} de ${evaluation.total}.`}</strong>
             <span>${evaluation.passed ? "Todas as extensões foram ligadas corretamente." : "Observe as extensões que ficaram incorretas e tente novamente."}</span>
-          ` : '<span>Você pode refazer uma ligação ou clicar nela para removê-la.</span>'}
+          ` : selectedConnection
+            ? `<strong>Selecionado: ${escapeHtml(selectedConnection.displayName)}</strong><span>Agora clique na categoria onde esse arquivo deve ficar.</span>`
+            : '<strong>1. Clique em um arquivo.</strong><span>2. Clique na categoria. Você pode refazer ou remover uma ligação depois.</span>'}
         </div>
         <footer class="wfo-stage-actions">
           ${evaluation?.passed
@@ -324,15 +357,16 @@ class WindowsFileOrganizerGame {
           <span class="wfo-kicker">${dragLesson ? "Antes de praticar" : "Nova habilidade"}</span>
           <h1 id="wfo-media-title">${dragLesson ? "Como colocar um arquivo em uma pasta" : "Como descobrir um tipo oculto"}</h1>
           <p>${dragLesson
-            ? "Clique e segure o arquivo, arraste até a pasta e solte quando ela ficar destacada."
+            ? "Para facilitar, clique uma vez no arquivo e depois clique na pasta. Se preferir, você ainda pode arrastar."
             : "Clique com o botão direito no arquivo, escolha Propriedades e observe o campo Tipo de arquivo."}</p>
+          ${dragLesson ? '<div class="wfo-easy-method"><strong>Jeito recomendado</strong><span><b>1</b> Clique no arquivo</span><span><b>2</b> Clique na pasta</span><small>O arquivo selecionado fica bem destacado.</small></div>' : ""}
           ${!dragLesson ? '<div class="wfo-touchpad-tip"><span aria-hidden="true">☝☝</span><strong>No Chromebook</strong><p>Toque no touchpad com dois dedos para abrir o menu.</p></div>' : ""}
         </div>
         <div class="wfo-media">
           <video src="${media.video}" poster="${media.poster}" muted autoplay loop playsinline controls aria-label="${dragLesson ? "Demonstração de arrastar um arquivo para uma pasta" : "Demonstração de abrir as Propriedades de um arquivo"}"></video>
           <div class="wfo-media-fallback" aria-hidden="true">
             <span class="${dragLesson ? "is-drag-demo" : "is-properties-demo"}">🗎</span>
-            <strong>${dragLesson ? "Arraste e solte" : "Botão direito → Propriedades"}</strong>
+            <strong>${dragLesson ? "Clique no arquivo → clique na pasta" : "Botão direito → Propriedades"}</strong>
           </div>
         </div>
         <footer class="wfo-stage-actions">
@@ -347,10 +381,12 @@ class WindowsFileOrganizerGame {
     const order = getGuidedFolderOrder(this.state.guidedIndex, this.state.runSeed, challenge.folderIds);
     const correct = this.feedback?.kind === "guided-correct";
     const wrong = this.feedback?.kind === "guided-wrong";
+    const selectFirst = this.feedback?.kind === "guided-select-first";
+    const selected = this.selectedFile === challenge.file.id;
     return `
       <section class="wfo-guided-screen" aria-labelledby="wfo-guided-title">
         <header class="wfo-compact-heading">
-          <div><span class="wfo-kicker">Etapa 2 • Desafio ${this.state.guidedIndex + 1} de ${GUIDED_CHALLENGES.length}</span><h1 id="wfo-guided-title">Coloque o arquivo na pasta correta</h1><p>Use o que você aprendeu sobre a extensão. A posição das pastas pode mudar.</p></div>
+          <div><span class="wfo-kicker">Etapa 2 • Desafio ${this.state.guidedIndex + 1} de ${GUIDED_CHALLENGES.length}</span><h1 id="wfo-guided-title">Coloque o arquivo na pasta correta</h1><p>Primeiro clique no arquivo. Depois clique na pasta escolhida.</p></div>
           <div class="wfo-mini-progress"><span style="width:${((this.state.guidedIndex + (correct ? 1 : 0)) / GUIDED_CHALLENGES.length) * 100}%"></span></div>
         </header>
         <div class="wfo-guided-desktop wfo-desktop-canvas">
@@ -360,7 +396,7 @@ class WindowsFileOrganizerGame {
               const category = categoryById.get(categoryId);
               const containsFile = this.state.guidedPlacement === categoryId;
               return `
-                <button type="button" class="wfo-folder ${containsFile ? "has-file" : ""}" data-action="guided-folder" data-category-id="${category.id}">
+                <button type="button" class="wfo-folder ${containsFile ? "has-file" : ""} ${selected && !containsFile ? "is-selection-target" : ""}" data-action="guided-folder" data-folder-id="${category.id}" data-category-id="${category.id}">
                   <img src="${FOLDER_ICON}" alt=""><strong>${escapeHtml(category.label)}</strong>
                   ${containsFile ? `<span><img src="${challenge.file.icon}" alt="">1 arquivo</span>` : "<span>Vazia</span>"}
                 </button>
@@ -368,12 +404,16 @@ class WindowsFileOrganizerGame {
             }).join("")}
           </div>
         </div>
-        <div class="wfo-feedback ${correct ? "is-success" : wrong ? "is-error" : ""}" aria-live="polite">
+        <div class="wfo-feedback ${correct ? "is-success" : wrong || selectFirst ? "is-error" : selected ? "is-selection" : ""}" aria-live="polite">
           ${correct
             ? `<strong>Correto!</strong><span>${escapeHtml(challenge.file.realName)} pertence a ${escapeHtml(categoryById.get(challenge.file.category).label)}.</span>`
             : wrong
               ? "<strong>Ainda não.</strong><span>Observe novamente a extensão do arquivo e tente outra pasta.</span>"
-              : "<span>Arraste o arquivo ou selecione-o e escolha uma pasta.</span>"}
+              : selectFirst
+                ? "<strong>Selecione o arquivo primeiro.</strong><span>Depois clique na pasta onde deseja colocá-lo.</span>"
+                : selected
+                  ? `<strong>Selecionado: ${escapeHtml(challenge.file.displayName)}</strong><span>Agora clique em uma das pastas.</span>`
+                  : "<strong>Passo 1:</strong><span>Clique no arquivo para selecioná-lo.</span>"}
         </div>
         <footer class="wfo-stage-actions">
           ${correct
@@ -415,6 +455,7 @@ class WindowsFileOrganizerGame {
     const counts = getFolderCounts(files, placements);
     const evaluation = this.desktopFeedback?.evaluation || null;
     const interactionHint = this.desktopFeedback?.hint || "";
+    const selectedFile = files.find((file) => file.id === this.selectedFile);
     const desktopFiles = files.filter((file) => !placements[file.id]);
     const folderFiles = this.openedFolder ? files.filter((file) => placements[file.id] === this.openedFolder) : [];
     const stageNumber = hiddenNames ? 4 : 3;
@@ -422,7 +463,7 @@ class WindowsFileOrganizerGame {
       <section class="wfo-desktop-screen" aria-labelledby="wfo-desktop-title">
         <header class="wfo-desktop-heading">
           <div><span class="wfo-kicker">Etapa ${stageNumber}</span><h1 id="wfo-desktop-title">${hiddenNames ? "Desafio final: extensões ocultas" : "Organize a Área de Trabalho"}</h1></div>
-          <p>${hiddenNames ? "Use botão direito → Propriedades para descobrir o tipo antes de mover." : "Arraste os arquivos para as pastas. Abra uma pasta com dois cliques."}</p>
+          <p>${hiddenNames ? "Descubra o tipo em Propriedades. Depois clique no arquivo e na pasta de destino." : "Clique em um arquivo e depois na pasta de destino. Arrastar continua opcional."}</p>
         </header>
         <div class="wfo-desktop-layout">
           <div class="wfo-desktop-canvas" data-desktop-drop="true" aria-label="Área de Trabalho">
@@ -442,8 +483,8 @@ class WindowsFileOrganizerGame {
           </div>
           <aside class="wfo-folder-rail" aria-label="Pastas">
             ${CATEGORIES.map((category) => `
-              <button type="button" class="wfo-folder ${evaluation?.folderCompletion[category.id] ? "is-complete" : ""}" data-folder-id="${category.id}" data-action="desktop-folder" data-category-id="${category.id}" aria-label="Pasta ${escapeHtml(category.label)}, ${counts[category.id]} arquivos">
-                <span class="wfo-folder-check" aria-hidden="true">${evaluation?.folderCompletion[category.id] ? "✓" : ""}</span>
+              <button type="button" class="wfo-folder ${evaluation?.folderCompletion[category.id] ? "is-complete" : ""} ${selectedFile ? "is-selection-target" : ""}" data-folder-id="${category.id}" data-action="desktop-folder" data-category-id="${category.id}" aria-label="Pasta ${escapeHtml(category.label)}, ${counts[category.id]} arquivos${selectedFile ? ", clique para mover o arquivo selecionado" : ""}">
+                ${evaluation?.folderCompletion[category.id] ? '<span class="wfo-folder-check" aria-hidden="true">✓</span>' : ""}
                 <img src="${FOLDER_ICON}" alt=""><strong>${escapeHtml(category.label)}</strong><small>${counts[category.id]} ${counts[category.id] === 1 ? "arquivo" : "arquivos"}</small>
               </button>
             `).join("")}
@@ -451,11 +492,13 @@ class WindowsFileOrganizerGame {
         </div>
         <div class="wfo-desktop-footer">
           <div class="wfo-feedback ${evaluation?.passed ? "is-success" : evaluation ? "is-error" : ""}" aria-live="polite">
-            ${interactionHint
+            ${selectedFile
+              ? `<strong>Selecionado: ${escapeHtml(selectedFile.displayName)}</strong><span>Agora clique na pasta onde deseja colocá-lo.</span>`
+              : interactionHint
               ? `<strong>Dica do touchpad</strong><span>${escapeHtml(interactionHint)}</span>`
               : evaluation
               ? `<strong>${evaluation.correctCount} de ${evaluation.total} arquivos estão organizados corretamente.</strong><span>${evaluation.passed ? "Área de Trabalho organizada!" : hiddenNames ? "Alguns arquivos ainda estão na pasta errada. Use Propriedades para conferir o tipo." : "Os arquivos incorretos voltaram para a Área de Trabalho. Tente novamente."}</span>`
-              : `<span>${desktopFiles.length} arquivos ainda estão na Área de Trabalho.</span>`}
+              : `<strong>Jeito mais fácil:</strong><span>Clique em um arquivo e depois clique na pasta. ${desktopFiles.length} arquivos ainda estão na Área de Trabalho.</span>`}
           </div>
           ${evaluation?.passed
             ? `<button type="button" class="wfo-primary" data-action="${hiddenNames ? "finish-course" : "visible-complete"}">${hiddenNames ? "VER RESULTADO" : "CONTINUAR"} <span aria-hidden="true">→</span></button>`
@@ -473,9 +516,10 @@ class WindowsFileOrganizerGame {
       ? `Arquivo ${file.displayName}. Pressione Shift mais F10 para abrir o menu.`
       : `Arquivo ${file.displayName}`;
     return `
-      <button type="button" class="wfo-file ${selected ? "is-selected" : ""} ${incorrect ? "is-incorrect" : ""}" data-action="select-file" data-file-id="${file.id}" data-location="${location}" aria-label="${escapeHtml(safeLabel)}">
+      <button type="button" class="wfo-file ${selected ? "is-selected" : ""} ${incorrect ? "is-incorrect" : ""}" data-action="select-file" data-file-id="${file.id}" data-location="${location}" aria-label="${escapeHtml(safeLabel)}" aria-pressed="${selected}">
         <span class="wfo-file-icon"><img src="${file.icon}" alt=""><i aria-hidden="true">${incorrect ? "!" : ""}</i></span>
         <span class="wfo-file-name">${escapeHtml(file.displayName)}</span>
+        <span class="wfo-file-selected-badge" aria-hidden="true">✓ Selecionado</span>
       </button>
     `;
   }
@@ -564,6 +608,8 @@ class WindowsFileOrganizerGame {
       start: () => this.startActivity(false),
       restart: () => this.startActivity(true),
       fullscreen: () => this.toggleFullscreen(),
+      "intro-previous": () => this.previousIntroItem(),
+      "intro-next-item": () => this.nextIntroItem(),
       "intro-next": () => this.setPhase("connections"),
       "undo-connection": () => this.undoConnections(),
       "clear-connections": () => this.clearConnections(),
@@ -573,7 +619,7 @@ class WindowsFileOrganizerGame {
       "retry-connections": () => this.retryConnections(),
       "connections-next": () => this.setPhase("drag-demo"),
       "drag-demo-next": () => this.setPhase("guided"),
-      "guided-folder": () => this.placeGuidedFile(categoryId),
+      "guided-folder": () => this.chooseGuidedFolder(categoryId),
       "guided-submit": () => this.evaluateGuided(),
       "guided-next": () => this.nextGuided(),
       "visible-intro-next": () => this.setPhase("desktop-visible"),
@@ -651,11 +697,35 @@ class WindowsFileOrganizerGame {
     if (this.connectionHistory.length > 20) this.connectionHistory.shift();
   }
 
+  previousIntroItem() {
+    if (this.state.introIndex <= 0) return;
+    this.state.introIndex -= 1;
+    this.pendingFocusSelector = "[data-action='intro-previous']";
+    this.saveState();
+    this.render();
+  }
+
+  nextIntroItem() {
+    if (this.state.introIndex >= FILE_TYPES.length - 1) {
+      this.setPhase("connections");
+      return;
+    }
+    this.state.introIndex += 1;
+    this.pendingFocusSelector = "[data-action='intro-next-item']";
+    this.saveState();
+    this.render();
+  }
+
   selectConnectionFile(fileId) {
     if (this.feedback) return;
     this.selectedConnectionFile = this.selectedConnectionFile === fileId ? null : fileId;
     this.pendingFocusSelector = `[data-action="select-connection-file"][data-file-id="${fileId}"]`;
     this.render();
+    this.announce(
+      this.selectedConnectionFile
+        ? "Arquivo selecionado. Agora clique na categoria correspondente."
+        : "Seleção cancelada."
+    );
   }
 
   connectSelected(categoryId) {
@@ -715,6 +785,16 @@ class WindowsFileOrganizerGame {
     this.render();
   }
 
+  chooseGuidedFolder(categoryId) {
+    const challenge = GUIDED_CHALLENGES[this.state.guidedIndex];
+    if (this.selectedFile !== challenge.file.id) {
+      this.feedback = { kind: "guided-select-first" };
+      this.render();
+      return;
+    }
+    this.placeGuidedFile(categoryId);
+  }
+
   evaluateGuided() {
     const challenge = GUIDED_CHALLENGES[this.state.guidedIndex];
     if (!this.state.guidedPlacement) return;
@@ -754,7 +834,10 @@ class WindowsFileOrganizerGame {
     if (!["desktop-visible", "desktop-hidden"].includes(this.state.phase) && this.state.phase !== "guided") return;
     if (this.state.phase === "guided") {
       this.selectedFile = this.selectedFile === fileId ? null : fileId;
+      this.feedback = null;
+      this.pendingFocusSelector = `[data-file-id="${fileId}"]`;
       this.render();
+      this.announce(this.selectedFile ? "Arquivo selecionado. Agora escolha uma pasta." : "Seleção cancelada.");
       return;
     }
     this.selectedFile = this.selectedFile === fileId ? null : fileId;
@@ -765,7 +848,11 @@ class WindowsFileOrganizerGame {
   }
 
   handleFolderClick(categoryId) {
-    if (this.selectedFile) this.moveSelectedFile(categoryId);
+    if (this.selectedFile) {
+      this.moveSelectedFile(categoryId);
+      return;
+    }
+    this.announce("Primeiro clique em um arquivo. Depois clique na pasta de destino.");
   }
 
   moveSelectedFile(destination) {
@@ -855,6 +942,18 @@ class WindowsFileOrganizerGame {
       else if (this.openedFolder) this.closeFolder();
       return;
     }
+    if (this.state.phase === "intro" && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        this.previousIntroItem();
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        this.nextIntroItem();
+        return;
+      }
+    }
     const file = event.target.closest(".wfo-file[data-file-id]");
     if (file && (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))) {
       event.preventDefault();
@@ -870,7 +969,8 @@ class WindowsFileOrganizerGame {
     const folder = event.target.closest("[data-folder-id]");
     if (folder && event.key === "Enter") {
       event.preventDefault();
-      if (this.selectedFile) this.moveSelectedFile(folder.dataset.folderId);
+      if (this.state.phase === "guided") this.chooseGuidedFolder(folder.dataset.folderId);
+      else if (this.selectedFile) this.moveSelectedFile(folder.dataset.folderId);
       else {
         this.openedFolder = folder.dataset.folderId;
         this.render();
@@ -889,15 +989,15 @@ class WindowsFileOrganizerGame {
     const source = event.target.closest(".wfo-source-dot[data-file-id]");
     if (source && this.state.phase === "connections" && !this.feedback) {
       event.preventDefault();
-      this.pointerDrag = { kind: "connection", pointerId: event.pointerId, fileId: source.dataset.fileId, startX: event.clientX, startY: event.clientY, moved: false };
-      this.root.setPointerCapture?.(event.pointerId);
+      this.pointerDrag = { kind: "connection", pointerId: event.pointerId, fileId: source.dataset.fileId, startX: event.clientX, startY: event.clientY, moved: false, captureElement: source };
+      try { source.setPointerCapture?.(event.pointerId); } catch {}
       this.updateTemporaryLine(event.clientX, event.clientY);
       return;
     }
     const file = event.target.closest(".wfo-file[data-file-id]");
     if (!file || !["guided", "desktop-visible", "desktop-hidden"].includes(this.state.phase)) return;
-    this.pointerDrag = { kind: "file", pointerId: event.pointerId, fileId: file.dataset.fileId, startX: event.clientX, startY: event.clientY, moved: false };
-    this.root.setPointerCapture?.(event.pointerId);
+    this.pointerDrag = { kind: "file", pointerId: event.pointerId, fileId: file.dataset.fileId, startX: event.clientX, startY: event.clientY, moved: false, captureElement: file };
+    try { file.setPointerCapture?.(event.pointerId); } catch {}
     if (this.state.phase === "desktop-hidden" && event.pointerType === "touch") {
       this.longPressTimer = window.setTimeout(() => {
         if (this.pointerDrag && !this.pointerDrag.moved) {
@@ -911,6 +1011,7 @@ class WindowsFileOrganizerGame {
 
   handlePointerMove(event) {
     if (!this.pointerDrag || this.pointerDrag.pointerId !== event.pointerId) return;
+    event.preventDefault();
     const distance = Math.hypot(event.clientX - this.pointerDrag.startX, event.clientY - this.pointerDrag.startY);
     if (distance > 7) {
       this.pointerDrag.moved = true;
@@ -918,19 +1019,25 @@ class WindowsFileOrganizerGame {
       this.root.querySelector(`[data-file-id="${this.pointerDrag.fileId}"]`)?.classList.add("is-dragging");
     }
     if (this.pointerDrag.kind === "connection") this.updateTemporaryLine(event.clientX, event.clientY);
-    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".wfo-folder");
-    this.root.querySelectorAll(".wfo-folder.is-drop-target").forEach((folder) => folder.classList.remove("is-drop-target"));
+    const targetSelector = this.pointerDrag.kind === "connection" ? ".wfo-category-target" : ".wfo-folder";
+    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(targetSelector);
+    this.root.querySelectorAll(".is-drop-target").forEach((item) => item.classList.remove("is-drop-target"));
     target?.classList.add("is-drop-target");
   }
 
   handlePointerUp(event) {
     if (!this.pointerDrag || this.pointerDrag.pointerId !== event.pointerId) return;
+    if (event.type === "pointercancel") {
+      this.stopPointerInteraction();
+      return;
+    }
     const drag = this.pointerDrag;
     window.clearTimeout(this.longPressTimer);
     const target = document.elementFromPoint(event.clientX, event.clientY);
     if (drag.kind === "connection") {
       const categoryTarget = target?.closest(".wfo-category-target[data-category-id]");
-      if (categoryTarget) this.connectFile(drag.fileId, categoryTarget.dataset.categoryId);
+      if (drag.moved && categoryTarget) this.connectFile(drag.fileId, categoryTarget.dataset.categoryId);
+      else if (!drag.moved) this.selectConnectionFile(drag.fileId);
       else this.render();
       this.suppressClickUntil = Date.now() + 250;
     } else if (drag.moved) {
@@ -956,10 +1063,17 @@ class WindowsFileOrganizerGame {
   stopPointerInteraction() {
     window.clearTimeout(this.longPressTimer);
     this.longPressTimer = null;
+    const drag = this.pointerDrag;
+    try {
+      if (drag?.captureElement?.hasPointerCapture?.(drag.pointerId)) drag.captureElement.releasePointerCapture(drag.pointerId);
+    } catch {}
     this.pointerDrag = null;
     this.root?.querySelectorAll(".is-dragging,.is-drop-target").forEach((element) => element.classList.remove("is-dragging", "is-drop-target"));
     const temp = this.root?.querySelector(".wfo-temp-line");
-    if (temp) temp.hidden = true;
+    if (temp) {
+      temp.classList.remove("is-visible");
+      temp.removeAttribute("d");
+    }
   }
 
   drawConnectionLines() {
@@ -997,7 +1111,15 @@ class WindowsFileOrganizerGame {
     const start = this.pointForElement(source, boardRect);
     const end = { x: clientX - boardRect.left, y: clientY - boardRect.top };
     path.setAttribute("d", this.connectionPath(start, end));
-    path.hidden = false;
+    path.classList.add("is-visible");
+  }
+
+  handleDragStart(event) {
+    if (event.target.closest("img,.wfo-file,.wfo-file-label")) event.preventDefault();
+  }
+
+  disableNativeImageDrag() {
+    this.root?.querySelectorAll("img").forEach((image) => { image.draggable = false; });
   }
 
   pointForElement(element, parentRect) {
