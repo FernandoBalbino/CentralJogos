@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v21";
+const CACHE_NAME = "central-jogos-offline-v22";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -12,6 +12,28 @@ const WINDOWS_DISCOVERY_VIDEO_NAMES = [
 const WINDOWS_DISCOVERY_MEDIA = [
   ...["desktop", "start", "explorer", "browser", "settings"].map((name) => `./assets/windows-discovery/posters/${name}.webp`),
   ...WINDOWS_DISCOVERY_VIDEO_NAMES.map((name) => `./assets/windows-discovery/videos/${name}.webm`)
+];
+
+const WINDOWS_FILE_ORGANIZER_ASSETS = [
+  "./assets/windows-file-organizer/icons/pdf.svg",
+  "./assets/windows-file-organizer/icons/word.svg",
+  "./assets/windows-file-organizer/icons/text.svg",
+  "./assets/windows-file-organizer/icons/excel.svg",
+  "./assets/windows-file-organizer/icons/powerpoint.svg",
+  "./assets/windows-file-organizer/icons/photo-jpg.svg",
+  "./assets/windows-file-organizer/icons/photo-png.svg",
+  "./assets/windows-file-organizer/icons/video.svg",
+  "./assets/windows-file-organizer/icons/music.svg",
+  "./assets/windows-file-organizer/icons/archive.svg",
+  "./assets/windows-file-organizer/icons/program.svg",
+  "./assets/windows-file-organizer/icons/folder.svg",
+  "./assets/windows-file-organizer/icons/chrome.svg",
+  "./assets/windows-file-organizer/icons/discord.svg",
+  "./assets/windows-file-organizer/icons/minecraft-launcher.png",
+  "./assets/windows-file-organizer/media/drag-file.webm",
+  "./assets/windows-file-organizer/media/drag-file.webp",
+  "./assets/windows-file-organizer/media/open-properties.webm",
+  "./assets/windows-file-organizer/media/open-properties.webp"
 ];
 
 const PRECACHE_PATHS = [
@@ -28,6 +50,7 @@ const PRECACHE_PATHS = [
   "./windows-discovery-game.css",
   "./google-slides-course.css",
   "./google-sheets-course.css",
+  "./windows-file-organizer-game.css",
   "./js/app.js",
   "./js/credits-data.js",
   "./js/data.js",
@@ -57,6 +80,9 @@ const PRECACHE_PATHS = [
   "./js/google-sheets-course-game.mjs",
   "./js/google-sheets-course-core.mjs",
   "./js/google-sheets-course-data.mjs",
+  "./js/windows-file-organizer-game.mjs",
+  "./js/windows-file-organizer-core.mjs",
+  "./js/windows-file-organizer-data.mjs",
   "./vendor/three/three.module.min.js",
   "./vendor/three/three.core.min.js",
   "./assets/windows-mission/tecnico-em-acao-card.png",
@@ -91,7 +117,8 @@ const PRECACHE_PATHS = [
   "./assets/side-game/icons/touch_app.svg",
   "./assets/side-game/icons/visibility.svg",
   "./assets/side-game/icons/wifi.svg",
-  ...WINDOWS_DISCOVERY_MEDIA
+  ...WINDOWS_DISCOVERY_MEDIA,
+  ...WINDOWS_FILE_ORGANIZER_ASSETS
 ];
 
 const scopedUrls = () => PRECACHE_PATHS.map((path) => new URL(path, self.registration.scope).href);

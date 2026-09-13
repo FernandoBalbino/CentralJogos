@@ -285,6 +285,7 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 .choose-side-card .card-kicker { color: var(--purple); }
 .windows-mission-home-card .card-kicker { color: var(--teal-dark); }
 .windows-discovery-home-card .card-kicker { color: var(--teal-dark); }
+.windows-file-organizer-home-card .card-kicker { color: #0b5ed7; }
 .game-card h2 { margin: 0 0 7px; font-family: "Fredoka", sans-serif; font-size: 1.28rem; line-height: 1.04; }
 .game-card-copy > p:not(.card-kicker) { display: -webkit-box; margin: 0 0 11px; overflow: hidden; color: var(--muted); font-size: .81rem; line-height: 1.34; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .game-card-copy .primary-button { width: 100%; min-height: 38px; margin-top: auto; padding: 8px 12px; border-radius: 10px; font-size: .78rem; }
@@ -308,7 +309,23 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 .windows-discovery-home-preview img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .windows-discovery-home-preview span { position: absolute; z-index: 1; right: 10px; bottom: 9px; padding: 5px 9px; border-radius: 999px; color: #fff; background: rgba(24,42,67,.9); font-size: .64rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 
-.home-screen :is(.classification-preview,.hangman-preview,.choose-side-preview,.support-preview,.memory-home-preview,.crossword-home-preview,.desafio-home-preview,.windows-mission-home-preview,.windows-discovery-home-preview) { height: 112px; min-height: 112px; }
+.windows-file-organizer-home-preview {
+  position: relative;
+  display: grid;
+  grid-template-columns: 62px 30px 75px;
+  place-content: center;
+  place-items: center;
+  gap: 5px;
+  overflow: hidden;
+  background: linear-gradient(145deg,#dff5ff,#70c8f3);
+}
+.windows-file-organizer-home-preview::before { position: absolute; right: -35px; bottom: -55px; width: 130px; height: 130px; border: 2px solid rgba(255,255,255,.45); border-radius: 35%; content: ""; transform: rotate(28deg); }
+.windows-file-organizer-home-preview img { position: relative; z-index: 1; width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 5px 6px rgba(16,64,105,.18)); }
+.windows-file-organizer-home-preview .wfo-preview-folder { width: 74px; }
+.windows-file-organizer-home-preview > span { color: #fff; font-size: 2rem; font-weight: 900; text-shadow: 0 3px 8px rgba(11,94,215,.3); }
+.windows-file-organizer-home-preview > b { position: absolute; z-index: 2; right: 9px; bottom: 8px; padding: 5px 8px; border-radius: 999px; color: #fff; background: rgba(8,55,103,.88); font-size: .6rem; letter-spacing: .06em; text-transform: uppercase; }
+
+.home-screen :is(.classification-preview,.hangman-preview,.choose-side-preview,.support-preview,.memory-home-preview,.crossword-home-preview,.desafio-home-preview,.windows-mission-home-preview,.windows-discovery-home-preview,.windows-file-organizer-home-preview) { height: 112px; min-height: 112px; }
 .home-screen .preview-chip { width: 46px; height: 41px; border-width: 3px; border-radius: 9px; box-shadow: 3px 4px 0 rgba(24,42,67,.3); font-size: 1.1rem; }
 .home-screen .chip-keyboard { top: 42px; left: 18px; }
 .home-screen .chip-monitor { top: 46px; right: 20px; }
@@ -661,7 +678,11 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
   .game-card { grid-template-columns: 120px minmax(0,1fr); grid-template-rows: 1fr; min-height: 176px; }
   .game-card-copy { padding: 34px 14px 13px; }
   .card-topline .difficulty { display: none; }
-  .home-screen :is(.classification-preview,.hangman-preview,.choose-side-preview,.support-preview,.memory-home-preview,.crossword-home-preview,.desafio-home-preview) { width: 120px; height: 100%; min-height: 176px; }
+  .home-screen :is(.classification-preview,.hangman-preview,.choose-side-preview,.support-preview,.memory-home-preview,.crossword-home-preview,.desafio-home-preview,.windows-mission-home-preview,.windows-discovery-home-preview,.windows-file-organizer-home-preview) { width: 120px; height: 100%; min-height: 176px; }
+  .windows-file-organizer-home-preview { grid-template-columns: 43px 16px 48px; gap: 1px; }
+  .windows-file-organizer-home-preview img,.windows-file-organizer-home-preview .wfo-preview-folder { width: 44px; height: 44px; }
+  .windows-file-organizer-home-preview > span { font-size: 1.15rem; }
+  .windows-file-organizer-home-preview > b { display: none; }
   .home-screen .memory-home-preview { grid-template-columns: repeat(2,40px); }
   .home-screen .memory-preview-card { width: 40px; height: 40px; }
   .home-screen .desafio-home-preview { grid-template-columns: repeat(2,38px); }

@@ -266,7 +266,7 @@ test("rota, recursos, cache v21, foco de célula, fullscreen, senha e cursor est
   assert.match(css, /\.gsh-status-bar/);
   assert.match(css, /\.gsh-cell\.is-selected:not\(\.is-active\)/);
   assert.doesNotMatch(css, /\.gsh-demo-cursor\s*\{\s*display:\s*none/);
-  assert.match(worker, /central-jogos-offline-v21/);
+  assert.match(worker, /central-jogos-offline-v22/);
   assert.match(worker, /google-sheets-course-data\.mjs/);
   assert.match(worker, /roboto-400\.ttf/);
   assert.match(worker, /chromebook-keyboard\.webp/);

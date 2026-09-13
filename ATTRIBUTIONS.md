@@ -15,6 +15,18 @@ Todos os recursos usados pelo site são armazenados localmente. Este arquivo com
 - **Cursor do Windows** — a imagem do cursor usada durante a produção dos vídeos foi extraída da instalação local do Windows exclusivamente para representar a interação do sistema na atividade educativa.
 - **Ícones da interface** — o jogo reutiliza os Material Design Icons locais já atribuídos abaixo.
 
+## Organize o Windows — Arquivos e Extensões
+
+- **Microsoft Word, Excel e PowerPoint (2019–2025)** — ícones oficiais da Microsoft Corporation, obtidos por meio das páginas de arquivo do Wikimedia Commons e armazenados sem alteração em `assets/windows-file-organizer/icons/`. Os arquivos são identificados como logotipos simples de domínio público, sujeitos a direitos de marca.
+- **Adobe PDF** — ícone de arquivo PDF associado ao Adobe Reader, autoria atribuída a Adobe Systems/CMetalCore na página do arquivo no Wikimedia Commons, armazenado localmente como `pdf.svg`.
+- **Google Chrome** — ícone oficial de 2022 disponibilizado pelo Google em `google.com/chrome/static/images/chrome-logo.svg` e copiado localmente sem alteração.
+- **Discord** — símbolo Clyde na cor oficial Blurple `#5865F2`, mantido sem distorção ou recoloração e armazenado localmente como `discord.svg`.
+- **Minecraft Launcher** — ícone oficial do Launcher com rosto de Creeper, obtido de `minecraft.net` e armazenado localmente como `minecraft-launcher.png`.
+- **TXT, JPG, PNG, MP4, MP3, ZIP, programa e pasta** — ícones vetoriais originais criados para esta atividade.
+- **Demonstrações educativas** — os vídeos WebM e pôsteres WebP de arrastar e de abrir Propriedades foram produzidos localmente pelo script `scripts/create-windows-file-organizer-media.ps1`.
+
+Microsoft, Adobe, Google Chrome, Discord e Minecraft são marcas de seus respectivos titulares. Os ícones aparecem somente para identificar funcionalmente os tipos e aplicativos citados em contexto educacional. Este projeto não é oficial, patrocinado ou endossado por essas empresas.
+
 ## Acervo original do CentralJogos
 
 As 40 fotografias e marcas que já faziam parte dos jogos Classificação e Forca continuam documentadas individualmente em `js/credits-data.js`, com fonte, autoria, título e licença. Os arquivos correspondentes permanecem em `assets/items/`.
