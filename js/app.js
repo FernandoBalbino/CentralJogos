@@ -9,6 +9,7 @@ import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
 import { googleSlidesCourseGame } from "./google-slides-course-game.mjs?v=3.0.0";
 import { googleSheetsCourseGame } from "./google-sheets-course-game.mjs?v=1.0.6";
 import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.1.0";
+import { mazeGame } from "./maze-game.mjs?v=1.0.0";
 
 (function () {
   "use strict";
@@ -50,6 +51,7 @@ import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.
     if (hash.startsWith("#/google-apresentacoes")) return "google-slides-course";
     if (hash.startsWith("#/google-planilhas")) return "google-sheets-course";
     if (hash.startsWith("#/organize-windows")) return "windows-file-organizer";
+    if (hash.startsWith("#/labirinto-da-informatica")) return "maze-game";
     return "home";
   };
 
@@ -65,6 +67,7 @@ import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.
     if (activeRoute === "google-slides-course" && route !== "google-slides-course") googleSlidesCourseGame.leave();
     if (activeRoute === "google-sheets-course" && route !== "google-sheets-course") googleSheetsCourseGame.leave();
     if (activeRoute === "windows-file-organizer" && route !== "windows-file-organizer") windowsFileOrganizerGame.leave();
+    if (activeRoute === "maze-game" && route !== "maze-game") mazeGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -97,8 +100,10 @@ import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.
           ? "Google Planilhas na Prática | Central de Jogos"
         : route === "windows-file-organizer"
           ? "Organize o Windows — Arquivos e Extensões | Central de Jogos"
+        : route === "maze-game"
+          ? "Labirinto da Informática | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer" && route !== "maze-game") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
@@ -111,6 +116,7 @@ import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.
     if (route === "google-slides-course" && activeRoute !== "google-slides-course") googleSlidesCourseGame.enter();
     if (route === "google-sheets-course" && activeRoute !== "google-sheets-course") googleSheetsCourseGame.enter();
     if (route === "windows-file-organizer" && activeRoute !== "windows-file-organizer") windowsFileOrganizerGame.enter();
+    if (route === "maze-game" && activeRoute !== "maze-game") mazeGame.enter();
     activeRoute = route;
   };
 
@@ -747,6 +753,7 @@ import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.
   googleSlidesCourseGame.mount(document.getElementById("google-slides-course-app"));
   googleSheetsCourseGame.mount(document.getElementById("google-sheets-course-app"));
   windowsFileOrganizerGame.mount(document.getElementById("windows-file-organizer-app"));
+  mazeGame.mount(document.getElementById("maze-game-app"));
   classification.ensureState();
   renderRoute();
 

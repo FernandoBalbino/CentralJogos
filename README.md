@@ -1,6 +1,6 @@
 # Central de Jogos — Fundamentos de Informática
 
-Site educacional estático com doze jogos para aulas introdutórias de informática:
+Site educacional estático com treze jogos para aulas introdutórias de informática:
 
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
@@ -14,6 +14,7 @@ Site educacional estático com doze jogos para aulas introdutórias de informát
 - **Google Apresentações na Prática:** 30 aulas com demonstração, pergunta e prática real, além de um desafio final com dez objetivos em um simulador local fiel à interface do Google Apresentações e otimizado para Chromebook.
 - **Google Planilhas na Prática:** 30 aulas com demonstração e prática em um simulador de planilhas preparado para teclado e touchpad de Chromebook.
 - **Organize o Windows — Arquivos e Extensões:** curso prático em quatro etapas para reconhecer 11 extensões, mover arquivos, organizar duas Áreas de Trabalho e consultar o tipo pelo menu Propriedades.
+- **Labirinto da Informática:** exploração de um labirinto procedural com cronômetro, vírus perseguidor, baús com 10 poderes, personagem em pixel art e 36 desafios práticos de arquivos, hardware, software, periféricos, Windows e suporte básico.
 
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 
@@ -41,6 +42,7 @@ As rotas diretas dos jogos mais recentes são:
 - `http://localhost:8000/#/google-apresentacoes`
 - `http://localhost:8000/#/google-planilhas`
 - `http://localhost:8000/#/organize-windows`
+- `http://localhost:8000/#/labirinto-da-informatica`
 
 ## Expandir o curso Google Apresentações
 
@@ -88,6 +90,7 @@ node --test tests/windows-discovery.test.mjs
 node --test tests/google-slides-course.test.mjs
 node --test tests/google-sheets-course.test.mjs
 node --test tests/windows-file-organizer.test.mjs
+node --test tests/maze-game.test.mjs
 ```
 
 ## Publicar no GitHub Pages

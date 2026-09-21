@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v23";
+const CACHE_NAME = "central-jogos-offline-v24";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -36,6 +36,34 @@ const WINDOWS_FILE_ORGANIZER_ASSETS = [
   "./assets/windows-file-organizer/media/open-properties.webp"
 ];
 
+const MAZE_GAME_ASSETS = [
+  "./assets/maze-game/player-sprites.png",
+  "./assets/maze-game/lab-props.png",
+  "./assets/maze-game/virus-power-atlas.png",
+  "./assets/items/ssd.jpg",
+  "./assets/items/memoria-ram.jpg",
+  "./assets/items/processador.jpg",
+  "./assets/items/placa-mae.jpg",
+  "./assets/items/teclado.jpg",
+  "./assets/items/windows.svg",
+  "./assets/items/mouse.jpg",
+  "./assets/items/google-chrome.svg",
+  "./assets/items/monitor.jpg",
+  "./assets/items/libreoffice-writer.svg",
+  "./assets/items/gimp.svg",
+  "./assets/items/mozilla-firefox.svg",
+  "./assets/items/webcam.jpg",
+  "./assets/items/vlc.svg",
+  "./assets/items/impressora.jpg",
+  "./assets/items/ubuntu.svg",
+  "./assets/items/seven-zip.svg",
+  "./assets/items/headset.jpg",
+  "./assets/items/microfone.jpg",
+  "./assets/items/touchscreen.jpg",
+  "./assets/items/caixa-som.jpg",
+  "./assets/items/scanner.jpg"
+];
+
 const PRECACHE_PATHS = [
   "./",
   "./index.html",
@@ -51,6 +79,7 @@ const PRECACHE_PATHS = [
   "./google-slides-course.css",
   "./google-sheets-course.css",
   "./windows-file-organizer-game.css",
+  "./maze-game.css",
   "./js/app.js",
   "./js/credits-data.js",
   "./js/data.js",
@@ -83,6 +112,11 @@ const PRECACHE_PATHS = [
   "./js/windows-file-organizer-game.mjs",
   "./js/windows-file-organizer-core.mjs",
   "./js/windows-file-organizer-data.mjs",
+  "./js/maze-game.mjs",
+  "./js/maze-game-core.mjs",
+  "./js/maze-game-renderer.mjs",
+  "./js/maze-game-challenges.mjs",
+  "./js/maze-game-data.mjs",
   "./vendor/three/three.module.min.js",
   "./vendor/three/three.core.min.js",
   "./assets/windows-mission/tecnico-em-acao-card.png",
@@ -117,6 +151,7 @@ const PRECACHE_PATHS = [
   "./assets/side-game/icons/touch_app.svg",
   "./assets/side-game/icons/visibility.svg",
   "./assets/side-game/icons/wifi.svg",
+  ...MAZE_GAME_ASSETS,
   ...WINDOWS_DISCOVERY_MEDIA,
   ...WINDOWS_FILE_ORGANIZER_ASSETS
 ];

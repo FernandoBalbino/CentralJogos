@@ -191,7 +191,7 @@ test("ícones, vídeos e pôsteres são locais, existem e são leves", async () 
   }
 });
 
-test("integração inclui rota, seleção acessível, trilha, tela cheia e cache v23", async () => {
+test("integração inclui rota, seleção acessível, trilha, tela cheia e cache v24", async () => {
   const [html, app, css, game, serviceWorker, readme, attributions] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -220,7 +220,7 @@ test("integração inclui rota, seleção acessível, trilha, tela cheia e cache
   assert.doesNotMatch(game, /title="/);
   assert.match(css, /windows-file-organizer-active/);
   assert.match(css, /prefers-reduced-motion/);
-  assert.match(serviceWorker, /central-jogos-offline-v23/);
+  assert.match(serviceWorker, /central-jogos-offline-v24/);
   assert.match(serviceWorker, /windows-file-organizer-game\.mjs/);
   assert.match(serviceWorker, /drag-file\.webm/);
   assert.match(readme, /#\/organize-windows/);

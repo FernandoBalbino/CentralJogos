@@ -2,6 +2,12 @@
 
 Todos os recursos usados pelo site são armazenados localmente. Este arquivo complementa os créditos exibidos na interface.
 
+## Labirinto da Informática
+
+- **Personagem em pixel art** — imagem original gerada para este projeto com OpenAI ImageGen e armazenada em `assets/maze-game/player-sprites.png`.
+- **Objetos do laboratório em pixel art** — imagem original gerada para este projeto com OpenAI ImageGen e armazenada em `assets/maze-game/lab-props.png`.
+- **Vírus, baús e poderes em pixel art** — atlas original gerado para este projeto com OpenAI ImageGen e armazenado em `assets/maze-game/virus-power-atlas.png`.
+
 ## Técnico em Ação 3D e modo offline
 
 - **Three.js 0.185.1** — Copyright © 2010-2026 three.js authors — licença MIT. A cópia usada pelo site está em `vendor/three/` e a licença completa em `vendor/three/LICENSE.txt`.
