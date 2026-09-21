@@ -1,29 +1,37 @@
 import {
   INITIAL_FREE_TIME,
   MAZE_TILE_SIZE,
+  advanceEventClock,
   advanceTimer,
+  applyMeteorPenalty,
   applyCorrectAnswer,
   applyWrongAnswer,
   canRestartChallenge,
   completeMaze,
   createChallengeDeck,
   createGameState,
+  createPowerChests,
+  createPrizeTrail,
   createSeededRandom,
+  createVirusClones,
   createVirusState,
   findShortestPath,
   formatClock,
   freeTimeForStreak,
   generateMaze,
+  getWalkableCells,
   movePlayer,
+  pickRandomEvent,
   pickPowerChoices,
   positionToCell,
   reachedExit,
   resumeAfterChallenge,
   slowVirusAfterCatch,
   takeNextChallenge,
-  teleportPlayer
+  teleportPlayer,
+  shuffleValues
 } from "./maze-game-core.mjs";
-import { mazeChallenges, mazePowers } from "./maze-game-data.mjs";
+import { mazeChallenges, mazeEvents, mazePowers } from "./maze-game-data.mjs";
 import { MazeRenderer } from "./maze-game-renderer.mjs";
 import { ChallengeManager } from "./maze-game-challenges.mjs";
 
@@ -54,6 +62,8 @@ class MazeGame {
     this.seerPath = [];
     this.toastTimer = null;
     this.virusAlertTimer = null;
+    this.eventBannerTimer = null;
+    this.meteorCounter = 0;
     this.soundEnabled = localStorage.getItem(SOUND_KEY) !== "off";
     this.currentSeed = null;
     this.handleClick = this.handleClick.bind(this);
@@ -89,6 +99,7 @@ class MazeGame {
     window.clearTimeout(this.resumeTimer);
     window.clearTimeout(this.toastTimer);
     window.clearTimeout(this.virusAlertTimer);
+    window.clearTimeout(this.eventBannerTimer);
     cancelAnimationFrame(this.animationFrame);
     this.animationFrame = null;
     this.lastFrame = null;
@@ -170,6 +181,7 @@ class MazeGame {
             <div class="maze-victory-layer" hidden></div>
             <div class="maze-virus-alert" role="status" aria-live="assertive" hidden></div>
             <div class="maze-power-toast" role="status" aria-live="polite" hidden></div>
+            <div class="maze-event-banner" role="status" aria-live="polite" hidden></div>
             <div class="maze-dpad" aria-label="Controles de movimento">
               <button type="button" data-direction="up" aria-label="Mover para cima">▲</button>
               <button type="button" data-direction="left" aria-label="Mover para esquerda">◀</button>
@@ -235,20 +247,32 @@ class MazeGame {
         this.lastStepSound = timestamp;
         this.playSound("step");
       }
+      const eventClock = advanceEventClock(this.state, deltaSeconds);
+      this.state = eventClock.state;
+      if (eventClock.due) this.triggerRandomEvent(timestamp);
+      this.updateActiveEvent(timestamp, deltaSeconds);
       this.updateVirus(timestamp, deltaSeconds);
-      const chestOpened = this.checkChestPickup();
-      if (!chestOpened && reachedExit(this.state.playerPosition, this.maze)) {
+      this.checkPrizeBitPickup();
+      if (this.state.phase === "challenge") {
+        this.openChallenge();
+      } else {
+        const chestOpened = this.checkChestPickup();
+        if (!chestOpened && reachedExit(this.state.playerPosition, this.maze)) {
         this.finishMaze(timestamp);
-      } else if (!chestOpened && this.state.phase === "playing") {
-        const previousPhase = this.state.phase;
-        this.state = advanceTimer(this.state, deltaSeconds);
-        if (previousPhase !== "challenge" && this.state.phase === "challenge") this.openChallenge();
+        } else if (!chestOpened && this.state.phase === "playing") {
+          this.state = advanceTimer(this.state, deltaSeconds);
+          if (this.state.phase === "challenge") this.openChallenge();
+        }
       }
     }
     this.renderer?.draw(this.maze, this.state.playerPosition, timestamp, {
       virus: this.state.virus,
-      virusFrozen: timestamp < this.state.activeEffects.frozenUntil,
+      virusFrozen: timestamp < this.state.activeEffects.frozenUntil || this.state.activeEvent?.id === "onda-antivirus",
+      eventViruses: this.state.eventViruses,
       chests: this.state.chests,
+      meteors: this.state.meteors,
+      prizeBits: this.state.prizeBits,
+      activeEvent: this.state.activeEvent,
       seerPath: timestamp < this.state.activeEffects.seerUntil ? this.seerPath : [],
       playerShielded: this.state.activeEffects.shieldCharges > 0,
       showCompass: timestamp < this.state.activeEffects.compassUntil
@@ -265,8 +289,8 @@ class MazeGame {
     return { x: Number(right) - Number(left), y: Number(down) - Number(up) };
   }
 
-  updateVirus(timestamp, deltaSeconds) {
-    let virus = { ...this.state.virus };
+  advanceVirus(virusState, timestamp, deltaSeconds, alwaysChasing = false) {
+    let virus = { ...virusState };
     const effects = this.state.activeEffects;
     if (virus.respawnAt && timestamp >= virus.respawnAt) {
       const respawned = createVirusState(this.maze, {
@@ -274,24 +298,32 @@ class MazeGame {
         playerPosition: this.state.playerPosition,
         now: timestamp
       });
-      virus = { ...respawned, caughtCount: virus.caughtCount, speed: virus.speed };
+      virus = {
+        ...respawned,
+        id: virus.id,
+        caughtCount: virus.caughtCount,
+        speed: virus.speed,
+        temporary: virus.temporary,
+        sprinting: alwaysChasing,
+        sprintEndsAt: alwaysChasing ? Number.POSITIVE_INFINITY : respawned.sprintEndsAt
+      };
     }
-    if (virus.respawnAt > timestamp) {
-      this.state = { ...this.state, virus };
-      return;
+    if (virus.respawnAt > timestamp) return virus;
+    const frozenByEvent = this.state.activeEvent?.id === "onda-antivirus";
+    if (timestamp < effects.frozenUntil || frozenByEvent || timestamp < effects.invisibleUntil) {
+      return { ...virus, moving: false };
     }
-    if (timestamp < effects.frozenUntil || timestamp < effects.invisibleUntil) {
-      this.state = { ...this.state, virus: { ...virus, moving: false } };
-      return;
-    }
-    if (!virus.sprinting && timestamp >= virus.nextSprintAt) {
+    if (alwaysChasing) {
+      virus.sprinting = true;
+      virus.sprintEndsAt = Number.POSITIVE_INFINITY;
+    } else if (!virus.sprinting && timestamp >= virus.nextSprintAt) {
       virus.sprinting = true;
       virus.sprintEndsAt = timestamp + 5000;
       virus.pathRefreshAt = 0;
       this.showToast("⚠️ Corrida do vírus!", "Ele encontrou sua trilha. Continue andando!");
       this.playSound("virus");
     }
-    if (virus.sprinting && timestamp >= virus.sprintEndsAt) {
+    if (!alwaysChasing && virus.sprinting && timestamp >= virus.sprintEndsAt) {
       virus.sprinting = false;
       virus.moving = false;
       virus.nextSprintAt = timestamp + 6500 + this.eventRandom() * 6500;
@@ -325,35 +357,61 @@ class MazeGame {
         virus = { ...virus, ...moved };
       }
     }
-    this.state = { ...this.state, virus };
-    if (Math.hypot(virus.x - this.state.playerPosition.x, virus.y - this.state.playerPosition.y) <= 23) {
+    return virus;
+  }
+
+  updateVirus(timestamp, deltaSeconds) {
+    const effects = this.state.activeEffects;
+    const virus = this.advanceVirus(this.state.virus, timestamp, deltaSeconds, false);
+    const eventViruses = this.state.eventViruses.map((candidate) => (
+      this.advanceVirus(candidate, timestamp, deltaSeconds, true)
+    ));
+    this.state = { ...this.state, virus, eventViruses };
+    if (timestamp < this.state.collisionImmuneUntil) return;
+    const collision = [virus, ...eventViruses].find((candidate) => (
+      candidate.respawnAt <= timestamp
+      && Math.hypot(candidate.x - this.state.playerPosition.x, candidate.y - this.state.playerPosition.y) <= 23
+    ));
+    if (collision) {
+      const temporary = Boolean(collision.temporary);
       if (effects.shieldCharges > 0) {
+        const repel = (candidate) => candidate.id === collision.id
+          ? { ...candidate, sprinting: false, moving: false, respawnAt: timestamp + 3000 }
+          : candidate;
         this.state = {
           ...this.state,
           activeEffects: { ...effects, shieldCharges: effects.shieldCharges - 1 },
-          virus: { ...virus, sprinting: false, moving: false, respawnAt: timestamp + 3000 }
+          collisionImmuneUntil: timestamp + 1500,
+          virus: temporary ? virus : repel(virus),
+          eventViruses: temporary ? eventViruses.map(repel) : eventViruses
         };
         this.showToast("🛡️ Escudo ativado!", "O vírus foi repelido e não conseguiu capturar você.");
         this.playSound("correct");
       } else {
-        this.handleVirusCatch(timestamp);
+        this.handleVirusCatch(timestamp, collision);
       }
     }
   }
 
-  handleVirusCatch(timestamp) {
-    const slowedVirus = slowVirusAfterCatch(this.state.virus);
-    const playerPosition = teleportPlayer(this.maze, this.eventRandom, [positionToCell(this.state.virus)]);
-    this.state = {
-      ...this.state,
-      playerPosition,
-      virus: {
+  handleVirusCatch(timestamp, sourceVirus = this.state.virus) {
+    const slowedVirus = slowVirusAfterCatch(sourceVirus);
+    const temporary = Boolean(sourceVirus.temporary);
+    const playerPosition = teleportPlayer(this.maze, this.eventRandom, [positionToCell(sourceVirus)]);
+    const updateCaughtVirus = (candidate) => candidate.id === sourceVirus.id
+      ? {
         ...slowedVirus,
         sprinting: false,
         moving: false,
         respawnAt: timestamp + 3200,
         nextSprintAt: timestamp + 8000
       }
+      : candidate;
+    this.state = {
+      ...this.state,
+      playerPosition,
+      collisionImmuneUntil: timestamp + 1500,
+      virus: temporary ? this.state.virus : updateCaughtVirus(this.state.virus),
+      eventViruses: temporary ? this.state.eventViruses.map(updateCaughtVirus) : this.state.eventViruses
     };
     this.showVirusAlert(slowedVirus.caughtCount);
     this.playSound("caught");
@@ -378,6 +436,180 @@ class MazeGame {
     this.toastTimer = window.setTimeout(() => { toast.hidden = true; }, 3000);
   }
 
+  showEventBanner(event) {
+    const banner = this.root.querySelector(".maze-event-banner");
+    if (!banner || !event) return;
+    banner.className = `maze-event-banner is-${event.kind}`;
+    banner.setAttribute("aria-live", event.kind === "threat" ? "assertive" : "polite");
+    banner.innerHTML = `
+      <span class="maze-event-icon" style="${this.iconStyle(event.icon)}" aria-hidden="true"></span>
+      <span><small>${event.kind === "threat" ? "EVENTO DE ALERTA" : "EVENTO FAVORÁVEL"}</small><strong>${event.name}</strong><b>${event.description}</b></span>
+    `;
+    banner.hidden = false;
+    window.clearTimeout(this.eventBannerTimer);
+    this.eventBannerTimer = window.setTimeout(() => { banner.hidden = true; }, 3600);
+  }
+
+  triggerRandomEvent(timestamp, forcedId = null) {
+    if (!this.state || this.state.phase !== "playing") return null;
+    const event = forcedId
+      ? mazeEvents.find((candidate) => candidate.id === forcedId)
+      : pickRandomEvent(mazeEvents, this.state.lastEventId, this.eventRandom);
+    if (!event) return null;
+    let chests = this.state.chests;
+    let eventViruses = [];
+    let virus = { ...this.state.virus };
+    let activeEffects = { ...this.state.activeEffects };
+    let remainingTime = this.state.remainingTime;
+    let currentFreeTime = this.state.currentFreeTime;
+    const activeEvent = {
+      ...event,
+      elapsed: 0,
+      remaining: event.duration,
+      nextWaveIn: 0,
+      wavesCreated: 0
+    };
+    if (event.id === "virus-multiplicado") {
+      eventViruses = createVirusClones(this.maze, {
+        count: 3,
+        random: this.eventRandom,
+        playerPosition: this.state.playerPosition,
+        now: timestamp,
+        existingViruses: [virus]
+      });
+    }
+    if (event.id === "chuva-baus") {
+      const bonus = createPowerChests(this.maze, { count: 2, random: this.eventRandom, existing: chests });
+      chests = [...chests, ...bonus];
+      if (bonus.length < 2) {
+        remainingTime += 15;
+        currentFreeTime = Math.max(currentFreeTime, remainingTime);
+      }
+    }
+    if (event.id === "onda-antivirus") {
+      virus = { ...virus, sprinting: false, moving: false, nextSprintAt: timestamp + 12000 };
+    }
+    this.state = {
+      ...this.state,
+      activeEvent,
+      lastEventId: event.id,
+      eventViruses,
+      meteors: [],
+      chests,
+      virus,
+      activeEffects,
+      remainingTime,
+      currentFreeTime
+    };
+    this.showEventBanner(event);
+    this.playSound(event.kind === "threat" ? "event-danger" : "event-help");
+    this.updateHud(true);
+    return event;
+  }
+
+  createMeteorWave() {
+    const playerCell = positionToCell(this.state.playerPosition);
+    const candidates = shuffleValues(getWalkableCells(this.maze).filter((cell) => {
+      const distance = Math.hypot(cell.x - playerCell.x, cell.y - playerCell.y);
+      return distance >= 2 && distance <= 10
+        && !(cell.x === this.maze.start.x && cell.y === this.maze.start.y)
+        && !(cell.x === this.maze.exit.x && cell.y === this.maze.exit.y);
+    }), this.eventRandom);
+    return candidates.slice(0, 3).map((cell) => ({
+      id: `meteoro-${this.meteorCounter += 1}`,
+      ...cell,
+      age: 0,
+      hitApplied: false
+    }));
+  }
+
+  updateActiveEvent(timestamp, deltaSeconds) {
+    let prizeTrailRemaining = Math.max(0, this.state.prizeTrailRemaining - deltaSeconds);
+    let prizeBits = this.state.prizeBits;
+    if (this.state.prizeTrailRemaining > 0 && prizeTrailRemaining === 0) prizeBits = [];
+    this.state = { ...this.state, prizeTrailRemaining, prizeBits };
+    const event = this.state.activeEvent;
+    if (!event) return;
+    let activeEvent = {
+      ...event,
+      elapsed: event.elapsed + deltaSeconds,
+      remaining: Math.max(0, event.remaining - deltaSeconds)
+    };
+    let meteors = this.state.meteors;
+    let meteorHits = 0;
+    if (event.id === "chuva-meteoros") {
+      let nextWaveIn = activeEvent.nextWaveIn - deltaSeconds;
+      let wavesCreated = activeEvent.wavesCreated;
+      while (wavesCreated < 5 && nextWaveIn <= 0) {
+        meteors = [...meteors, ...this.createMeteorWave()];
+        wavesCreated += 1;
+        nextWaveIn += 2.4;
+      }
+      activeEvent = { ...activeEvent, nextWaveIn, wavesCreated };
+      meteors = meteors.map((meteor) => {
+        const age = meteor.age + deltaSeconds;
+        let hitApplied = meteor.hitApplied;
+        if (!hitApplied && meteor.age < 1.2 && age >= 1.2) {
+          const impactX = (meteor.x + 0.5) * MAZE_TILE_SIZE;
+          const impactY = (meteor.y + 0.5) * MAZE_TILE_SIZE;
+          if (Math.hypot(impactX - this.state.playerPosition.x, impactY - this.state.playerPosition.y) <= 22) meteorHits += 1;
+          hitApplied = true;
+        }
+        return { ...meteor, age, hitApplied };
+      }).filter((meteor) => meteor.age < 1.8);
+    }
+    this.state = { ...this.state, activeEvent, meteors };
+    if (meteorHits) {
+      for (let index = 0; index < meteorHits; index += 1) this.state = applyMeteorPenalty(this.state);
+      const shell = this.root.querySelector(".maze-game-shell");
+      shell?.classList.add("is-meteor-hit");
+      window.setTimeout(() => shell?.classList.remove("is-meteor-hit"), 340);
+      this.showToast("☄️ Meteoro atingiu!", `${meteorHits * 3} segundos foram descontados.`);
+      this.playSound("caught");
+    }
+    if (activeEvent.remaining === 0) this.endActiveEvent();
+  }
+
+  endActiveEvent() {
+    if (!this.state?.activeEvent) return;
+    const eventId = this.state.activeEvent.id;
+    this.state = {
+      ...this.state,
+      activeEvent: null,
+      eventViruses: eventId === "virus-multiplicado" ? [] : this.state.eventViruses,
+      meteors: eventId === "chuva-meteoros" ? [] : this.state.meteors
+    };
+  }
+
+  clearTransientEvents() {
+    if (!this.state) return;
+    this.state = { ...this.state, activeEvent: null, eventViruses: [], meteors: [] };
+    const banner = this.root.querySelector(".maze-event-banner");
+    if (banner) banner.hidden = true;
+    window.clearTimeout(this.eventBannerTimer);
+  }
+
+  checkPrizeBitPickup() {
+    const bit = this.state.prizeBits.find((candidate) => (
+      !candidate.collected
+      && Math.hypot(
+        this.state.playerPosition.x - (candidate.x + 0.5) * MAZE_TILE_SIZE,
+        this.state.playerPosition.y - (candidate.y + 0.5) * MAZE_TILE_SIZE
+      ) <= 20
+    ));
+    if (!bit) return false;
+    const remainingTime = this.state.remainingTime + 2;
+    this.state = {
+      ...this.state,
+      remainingTime,
+      currentFreeTime: Math.max(this.state.currentFreeTime, remainingTime),
+      prizeBits: this.state.prizeBits.map((candidate) => candidate.id === bit.id ? { ...candidate, collected: true } : candidate)
+    };
+    this.showToast("◆ Bit premiado", "+2 segundos no cronômetro.");
+    this.playSound("power");
+    return true;
+  }
+
   checkChestPickup() {
     const chest = this.state.chests.find((candidate) => (
       !candidate.opened
@@ -399,26 +631,32 @@ class MazeGame {
     return true;
   }
 
-  powerIconStyle(atlasIndex) {
-    const column = atlasIndex % 5;
-    const row = Math.floor(atlasIndex / 5);
-    return `background-position:${column * 25}% ${row * (100 / 3)}%`;
+  iconStyle(icon) {
+    const sheets = {
+      base: "./assets/maze-game/virus-power-atlas.png",
+      "luck-event": "./assets/maze-game/maze-luck-event-atlas.png"
+    };
+    const column = icon.index % icon.columns;
+    const row = Math.floor(icon.index / icon.columns);
+    const x = icon.columns > 1 ? column * (100 / (icon.columns - 1)) : 0;
+    const y = icon.rows > 1 ? row * (100 / (icon.rows - 1)) : 0;
+    return `background-image:url('${sheets[icon.sheet]}');background-size:${icon.columns * 100}% ${icon.rows * 100}%;background-position:${x}% ${y}%`;
   }
 
   openPowerChoice() {
-    this.powerChoices = pickPowerChoices(mazePowers, this.eventRandom, 2);
+    this.powerChoices = pickPowerChoices(mazePowers, this.eventRandom, 4);
     const layer = this.root.querySelector(".maze-power-layer");
     layer.hidden = false;
     this.root.querySelector(".maze-game-shell")?.classList.add("is-power-open");
     layer.innerHTML = `
       <section role="dialog" aria-modal="true" aria-labelledby="maze-power-title">
         <span class="maze-kicker">Baú encontrado!</span>
-        <h2 id="maze-power-title">ESCOLHA 1 DE 2 PODERES</h2>
+        <h2 id="maze-power-title">ESCOLHA 1 DE 4 PODERES</h2>
         <p>Veja o efeito de cada poder e escolha qual deles você quer usar agora.</p>
         <div class="maze-power-options">
           ${this.powerChoices.map((power) => `
             <button type="button" data-power-id="${power.id}">
-              <span class="maze-power-icon" style="${this.powerIconStyle(power.atlasIndex)}" aria-hidden="true"></span>
+              <span class="maze-power-icon" style="${this.iconStyle(power.icon)}" aria-hidden="true"></span>
               <strong>${power.name}</strong>
               <small>${power.description}</small>
               <b>ESCOLHER ESTE</b>
@@ -441,26 +679,65 @@ class MazeGame {
     let playerPosition = this.state.playerPosition;
     let remainingTime = this.state.remainingTime;
     let currentFreeTime = this.state.currentFreeTime;
-    if (power.id === "escudo") activeEffects.shieldCharges += 1;
-    if (power.id === "turbo") activeEffects.speedUntil = now + 10000;
-    if (power.id === "antivirus") virus = { ...virus, sprinting: false, moving: false, respawnAt: now + 4500 };
-    if (power.id === "vidente") {
-      activeEffects.seerUntil = now + 5000;
-      this.seerPath = findShortestPath(this.maze, positionToCell(playerPosition));
-    }
-    if (power.id === "tempo") {
-      remainingTime += 15;
+    let chests = this.state.chests;
+    let prizeBits = this.state.prizeBits;
+    let prizeTrailRemaining = this.state.prizeTrailRemaining;
+    let outcome = power.description;
+    const addTime = (seconds) => {
+      remainingTime += seconds;
       currentFreeTime = Math.max(currentFreeTime, remainingTime);
+    };
+    const applyEffect = (effectId) => {
+      if (effectId === "escudo") activeEffects.shieldCharges += 1;
+      if (effectId === "turbo") activeEffects.speedUntil = Math.max(activeEffects.speedUntil, now + 10000);
+      if (effectId === "antivirus") virus = { ...virus, sprinting: false, moving: false, respawnAt: now + 4500 };
+      if (effectId === "vidente") {
+        activeEffects.seerUntil = Math.max(activeEffects.seerUntil, now + 5000);
+        this.seerPath = findShortestPath(this.maze, positionToCell(playerPosition));
+      }
+      if (effectId === "tempo") addTime(15);
+      if (effectId === "congelar") activeEffects.frozenUntil = Math.max(activeEffects.frozenUntil, now + 8000);
+      if (effectId === "teleporte") {
+        const path = findShortestPath(this.maze, positionToCell(playerPosition));
+        const destination = path[Math.min(14, Math.max(1, path.length - 2))];
+        if (destination) playerPosition = { x: (destination.x + 0.5) * MAZE_TILE_SIZE, y: (destination.y + 0.5) * MAZE_TILE_SIZE, direction: "down", moving: false };
+      }
+      if (effectId === "invisibilidade") activeEffects.invisibleUntil = Math.max(activeEffects.invisibleUntil, now + 8000);
+      if (effectId === "bussola") activeEffects.compassUntil = Math.max(activeEffects.compassUntil, now + 10000);
+      if (effectId === "lentidao") virus.speed = Math.max(72, virus.speed * 0.72);
+    };
+    if (!power.lucky) applyEffect(power.id);
+    if (power.id === "dado-tempo") {
+      const award = [10, 20, 30][Math.floor(this.eventRandom() * 3)];
+      addTime(award);
+      outcome = `A sorte concedeu ${award} segundos extras!`;
     }
-    if (power.id === "congelar") activeEffects.frozenUntil = now + 8000;
-    if (power.id === "teleporte") {
+    if (power.id === "salto-sorte") {
+      const steps = 12 + Math.floor(this.eventRandom() * 19);
       const path = findShortestPath(this.maze, positionToCell(playerPosition));
-      const destination = path[Math.min(14, Math.max(1, path.length - 2))];
+      const destinationIndex = Math.min(steps, Math.max(1, path.length - 2));
+      const destination = path[destinationIndex];
       if (destination) playerPosition = { x: (destination.x + 0.5) * MAZE_TILE_SIZE, y: (destination.y + 0.5) * MAZE_TILE_SIZE, direction: "down", moving: false };
+      outcome = `Você avançou ${destinationIndex} corredores na direção da saída.`;
     }
-    if (power.id === "invisibilidade") activeEffects.invisibleUntil = now + 8000;
-    if (power.id === "bussola") activeEffects.compassUntil = now + 10000;
-    if (power.id === "lentidao") virus.speed = Math.max(72, virus.speed * 0.72);
+    if (power.id === "bau-duplicador") {
+      const bonus = createPowerChests(this.maze, { count: 2, random: this.eventRandom, existing: chests });
+      chests = [...chests, ...bonus];
+      if (bonus.length < 2) addTime(15);
+      outcome = bonus.length === 2 ? "Dois novos baús apareceram no labirinto." : "Sem espaço para novos baús: você ganhou 15 segundos.";
+    }
+    if (power.id === "combo-surpresa") {
+      const safeIds = new Set(["escudo", "turbo", "vidente", "congelar", "invisibilidade", "bussola", "lentidao"]);
+      const combo = pickPowerChoices(mazePowers.filter((candidate) => safeIds.has(candidate.id)), this.eventRandom, 2);
+      combo.forEach((candidate) => applyEffect(candidate.id));
+      outcome = `Combo ativado: ${combo.map((candidate) => candidate.name).join(" + ")}.`;
+    }
+    if (power.id === "trilha-premiada") {
+      prizeBits = createPrizeTrail(this.maze, playerPosition, { count: 5 });
+      prizeTrailRemaining = 20;
+      if (!prizeBits.length) addTime(10);
+      outcome = prizeBits.length ? "Colete os cinco bits em até 20 segundos ativos." : "Você já estava perto da saída e ganhou 10 segundos.";
+    }
     if (!virus.sprinting && virus.respawnAt <= now) virus.nextSprintAt = Math.max(virus.nextSprintAt, now + 2500);
     this.state = {
       ...this.state,
@@ -469,6 +746,9 @@ class MazeGame {
       playerPosition,
       remainingTime,
       currentFreeTime,
+      chests,
+      prizeBits,
+      prizeTrailRemaining,
       gamePaused: false,
       phase: "playing"
     };
@@ -478,7 +758,7 @@ class MazeGame {
     this.root.querySelector(".maze-game-shell")?.classList.remove("is-power-open");
     this.lastFrame = now;
     this.playSound("power");
-    this.showToast(`✨ ${power.name}`, power.description);
+    this.showToast(`✨ ${power.name}`, outcome);
     this.updateHud(true);
     this.root.querySelector(".maze-canvas")?.focus();
   }
@@ -486,6 +766,7 @@ class MazeGame {
   openChallenge() {
     this.keys.clear();
     this.virtualDirection = null;
+    this.clearTransientEvents();
     const selection = takeNextChallenge({
       deck: this.challengeDeck,
       challenges: mazeChallenges,
@@ -515,7 +796,7 @@ class MazeGame {
       this.lastFrame = performance.now();
       this.updateHud(true);
       this.root.querySelector(".maze-canvas")?.focus();
-    }, 1550);
+    }, window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? 350 : 700);
     return `Você ganhou ${award} segundos para explorar! ${this.state.correctStreak > 1 ? `${this.state.correctStreak} acertos seguidos.` : "Sua sequência começou."}`;
   }
 
@@ -543,6 +824,7 @@ class MazeGame {
 
   finishMaze(timestamp) {
     if (this.state.mazeCompleted) return;
+    this.clearTransientEvents();
     this.state = completeMaze(this.state, timestamp);
     this.keys.clear();
     this.virtualDirection = null;
@@ -590,7 +872,8 @@ class MazeGame {
     }
     const now = performance.now();
     if (virusStatus) {
-      if (this.state.virus.respawnAt > now) virusStatus.textContent = "Vírus reaparecendo longe";
+      if (this.state.eventViruses.length) virusStatus.textContent = `⚠️ ${this.state.eventViruses.length + 1} vírus no labirinto`;
+      else if (this.state.virus.respawnAt > now) virusStatus.textContent = "Vírus reaparecendo longe";
       else if (this.state.activeEffects.frozenUntil > now) virusStatus.textContent = "Vírus congelado";
       else if (this.state.virus.sprinting) virusStatus.textContent = "⚠️ Vírus em perseguição";
       else virusStatus.textContent = `Vírus à espreita • nível ${this.state.virus.caughtCount + 1}`;
@@ -603,6 +886,7 @@ class MazeGame {
       if (this.state.activeEffects.frozenUntil > now) activePowers.push("Congelamento");
       if (this.state.activeEffects.invisibleUntil > now) activePowers.push("Fantasma");
       if (this.state.activeEffects.compassUntil > now) activePowers.push("Bússola");
+      if (this.state.prizeTrailRemaining > 0) activePowers.push(`Trilha premiada ${Math.ceil(this.state.prizeTrailRemaining)}s`);
       powerStatus.textContent = activePowers.length ? activePowers.join(" • ") : "Encontre um baú para escolher um poder.";
     }
     if (status && detail) {
@@ -617,10 +901,10 @@ class MazeGame {
         detail.textContent = "A partida começa quando você fechar as instruções.";
       } else if (this.state.phase === "power-choice") {
         status.textContent = "Baú de poderes";
-        detail.textContent = "Escolha um dos dois poderes para continuar.";
+        detail.textContent = "Escolha um dos quatro poderes para continuar.";
       } else {
-        status.textContent = "Explorando";
-        detail.textContent = "O relógio está correndo.";
+        status.textContent = this.state.activeEvent ? this.state.activeEvent.name : "Explorando";
+        detail.textContent = this.state.activeEvent ? this.state.activeEvent.description : "O relógio está correndo.";
       }
     }
   }
@@ -710,6 +994,8 @@ class MazeGame {
       caught: [[190, 0.13], [135, 0.2]],
       chest: [[410, 0.07], [560, 0.09], [720, 0.12]],
       power: [[520, 0.06], [700, 0.08], [930, 0.12]],
+      "event-danger": [[170, 0.1], [240, 0.08], [170, 0.13], [310, 0.12]],
+      "event-help": [[440, 0.07], [620, 0.09], [830, 0.14]],
       victory: [[392, 0.12], [523, 0.12], [659, 0.14], [784, 0.22]]
     };
     let offset = 0;

@@ -1,9 +1,13 @@
-export const MAZE_WIDTH = 61;
-export const MAZE_HEIGHT = 45;
+export const MAZE_WIDTH = 69;
+export const MAZE_HEIGHT = 51;
 export const MAZE_TILE_SIZE = 36;
 export const PLAYER_SPEED = 148;
 export const PLAYER_RADIUS = 10;
 export const INITIAL_FREE_TIME = 20;
+export const BASE_CHEST_COUNT = 16;
+export const EVENT_INTERVAL_SECONDS = 60;
+export const METEOR_PENALTY_SECONDS = 3;
+export const DEFAULT_BRAID_CHANCE = 0.15;
 const CHALLENGE_RESTART_PASSWORD = "vinho123";
 
 const CARDINAL_DIRECTIONS = [
@@ -133,29 +137,39 @@ export const pickWalkableCell = (maze, {
   return { ...pool[Math.floor(random() * pool.length)] };
 };
 
-export const createPowerChests = (maze, { count = 8, random = Math.random } = {}) => {
+export const createPowerChests = (maze, {
+  count = BASE_CHEST_COUNT,
+  random = Math.random,
+  existing = []
+} = {}) => {
   const candidates = shuffleValues(getWalkableCells(maze).filter((cell) => (
     cellDistance(cell, maze.start) >= 8 && cellDistance(cell, maze.exit) >= 5
+    && !existing.some((other) => other.x === cell.x && other.y === cell.y)
   )), random);
   const selected = [];
   for (const cell of candidates) {
-    if (selected.every((other) => cellDistance(cell, other) >= 7)) selected.push(cell);
+    if (
+      selected.every((other) => cellDistance(cell, other) >= 7)
+      && existing.every((other) => cellDistance(cell, other) >= 5)
+    ) selected.push(cell);
     if (selected.length === count) break;
   }
   for (const cell of candidates) {
     if (selected.length === count) break;
     if (!selected.some((other) => other.x === cell.x && other.y === cell.y)) selected.push(cell);
   }
-  return selected.map((cell, index) => ({ id: `bau-${index + 1}`, ...cell, opened: false }));
+  return selected.map((cell, index) => ({ id: `bau-${existing.length + index + 1}`, ...cell, opened: false }));
 };
 
 export const createVirusState = (maze, {
   random = Math.random,
   playerPosition = createPlayerPosition(maze),
-  now = 0
+  now = 0,
+  avoid = [],
+  minDistance = 18
 } = {}) => {
   const playerCell = positionToCell(playerPosition);
-  const spawn = pickWalkableCell(maze, { random, avoid: [playerCell, maze.start], minDistance: 18 });
+  const spawn = pickWalkableCell(maze, { random, avoid: [playerCell, maze.start, ...avoid], minDistance });
   return {
     x: (spawn.x + 0.5) * MAZE_TILE_SIZE,
     y: (spawn.y + 0.5) * MAZE_TILE_SIZE,
@@ -170,6 +184,36 @@ export const createVirusState = (maze, {
     path: [],
     pathRefreshAt: 0
   };
+};
+
+export const createVirusClones = (maze, {
+  count = 3,
+  random = Math.random,
+  playerPosition = createPlayerPosition(maze),
+  now = 0,
+  existingViruses = []
+} = {}) => {
+  const occupied = existingViruses.map(positionToCell);
+  const clones = [];
+  for (let index = 0; index < count; index += 1) {
+    const clone = createVirusState(maze, {
+      random,
+      playerPosition,
+      now,
+      avoid: [...occupied, ...clones.map(positionToCell)],
+      minDistance: 12
+    });
+    clones.push({
+      ...clone,
+      id: `virus-evento-${index + 1}`,
+      speed: Math.round(clone.speed * 0.75),
+      sprinting: true,
+      temporary: true,
+      nextSprintAt: now,
+      sprintEndsAt: Number.POSITIVE_INFINITY
+    });
+  }
+  return clones;
 };
 
 export const slowVirusAfterCatch = (virus) => ({
@@ -191,6 +235,50 @@ export const teleportPlayer = (maze, random = Math.random, avoid = []) => {
 export const pickPowerChoices = (powers, random = Math.random, count = 2) => (
   shuffleValues(powers, random).slice(0, Math.min(count, powers.length))
 );
+
+export const pickRandomEvent = (events, lastEventId = null, random = Math.random) => {
+  const eligible = events.filter((event) => event.id !== lastEventId);
+  const pool = eligible.length ? eligible : events;
+  return pool[Math.floor(random() * pool.length)] || null;
+};
+
+export const advanceEventClock = (state, elapsedSeconds) => {
+  if (state.gamePaused || state.mazeCompleted || state.phase !== "playing") {
+    return { state, due: false };
+  }
+  const elapsed = (state.eventElapsed || 0) + Math.max(0, elapsedSeconds);
+  if (elapsed < EVENT_INTERVAL_SECONDS) {
+    return { state: { ...state, eventElapsed: elapsed }, due: false };
+  }
+  return {
+    state: { ...state, eventElapsed: elapsed - EVENT_INTERVAL_SECONDS },
+    due: true
+  };
+};
+
+export const applyMeteorPenalty = (state, seconds = METEOR_PENALTY_SECONDS) => {
+  if (state.gamePaused || state.phase !== "playing") return state;
+  const remainingTime = Math.max(0, state.remainingTime - Math.max(0, seconds));
+  return {
+    ...state,
+    remainingTime,
+    gamePaused: remainingTime === 0,
+    phase: remainingTime === 0 ? "challenge" : state.phase
+  };
+};
+
+export const createPrizeTrail = (maze, origin, { count = 5 } = {}) => {
+  const path = findShortestPath(maze, positionToCell(origin));
+  const usable = path.slice(3, Math.max(3, path.length - 1));
+  if (!usable.length) return [];
+  const step = Math.max(1, Math.floor(usable.length / count));
+  const selected = [];
+  for (let index = 0; index < usable.length && selected.length < count; index += step) {
+    const cell = usable[Math.min(usable.length - 1, index)];
+    if (!selected.some((other) => other.x === cell.x && other.y === cell.y)) selected.push(cell);
+  }
+  return selected.slice(0, count).map((cell, index) => ({ id: `bit-${index + 1}`, ...cell, collected: false }));
+};
 
 const buildDecorations = (grid, width, height, random) => {
   const propIndexes = [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 15];
@@ -232,7 +320,7 @@ export const generateMaze = ({
   width = MAZE_WIDTH,
   height = MAZE_HEIGHT,
   seed = Date.now(),
-  braidChance = 0.18
+  braidChance = DEFAULT_BRAID_CHANCE
 } = {}) => {
   const safeWidth = Math.max(15, width % 2 === 0 ? width + 1 : width);
   const safeHeight = Math.max(15, height % 2 === 0 ? height + 1 : height);
@@ -369,6 +457,14 @@ export const createGameState = ({ maze, now = 0, random = Math.random } = {}) =>
   completedAt: null,
   chests: createPowerChests(maze, { random }),
   virus: createVirusState(maze, { random, now }),
+  eventViruses: [],
+  meteors: [],
+  prizeBits: [],
+  prizeTrailRemaining: 0,
+  eventElapsed: 0,
+  lastEventId: null,
+  activeEvent: null,
+  collisionImmuneUntil: 0,
   activeEffects: {
     speedUntil: 0,
     shieldCharges: 0,

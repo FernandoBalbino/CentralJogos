@@ -9,7 +9,7 @@ import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
 import { googleSlidesCourseGame } from "./google-slides-course-game.mjs?v=3.0.0";
 import { googleSheetsCourseGame } from "./google-sheets-course-game.mjs?v=1.0.6";
 import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.1.0";
-import { mazeGame } from "./maze-game.mjs?v=1.0.0";
+import { mazeGame } from "./maze-game.mjs?v=1.1.0";
 
 (function () {
   "use strict";

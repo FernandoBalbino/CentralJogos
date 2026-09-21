@@ -7,6 +7,8 @@ Todos os recursos usados pelo site são armazenados localmente. Este arquivo com
 - **Personagem em pixel art** — imagem original gerada para este projeto com OpenAI ImageGen e armazenada em `assets/maze-game/player-sprites.png`.
 - **Objetos do laboratório em pixel art** — imagem original gerada para este projeto com OpenAI ImageGen e armazenada em `assets/maze-game/lab-props.png`.
 - **Vírus, baús e poderes em pixel art** — atlas original gerado para este projeto com OpenAI ImageGen e armazenado em `assets/maze-game/virus-power-atlas.png`.
+- **Poderes de sorte e eventos em pixel art** — atlas original gerado para este projeto com OpenAI ImageGen e armazenado em `assets/maze-game/maze-luck-event-atlas.png`.
+- **Animação de meteoros em pixel art** — sequência original de quatro quadros gerada para este projeto com OpenAI ImageGen e armazenada em `assets/maze-game/maze-meteor-sprites.png`.
 
 ## Técnico em Ação 3D e modo offline
 

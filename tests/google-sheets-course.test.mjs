@@ -205,7 +205,7 @@ test("progresso permanece sequencial, sanitizado e compatível", () => {
   assert.deepEqual(courseStats(restored), { completedLessons: 0, correctAnswers: 0, questionAttempts: 0, accuracy: 0, completedPractices: 0, teacherCompleted: 0, finalChallengeCompleted: false });
 });
 
-test("rota, recursos, cache v24, foco de célula, fullscreen, senha e cursor estão integrados", async () => {
+test("rota, recursos, cache v25, foco de célula, fullscreen, senha e cursor estão integrados", async () => {
   const [index, app, game, css, worker] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -266,7 +266,7 @@ test("rota, recursos, cache v24, foco de célula, fullscreen, senha e cursor est
   assert.match(css, /\.gsh-status-bar/);
   assert.match(css, /\.gsh-cell\.is-selected:not\(\.is-active\)/);
   assert.doesNotMatch(css, /\.gsh-demo-cursor\s*\{\s*display:\s*none/);
-  assert.match(worker, /central-jogos-offline-v24/);
+  assert.match(worker, /central-jogos-offline-v25/);
   assert.match(worker, /google-sheets-course-data\.mjs/);
   assert.match(worker, /roboto-400\.ttf/);
   assert.match(worker, /chromebook-keyboard\.webp/);

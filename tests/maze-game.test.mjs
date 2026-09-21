@@ -4,13 +4,19 @@ import { access, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { challengeTemplateCounts, mazeChallenges, mazePowers } from "../js/maze-game-data.mjs";
+import { challengeTemplateCounts, mazeChallenges, mazeEvents, mazePowers } from "../js/maze-game-data.mjs";
+import { ChallengeManager } from "../js/maze-game-challenges.mjs";
 import {
+  BASE_CHEST_COUNT,
+  DEFAULT_BRAID_CHANCE,
+  EVENT_INTERVAL_SECONDS,
   INITIAL_FREE_TIME,
   MAZE_HEIGHT,
   MAZE_TILE_SIZE,
   MAZE_WIDTH,
+  advanceEventClock,
   advanceTimer,
+  applyMeteorPenalty,
   analyzeMaze,
   applyCorrectAnswer,
   applyWrongAnswer,
@@ -22,12 +28,15 @@ import {
   createGameState,
   createPlayerPosition,
   createPowerChests,
+  createPrizeTrail,
   createSeededRandom,
+  createVirusClones,
   createVirusState,
   findShortestPath,
   freeTimeForStreak,
   generateMaze,
   movePlayer,
+  pickRandomEvent,
   pickPowerChoices,
   positionToCell,
   reachedExit,
@@ -66,6 +75,8 @@ test("catálogo contém exatamente 36 variações nos nove grupos planejados", a
   await access(resolve(projectRoot, "assets/maze-game/player-sprites.png"));
   await access(resolve(projectRoot, "assets/maze-game/lab-props.png"));
   await access(resolve(projectRoot, "assets/maze-game/virus-power-atlas.png"));
+  await access(resolve(projectRoot, "assets/maze-game/maze-luck-event-atlas.png"));
+  await access(resolve(projectRoot, "assets/maze-game/maze-meteor-sprites.png"));
   const serviceWorker = await readFile(resolve(projectRoot, "service-worker.js"), "utf8");
   const challengeIcons = new Set(mazeChallenges.flatMap((challenge) => [
     ...(challenge.payload.items || []),
@@ -76,19 +87,40 @@ test("catálogo contém exatamente 36 variações nos nove grupos planejados", a
   assert.match(serviceWorker, /assets\/maze-game\/virus-power-atlas\.png/);
 });
 
-test("dez poderes possuem ícones, textos curtos e escolhas de dois itens", () => {
-  assert.equal(mazePowers.length, 10);
-  assert.equal(new Set(mazePowers.map((power) => power.id)).size, 10);
+test("quinze poderes possuem ícones, textos curtos e escolhas de quatro itens", () => {
+  assert.equal(mazePowers.length, 15);
+  assert.equal(new Set(mazePowers.map((power) => power.id)).size, 15);
+  assert.equal(mazePowers.filter((power) => power.lucky).length, 5);
   mazePowers.forEach((power) => {
     assert.ok(power.name);
     assert.ok(power.description.length >= 20 && power.description.length <= 90);
-    assert.ok(Number.isInteger(power.atlasIndex));
+    assert.ok(Number.isInteger(power.icon.index));
+    assert.ok(["base", "luck-event"].includes(power.icon.sheet));
+    assert.ok(power.icon.columns > 0 && power.icon.rows > 0);
   });
   const random = createSeededRandom("poderes");
   for (let index = 0; index < 30; index += 1) {
-    const choices = pickPowerChoices(mazePowers, random, 2);
-    assert.equal(choices.length, 2);
-    assert.notEqual(choices[0].id, choices[1].id);
+    const choices = pickPowerChoices(mazePowers, random, 4);
+    assert.equal(choices.length, 4);
+    assert.equal(new Set(choices.map((choice) => choice.id)).size, 4);
+  }
+});
+
+test("cinco eventos equilibram três ameaças, duas ajudas e não repetem imediatamente", () => {
+  assert.equal(mazeEvents.length, 5);
+  assert.equal(new Set(mazeEvents.map((event) => event.id)).size, 5);
+  assert.equal(mazeEvents.filter((event) => event.kind === "threat").length, 3);
+  assert.equal(mazeEvents.filter((event) => event.kind === "help").length, 2);
+  mazeEvents.forEach((event) => {
+    assert.ok(event.name && event.description);
+    assert.equal(event.icon.sheet, "luck-event");
+  });
+  const random = createSeededRandom("eventos-sem-repeticao");
+  let lastEventId = null;
+  for (let index = 0; index < 50; index += 1) {
+    const event = pickRandomEvent(mazeEvents, lastEventId, random);
+    assert.notEqual(event.id, lastEventId);
+    lastEventId = event.id;
   }
 });
 
@@ -101,9 +133,10 @@ test("labirintos gerados são conectados, extensos e possuem saída distante", (
     assert.equal(maze.height, MAZE_HEIGHT);
     assert.equal(analysis.reachableCount, openTiles);
     assert.deepEqual(maze.exit, { x: analysis.farthest.x, y: analysis.farthest.y });
-    assert.ok(maze.pathDistance >= 180, `saída pouco distante na semente ${index}`);
-    assert.ok(maze.extraOpenings >= 60, `poucas ramificações extras na semente ${index}`);
-    assert.ok(countDeadEnds(maze) >= 20);
+    assert.equal(DEFAULT_BRAID_CHANCE, 0.15);
+    assert.ok(maze.pathDistance >= 200, `saída pouco distante na semente ${index}`);
+    assert.ok(maze.extraOpenings >= 100, `poucas ramificações extras na semente ${index}`);
+    assert.ok(countDeadEnds(maze) >= 160, `poucos becos na semente ${index}`);
     assert.equal(maze.grid[maze.start.y][maze.start.x], 0);
     assert.equal(maze.grid[maze.exit.y][maze.exit.x], 0);
   }
@@ -113,11 +146,12 @@ test("caminho final, baús e teleporte permanecem em células alcançáveis", ()
   const maze = generateMaze({ seed: "poderes-no-labirinto" });
   const random = createSeededRandom("eventos-do-labirinto");
   const path = findShortestPath(maze, maze.start);
-  const chests = createPowerChests(maze, { count: 8, random });
+  const chests = createPowerChests(maze, { random });
   const teleported = teleportPlayer(maze, random, [maze.start]);
   assert.equal(path.length, maze.pathDistance + 1);
   assert.deepEqual(path.at(-1), maze.exit);
-  assert.equal(chests.length, 8);
+  assert.equal(chests.length, BASE_CHEST_COUNT);
+  assert.equal(new Set(chests.map((chest) => `${chest.x}:${chest.y}`)).size, BASE_CHEST_COUNT);
   chests.forEach((chest) => assert.equal(maze.grid[chest.y][chest.x], 0));
   const teleportedCell = positionToCell(teleported);
   assert.equal(maze.grid[teleportedCell.y][teleportedCell.x], 0);
@@ -136,6 +170,22 @@ test("vírus nasce distante e fica mais lento a cada captura", () => {
   virus = slowVirusAfterCatch(virus);
   assert.equal(virus.caughtCount, 2);
   assert.ok(virus.speed < secondSpeed);
+});
+
+test("evento de multiplicação cria três clones extras em células alcançáveis", () => {
+  const maze = generateMaze({ seed: "virus-clones" });
+  const random = createSeededRandom("virus-clones-evento");
+  const playerPosition = createPlayerPosition(maze);
+  const mainVirus = createVirusState(maze, { random, playerPosition, now: 100 });
+  const clones = createVirusClones(maze, { count: 3, random, playerPosition, now: 100, existingViruses: [mainVirus] });
+  assert.equal(clones.length, 3);
+  assert.equal(new Set(clones.map((virus) => `${positionToCell(virus).x}:${positionToCell(virus).y}`)).size, 3);
+  clones.forEach((virus) => {
+    const cell = positionToCell(virus);
+    assert.equal(maze.grid[cell.y][cell.x], 0);
+    assert.equal(virus.temporary, true);
+    assert.equal(virus.speed, 124);
+  });
 });
 
 test("movimento avança no corredor e bloqueia paredes", () => {
@@ -167,6 +217,51 @@ test("cronômetro pausa exatamente ao zerar e não avança durante desafio", () 
   assert.equal(state.gamePaused, true);
   assert.equal(state.phase, "challenge");
   assert.equal(advanceTimer(state, 30), state);
+});
+
+test("relógio de eventos dispara a cada 60 segundos ativos e pausa nos modais", () => {
+  const maze = generateMaze({ seed: "event-clock" });
+  let state = createGameState({ maze, now: 0 });
+  let result = advanceEventClock(state, EVENT_INTERVAL_SECONDS - 0.25);
+  assert.equal(result.due, false);
+  result = advanceEventClock(result.state, 0.25);
+  assert.equal(result.due, true);
+  assert.equal(result.state.eventElapsed, 0);
+  state = { ...result.state, gamePaused: true, phase: "power-choice" };
+  assert.equal(advanceEventClock(state, 120).state, state);
+});
+
+test("meteoro desconta três segundos e abre desafio ao zerar", () => {
+  const maze = generateMaze({ seed: "meteor" });
+  let state = { ...createGameState({ maze, now: 0 }), remainingTime: 10 };
+  state = applyMeteorPenalty(state);
+  assert.equal(state.remainingTime, 7);
+  state = { ...state, remainingTime: 2 };
+  state = applyMeteorPenalty(state);
+  assert.equal(state.remainingTime, 0);
+  assert.equal(state.phase, "challenge");
+  assert.equal(state.gamePaused, true);
+});
+
+test("trilha premiada cria até cinco bits distintos no caminho da saída", () => {
+  const maze = generateMaze({ seed: "trilha-premiada" });
+  const bits = createPrizeTrail(maze, createPlayerPosition(maze), { count: 5 });
+  assert.equal(bits.length, 5);
+  assert.equal(new Set(bits.map((bit) => `${bit.x}:${bit.y}`)).size, 5);
+  bits.forEach((bit) => assert.equal(maze.grid[bit.y][bit.x], 0));
+});
+
+test("desafio correto é processado uma única vez mesmo com vários envios", () => {
+  let correctCalls = 0;
+  const challenge = mazeChallenges.find((candidate) => candidate.id === "arquivo-curriculo");
+  const manager = new ChallengeManager({ onCorrect: () => { correctCalls += 1; return "Tempo liberado"; } });
+  manager.show(challenge);
+  manager.submit({ ...challenge.solution });
+  manager.submit({ ...challenge.solution });
+  manager.submit({ ...challenge.solution });
+  assert.equal(correctCalls, 1);
+  assert.equal(manager.resolved, true);
+  assert.equal(manager.feedback.type, "success");
 });
 
 test("sequência concede 20, 30, 40 e reinicia após erro", () => {
@@ -268,17 +363,20 @@ test("rota, card, senha, poderes e cache offline estão integrados", async () =>
   ]);
   assert.match(html, /Jogo 13/);
   assert.match(html, /#\/labirinto-da-informatica/);
-  assert.match(html, /maze-game\.css\?v=1\.0\.0/);
+  assert.match(html, /maze-game\.css\?v=1\.1\.0/);
   assert.match(app, /mazeGame\.mount/);
   assert.match(app, /mazeGame\.enter/);
   assert.match(app, /mazeGame\.leave/);
-  assert.match(game, /pickPowerChoices\(mazePowers/);
+  assert.match(game, /pickPowerChoices\(mazePowers, this\.eventRandom, 4\)/);
+  assert.match(game, /triggerRandomEvent/);
   assert.match(game, /restartChallenge\(password\)/);
   assert.match(challengeUi, /data-restart-form/);
   assert.match(challengeUi, /ESCOLHER ESTE|REINICIAR/);
   assert.match(css, /maze-power-options/);
-  assert.match(css, /virus-power-atlas\.png/);
-  assert.match(worker, /central-jogos-offline-v24/);
+  assert.match(css, /maze-event-banner/);
+  assert.match(worker, /central-jogos-offline-v25/);
   assert.match(worker, /maze-game-core\.mjs/);
   assert.match(worker, /virus-power-atlas\.png/);
+  assert.match(worker, /maze-luck-event-atlas\.png/);
+  assert.match(worker, /maze-meteor-sprites\.png/);
 });

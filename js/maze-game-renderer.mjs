@@ -20,14 +20,21 @@ export class MazeRenderer {
     this.playerSprites = null;
     this.labProps = null;
     this.virusPowerAtlas = null;
+    this.luckEventAtlas = null;
+    this.meteorSprites = null;
+    this.reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false;
     this.ready = Promise.all([
       loadImage("./assets/maze-game/player-sprites.png"),
       loadImage("./assets/maze-game/lab-props.png"),
-      loadImage("./assets/maze-game/virus-power-atlas.png")
-    ]).then(([playerSprites, labProps, virusPowerAtlas]) => {
+      loadImage("./assets/maze-game/virus-power-atlas.png"),
+      loadImage("./assets/maze-game/maze-luck-event-atlas.png"),
+      loadImage("./assets/maze-game/maze-meteor-sprites.png")
+    ]).then(([playerSprites, labProps, virusPowerAtlas, luckEventAtlas, meteorSprites]) => {
       this.playerSprites = playerSprites;
       this.labProps = labProps;
       this.virusPowerAtlas = virusPowerAtlas;
+      this.luckEventAtlas = luckEventAtlas;
+      this.meteorSprites = meteorSprites;
     });
     this.resize();
   }
@@ -61,15 +68,20 @@ export class MazeRenderer {
     context.translate(-this.camera.x, -this.camera.y);
     this.drawTiles(context, maze);
     this.drawSeerPath(context, scene.seerPath);
+    this.drawMeteors(context, scene.meteors, timestamp);
     this.drawDecorations(context, maze);
     this.drawChests(context, scene.chests, timestamp);
+    this.drawPrizeBits(context, scene.prizeBits, timestamp);
     this.drawMarker(context, maze.start, 14, "ENTRADA", "#62e5c3", timestamp);
     this.drawMarker(context, maze.exit, 13, "SAÍDA", "#ffb84d", timestamp);
     this.drawVirus(context, scene.virus, timestamp, scene.virusFrozen);
+    (scene.eventViruses || []).forEach((virus) => this.drawVirus(context, virus, timestamp, scene.virusFrozen));
     this.drawPlayer(context, player, timestamp);
     if (scene.playerShielded) this.drawPlayerShield(context, player, timestamp);
     context.restore();
     if (scene.showCompass) this.drawCompass(context, maze, player, timestamp);
+    if (scene.activeEvent?.id === "onda-antivirus") this.drawAntivirusWave(context, scene.activeEvent);
+    if (scene.activeEvent?.id === "apagao-digital") this.drawBlackout(context, player, timestamp);
     this.drawVignette(context);
   }
 
@@ -108,7 +120,7 @@ export class MazeRenderer {
       context.arc(centerX, centerY, 29 + Math.sin(timestamp / 180) * 3, 0, Math.PI * 2);
       context.fill();
       context.restore();
-      this.drawAtlasCell(context, this.virusPowerAtlas, 5, centerX - 25, centerY - 23 + bob, 50, 42, 5);
+      this.drawAtlasCell(context, this.virusPowerAtlas, 5, centerX - 25, centerY - 23 + bob, 50, 42, 5, 4);
       const bubbleY = centerY - 47 + bob;
       context.save();
       context.fillStyle = "#f5ffff";
@@ -126,6 +138,50 @@ export class MazeRenderer {
     });
   }
 
+  drawPrizeBits(context, bits = [], timestamp = 0) {
+    if (!this.luckEventAtlas) return;
+    bits.filter((bit) => !bit.collected).forEach((bit) => {
+      const centerX = (bit.x + 0.5) * MAZE_TILE_SIZE;
+      const centerY = (bit.y + 0.5) * MAZE_TILE_SIZE;
+      const bob = this.reducedMotion ? 0 : Math.sin(timestamp / 170 + bit.x) * 4;
+      context.save();
+      context.fillStyle = "rgba(92,239,255,.2)";
+      context.beginPath();
+      context.arc(centerX, centerY, 18, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
+      this.drawAtlasCell(context, this.luckEventAtlas, 4, centerX - 20, centerY - 20 + bob, 40, 40, 5, 2);
+    });
+  }
+
+  drawMeteors(context, meteors = [], timestamp = 0) {
+    meteors.forEach((meteor) => {
+      const centerX = (meteor.x + 0.5) * MAZE_TILE_SIZE;
+      const centerY = (meteor.y + 0.5) * MAZE_TILE_SIZE;
+      if (meteor.age < 1.2) {
+        const pulse = this.reducedMotion ? 0.72 : 0.55 + Math.sin(timestamp / 90) * 0.2;
+        context.save();
+        context.strokeStyle = `rgba(255,121,55,${pulse})`;
+        context.fillStyle = "rgba(255,65,45,.14)";
+        context.lineWidth = 4;
+        context.beginPath();
+        context.arc(centerX, centerY, 15, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        context.restore();
+        if (this.meteorSprites) {
+          const frame = meteor.age < 0.65 ? 0 : 1;
+          this.drawAtlasCell(context, this.meteorSprites, frame, centerX - 34, centerY - 60, 68, 68, 4, 1);
+        }
+        return;
+      }
+      if (this.meteorSprites) {
+        const frame = meteor.age < 1.48 ? 2 : 3;
+        this.drawAtlasCell(context, this.meteorSprites, frame, centerX - 35, centerY - 35, 70, 70, 4, 1);
+      }
+    });
+  }
+
   drawVirus(context, virus, timestamp = 0, frozen = false) {
     if (!virus || virus.respawnAt > timestamp || !this.virusPowerAtlas) return;
     const frame = Math.floor(timestamp / 115) % 4;
@@ -137,9 +193,9 @@ export class MazeRenderer {
     }
     context.shadowColor = virus.sprinting ? "#ff32d2" : "#3fdbe8";
     context.shadowBlur = virus.sprinting ? 18 : 8;
-    this.drawAtlasCell(context, this.virusPowerAtlas, frame, virus.x - size / 2, virus.y - size / 2, size, size, 5);
+    this.drawAtlasCell(context, this.virusPowerAtlas, frame, virus.x - size / 2, virus.y - size / 2, size, size, 5, 4);
     context.restore();
-    if (virus.sprinting && !frozen) {
+    if (virus.sprinting && !frozen && !virus.temporary) {
       context.save();
       context.fillStyle = "#ff84e7";
       context.font = "800 10px Atkinson Hyperlegible, sans-serif";
@@ -186,6 +242,33 @@ export class MazeRenderer {
     context.closePath();
     context.fill();
     context.restore();
+  }
+
+  drawAntivirusWave(context, activeEvent) {
+    const progress = Math.min(1, Math.max(0, (activeEvent.elapsed || 0) / 2));
+    if (progress >= 1) return;
+    context.save();
+    context.strokeStyle = `rgba(92,244,255,${0.85 - progress * 0.65})`;
+    context.lineWidth = 8;
+    context.shadowColor = "#54eaff";
+    context.shadowBlur = 18;
+    context.beginPath();
+    context.arc(this.width / 2, this.height / 2, 30 + progress * Math.max(this.width, this.height), 0, Math.PI * 2);
+    context.stroke();
+    context.restore();
+  }
+
+  drawBlackout(context, player, timestamp = 0) {
+    const playerX = player.x - this.camera.x;
+    const playerY = player.y - this.camera.y;
+    const flicker = this.reducedMotion ? 0 : Math.sin(timestamp / 83) * 5;
+    const radius = MAZE_TILE_SIZE * 4.5 + flicker;
+    const gradient = context.createRadialGradient(playerX, playerY, radius * 0.25, playerX, playerY, radius);
+    gradient.addColorStop(0, "rgba(0,3,10,0)");
+    gradient.addColorStop(0.55, "rgba(0,3,10,.12)");
+    gradient.addColorStop(1, "rgba(0,3,10,.94)");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, this.width, this.height);
   }
 
   drawTiles(context, maze) {
@@ -285,9 +368,9 @@ export class MazeRenderer {
     context.fillRect(player.x + 5, player.y - 8, 8, 16);
   }
 
-  drawAtlasCell(context, image, index, x, y, width, height, columns = 4) {
+  drawAtlasCell(context, image, index, x, y, width, height, columns = 4, rows = 4) {
     const sourceWidth = image.naturalWidth / columns;
-    const sourceHeight = image.naturalHeight / 4;
+    const sourceHeight = image.naturalHeight / rows;
     const column = index % columns;
     const row = Math.floor(index / columns);
     context.drawImage(image, column * sourceWidth, row * sourceHeight, sourceWidth, sourceHeight, x, y, width, height);

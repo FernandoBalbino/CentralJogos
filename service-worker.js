@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v24";
+const CACHE_NAME = "central-jogos-offline-v25";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -40,6 +40,8 @@ const MAZE_GAME_ASSETS = [
   "./assets/maze-game/player-sprites.png",
   "./assets/maze-game/lab-props.png",
   "./assets/maze-game/virus-power-atlas.png",
+  "./assets/maze-game/maze-luck-event-atlas.png",
+  "./assets/maze-game/maze-meteor-sprites.png",
   "./assets/items/ssd.jpg",
   "./assets/items/memoria-ram.jpg",
   "./assets/items/processador.jpg",

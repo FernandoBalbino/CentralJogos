@@ -14,7 +14,7 @@ Site educacional estático com treze jogos para aulas introdutórias de informá
 - **Google Apresentações na Prática:** 30 aulas com demonstração, pergunta e prática real, além de um desafio final com dez objetivos em um simulador local fiel à interface do Google Apresentações e otimizado para Chromebook.
 - **Google Planilhas na Prática:** 30 aulas com demonstração e prática em um simulador de planilhas preparado para teclado e touchpad de Chromebook.
 - **Organize o Windows — Arquivos e Extensões:** curso prático em quatro etapas para reconhecer 11 extensões, mover arquivos, organizar duas Áreas de Trabalho e consultar o tipo pelo menu Propriedades.
-- **Labirinto da Informática:** exploração de um labirinto procedural com cronômetro, vírus perseguidor, baús com 10 poderes, personagem em pixel art e 36 desafios práticos de arquivos, hardware, software, periféricos, Windows e suporte básico.
+- **Labirinto da Informática:** exploração de um labirinto procedural ampliado, com cronômetro, vírus perseguidor, 16 baús-base, 15 poderes, quatro escolhas por baú, cinco eventos aleatórios, personagem em pixel art e 36 desafios práticos de arquivos, hardware, software, periféricos, Windows e suporte básico.
 
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 

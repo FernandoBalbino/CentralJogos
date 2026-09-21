@@ -14,6 +14,7 @@ export class ChallengeManager {
     this.selectedItem = null;
     this.selectedResponse = null;
     this.feedback = null;
+    this.resolved = false;
     this.simState = {};
     this.draggedItem = null;
     this.onCorrect = onCorrect;
@@ -48,12 +49,14 @@ export class ChallengeManager {
     this.selectedItem = null;
     this.selectedResponse = null;
     this.feedback = null;
+    this.resolved = false;
     this.simState = {};
     this.render(true);
   }
 
   hide() {
     this.challenge = null;
+    this.resolved = false;
     if (this.root) this.root.innerHTML = "";
   }
 
@@ -63,6 +66,19 @@ export class ChallengeManager {
 
   render(focusHeading = false) {
     if (!this.root || !this.challenge) return;
+    if (this.resolved && this.feedback?.type === "success") {
+      this.root.innerHTML = `
+        <section class="maze-challenge-card is-resolved" role="dialog" aria-modal="true" aria-labelledby="maze-success-title">
+          <div class="maze-challenge-success" role="status" aria-live="assertive" tabindex="-1">
+            <span class="maze-success-check" aria-hidden="true">✓</span>
+            <strong id="maze-success-title">CORRETO!</strong>
+            <p>${escapeHtml(this.feedback.message)}</p>
+          </div>
+        </section>
+      `;
+      requestAnimationFrame(() => this.root?.querySelector(".maze-challenge-success")?.focus());
+      return;
+    }
     const challenge = this.challenge;
     const content = this.renderContent(challenge);
     const needsSubmit = !["windows-sim", "support-sim"].includes(challenge.template);
@@ -277,6 +293,7 @@ export class ChallengeManager {
   }
 
   handleClick(event) {
+    if (this.resolved) return;
     const item = event.target.closest("[data-item-id]");
     const target = event.target.closest("[data-target-id]");
     if (target && this.isSortTemplate() && this.selectedItem) {
@@ -365,11 +382,13 @@ export class ChallengeManager {
   }
 
   handleDoubleClick(event) {
+    if (this.resolved) return;
     const action = event.target.closest("[data-sim-double]")?.dataset.simDouble;
     if (action) this.submit(action);
   }
 
   handleContextMenu(event) {
+    if (this.resolved) return;
     if (!event.target.closest("[data-rename-file]")) return;
     event.preventDefault();
     this.simState.contextOpen = true;
@@ -377,6 +396,7 @@ export class ChallengeManager {
   }
 
   handleKeyDown(event) {
+    if (this.resolved) return;
     const item = event.target.closest("[data-item-id]");
     if (item && ["Enter", " "].includes(event.key)) {
       event.preventDefault();
@@ -395,6 +415,10 @@ export class ChallengeManager {
   }
 
   handleSubmit(event) {
+    if (this.resolved) {
+      event.preventDefault();
+      return;
+    }
     const restartForm = event.target.closest("[data-restart-form]");
     if (restartForm) {
       event.preventDefault();
@@ -413,6 +437,10 @@ export class ChallengeManager {
   }
 
   handleDragStart(event) {
+    if (this.resolved) {
+      event.preventDefault();
+      return;
+    }
     const sortItem = event.target.closest("[data-item-id]");
     const response = event.target.closest("[data-response]");
     const trashItem = event.target.closest("[data-trash-item]");
@@ -424,10 +452,12 @@ export class ChallengeManager {
   }
 
   handleDragOver(event) {
+    if (this.resolved) return;
     if (event.target.closest("[data-target-id], [data-hardware-target], [data-trash-target]")) event.preventDefault();
   }
 
   handleDrop(event) {
+    if (this.resolved) return;
     const id = event.dataTransfer.getData("text/plain") || this.draggedItem;
     const target = event.target.closest("[data-target-id]");
     if (target && this.isSortTemplate()) {
@@ -486,7 +516,9 @@ export class ChallengeManager {
   }
 
   submit(response) {
+    if (this.resolved || !this.challenge) return;
     if (validateChallengeResponse(this.challenge, response)) {
+      this.resolved = true;
       this.playSound?.("correct");
       const message = this.onCorrect?.(this.challenge);
       this.feedback = { type: "success", title: "CORRETO!", message: message || "Desafio concluído. Prepare-se para voltar ao labirinto!" };
