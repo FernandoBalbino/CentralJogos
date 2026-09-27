@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v25";
+const CACHE_NAME = "central-jogos-offline-v27";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -66,6 +66,15 @@ const MAZE_GAME_ASSETS = [
   "./assets/items/scanner.jpg"
 ];
 
+const WINDOWS_INSTALLER_ASSETS = [
+  ...["hard_drive", "wifi_1", "lock_closed", "arrow_right", "arrow_left", "window", "checkmark_circle", "building", "panel_right"].map((name) => `./assets/windows-installer/fluent/${name}.svg`),
+  ...["start", "explorer", "recycle-bin", "search", "computer", "settings"].map((name) => `./assets/windows-installer/desktop/${name}.png`),
+  "./assets/windows-installer/wallpapers/windows-10-hero.png",
+  "./assets/windows-installer/wallpapers/windows-11-bloom-official.jpg",
+  "./assets/windows-installer/fluent/LICENSE.txt",
+  "./assets/windows-installer/desktop/LICENSE.txt"
+];
+
 const PRECACHE_PATHS = [
   "./",
   "./index.html",
@@ -82,6 +91,7 @@ const PRECACHE_PATHS = [
   "./google-sheets-course.css",
   "./windows-file-organizer-game.css",
   "./maze-game.css",
+  "./windows-installer.css",
   "./js/app.js",
   "./js/credits-data.js",
   "./js/data.js",
@@ -119,6 +129,8 @@ const PRECACHE_PATHS = [
   "./js/maze-game-renderer.mjs",
   "./js/maze-game-challenges.mjs",
   "./js/maze-game-data.mjs",
+  "./js/windows-installer.mjs",
+  "./js/windows-installer-core.mjs",
   "./vendor/three/three.module.min.js",
   "./vendor/three/three.core.min.js",
   "./assets/windows-mission/tecnico-em-acao-card.png",
@@ -154,6 +166,7 @@ const PRECACHE_PATHS = [
   "./assets/side-game/icons/visibility.svg",
   "./assets/side-game/icons/wifi.svg",
   ...MAZE_GAME_ASSETS,
+  ...WINDOWS_INSTALLER_ASSETS,
   ...WINDOWS_DISCOVERY_MEDIA,
   ...WINDOWS_FILE_ORGANIZER_ASSETS
 ];

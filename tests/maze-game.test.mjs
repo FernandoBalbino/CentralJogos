@@ -374,7 +374,7 @@ test("rota, card, senha, poderes e cache offline estão integrados", async () =>
   assert.match(challengeUi, /ESCOLHER ESTE|REINICIAR/);
   assert.match(css, /maze-power-options/);
   assert.match(css, /maze-event-banner/);
-  assert.match(worker, /central-jogos-offline-v25/);
+  assert.match(worker, /central-jogos-offline-v27/);
   assert.match(worker, /maze-game-core\.mjs/);
   assert.match(worker, /virus-power-atlas\.png/);
   assert.match(worker, /maze-luck-event-atlas\.png/);

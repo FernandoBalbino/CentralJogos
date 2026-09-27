@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="./google-sheets-course.css?v=1.0.6">
     <link rel="stylesheet" href="./windows-file-organizer-game.css?v=1.1.0">
     <link rel="stylesheet" href="./maze-game.css?v=1.1.0">
+    <link rel="stylesheet" href="./windows-installer.css?v=1.0.0">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -60,7 +61,7 @@
           </div>
         </div>
 
-        <div class="game-selection" aria-label="Escolha um jogo">
+        <div class="game-selection" aria-label="Escolha um jogo ou laboratório">
           <article class="game-card classification-card">
             <div class="card-topline"><span>Jogo 01</span><span class="difficulty">Observação</span></div>
             <div class="classification-preview" aria-hidden="true">
@@ -259,6 +260,19 @@
               <a class="primary-button" href="#/labirinto-da-informatica">INICIAR MISSÃO <span aria-hidden="true">→</span></a>
             </div>
           </article>
+          <article class="game-card windows-installer-home-card">
+            <div class="card-topline"><span>Laboratório 01</span><span class="difficulty">Simulador</span></div>
+            <div class="windows-installer-home-preview" aria-hidden="true">
+              <img src="./assets/items/windows.svg" alt="">
+              <span>10 + 11</span>
+            </div>
+            <div class="game-card-copy">
+              <p class="card-kicker">Laboratório técnico</p>
+              <h2>Instalação do Windows</h2>
+              <p>Simule a instalação completa do Windows 10 ou 11 e escolha o HD virtual de destino.</p>
+              <a class="primary-button" href="#/instalacao-windows">ABRIR SIMULADOR <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -355,6 +369,10 @@
 
       <section id="maze-game-screen" class="screen" data-screen="maze-game" hidden>
         <div id="maze-game-app"></div>
+      </section>
+
+      <section id="windows-installer-screen" class="screen windows-installer-screen" data-screen="windows-installer" hidden>
+        <div id="windows-installer-app"></div>
       </section>
     </main>
 

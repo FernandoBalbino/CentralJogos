@@ -16,6 +16,8 @@ Site educacional estático com treze jogos para aulas introdutórias de informá
 - **Organize o Windows — Arquivos e Extensões:** curso prático em quatro etapas para reconhecer 11 extensões, mover arquivos, organizar duas Áreas de Trabalho e consultar o tipo pelo menu Propriedades.
 - **Labirinto da Informática:** exploração de um labirinto procedural ampliado, com cronômetro, vírus perseguidor, 16 baús-base, 15 poderes, quatro escolhas por baú, cinco eventos aleatórios, personagem em pixel art e 36 desafios práticos de arquivos, hardware, software, periféricos, Windows e suporte básico.
 
+Além dos jogos, há o **Laboratório de Instalação do Windows**: simulação educacional de instalação limpa do Windows 10 22H2 e do Windows 11 25H2, com duas opções de HD virtual já preparadas, guia lateral, configuração inicial e desktop final. A atividade não acessa discos reais nem instala software. A sessão pode ser retomada após recarregar a página; senha e PIN fictícios nunca são salvos.
+
 O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cronômetro de 15, 30, 45 ou 60 segundos, histórico da sessão, som opcional, explicações e recuperação do estado após atualizar a página.
 
 ## Abrir localmente
@@ -43,6 +45,7 @@ As rotas diretas dos jogos mais recentes são:
 - `http://localhost:8000/#/google-planilhas`
 - `http://localhost:8000/#/organize-windows`
 - `http://localhost:8000/#/labirinto-da-informatica`
+- `http://localhost:8000/#/instalacao-windows`
 
 ## Expandir o curso Google Apresentações
 
@@ -106,7 +109,7 @@ O jogo 3D usa uma cópia local do **Three.js 0.185.1** em `vendor/three/`, compa
 
 ## Recursos visuais e licenças
 
-As imagens usadas nos cartões estão em `assets/items/` e são carregadas localmente. Os metadados de fonte, autoria e licença ficam em `js/credits-data.js` e podem ser consultados no botão **Créditos das imagens** do site. As atribuições dos novos ícones também estão registradas em `ATTRIBUTIONS.md` e no dataset do jogo. Os recursos do simulador de apresentações estão documentados em `assets/google-slides/SOURCES.md`.
+As imagens usadas nos cartões estão em `assets/items/` e são carregadas localmente. Os metadados de fonte, autoria e licença ficam em `js/credits-data.js` e podem ser consultados no botão **Créditos das imagens** do site. As atribuições dos novos ícones também estão registradas em `ATTRIBUTIONS.md` e no dataset do jogo. Os recursos do simulador de apresentações estão documentados em `assets/google-slides/SOURCES.md`. Os ícones do laboratório de instalação e suas licenças estão documentados em `assets/windows-installer/SOURCES.md`; os ícones de desktop vindos do win11React não são assets oficiais da Microsoft.
 
 Para refazer o download dos recursos visuais:
 
