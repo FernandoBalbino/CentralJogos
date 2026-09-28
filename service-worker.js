@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v27";
+const CACHE_NAME = "central-jogos-offline-v28";
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -91,6 +91,11 @@ const PRECACHE_PATHS = [
   "./google-sheets-course.css",
   "./windows-file-organizer-game.css",
   "./maze-game.css",
+  "./carrinho-saber.css",
+  "./assets/items/disco-rigido.jpg",
+  "./assets/items/pen-drive.jpg",
+  "./assets/items/placa-video.jpg",
+  "./assets/items/roteador.jpg",
   "./windows-installer.css",
   "./js/app.js",
   "./js/credits-data.js",
@@ -125,6 +130,10 @@ const PRECACHE_PATHS = [
   "./js/windows-file-organizer-core.mjs",
   "./js/windows-file-organizer-data.mjs",
   "./js/maze-game.mjs",
+  "./js/carrinho-saber.mjs",
+  "./js/carrinho-saber-core.mjs",
+  "./js/carrinho-saber-data.mjs",
+  "./js/carrinho-saber-renderer.mjs",
   "./js/maze-game-core.mjs",
   "./js/maze-game-renderer.mjs",
   "./js/maze-game-challenges.mjs",
