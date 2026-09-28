@@ -10,6 +10,7 @@ import { googleSlidesCourseGame } from "./google-slides-course-game.mjs?v=3.0.0"
 import { googleSheetsCourseGame } from "./google-sheets-course-game.mjs?v=1.0.6";
 import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.1.0";
 import { mazeGame } from "./maze-game.mjs?v=1.1.0";
+import { carrinhoSaberGame } from "./carrinho-saber.mjs?v=1.0.0";
 import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
 
 (function () {
@@ -53,6 +54,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
     if (hash.startsWith("#/google-planilhas")) return "google-sheets-course";
     if (hash.startsWith("#/organize-windows")) return "windows-file-organizer";
     if (hash.startsWith("#/labirinto-da-informatica")) return "maze-game";
+    if (hash.startsWith("#/carrinho-do-saber")) return "carrinho-saber";
     if (hash.startsWith("#/instalacao-windows")) return "windows-installer";
     return "home";
   };
@@ -70,6 +72,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
     if (activeRoute === "google-sheets-course" && route !== "google-sheets-course") googleSheetsCourseGame.leave();
     if (activeRoute === "windows-file-organizer" && route !== "windows-file-organizer") windowsFileOrganizerGame.leave();
     if (activeRoute === "maze-game" && route !== "maze-game") mazeGame.leave();
+    if (activeRoute === "carrinho-saber" && route !== "carrinho-saber") carrinhoSaberGame.leave();
     if (activeRoute === "windows-installer" && route !== "windows-installer") windowsInstaller.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
@@ -105,10 +108,12 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
           ? "Organize o Windows — Arquivos e Extensões | Central de Jogos"
         : route === "maze-game"
           ? "Labirinto da Informática | Central de Jogos"
+        : route === "carrinho-saber"
+          ? "Carrinho do Saber | Central de Jogos"
         : route === "windows-installer"
           ? "Simulador de Instalação do Windows | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer" && route !== "maze-game" && route !== "windows-installer") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer" && route !== "maze-game" && route !== "carrinho-saber" && route !== "windows-installer") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
@@ -122,6 +127,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
     if (route === "google-sheets-course" && activeRoute !== "google-sheets-course") googleSheetsCourseGame.enter();
     if (route === "windows-file-organizer" && activeRoute !== "windows-file-organizer") windowsFileOrganizerGame.enter();
     if (route === "maze-game" && activeRoute !== "maze-game") mazeGame.enter();
+    if (route === "carrinho-saber" && activeRoute !== "carrinho-saber") carrinhoSaberGame.enter();
     if (route === "windows-installer" && activeRoute !== "windows-installer") windowsInstaller.enter();
     activeRoute = route;
   };
@@ -760,6 +766,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
   googleSheetsCourseGame.mount(document.getElementById("google-sheets-course-app"));
   windowsFileOrganizerGame.mount(document.getElementById("windows-file-organizer-app"));
   mazeGame.mount(document.getElementById("maze-game-app"));
+  carrinhoSaberGame.mount(document.getElementById("carrinho-saber-app"));
   windowsInstaller.mount(document.getElementById("windows-installer-app"));
   classification.ensureState();
   renderRoute();
