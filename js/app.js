@@ -4,7 +4,7 @@ import { supportGame } from "./support-game.mjs?v=2.0.0";
 import { memoryGame } from "./memory-game.mjs?v=1.0.3";
 import { crosswordGame } from "./crossword-game.mjs?v=1.1.0";
 import { desafioTiGame } from "./desafio-ti-game.mjs?v=1.0.0";
-import { windowsMissionGame } from "./windows-mission-game.mjs?v=1.0.1";
+import { prepareGameOffline, updateGameOfflineCards } from "./game-offline.mjs";
 import { windowsDiscoveryGame } from "./windows-discovery-game.mjs?v=1.0.3";
 import { googleSlidesCourseGame } from "./google-slides-course-game.mjs?v=3.0.0";
 import { googleSheetsCourseGame } from "./google-sheets-course-game.mjs?v=1.0.6";
@@ -22,6 +22,44 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
   const toastElement = document.getElementById("toast");
   let toastTimer;
   let activeRoute = null;
+  let routeGeneration = 0;
+  const lazyGames = {
+    "windows-mission": { rootId: "windows-mission-app", title: "Técnico em Ação 3D", css: "./windows-mission-game.css?v=1.0.1", load: () => import("./windows-mission-game.mjs?v=1.0.1").then((module) => module.windowsMissionGame) },
+    "oficina-pc": { rootId: "oficina-pc-app", title: "Oficina do PC", css: "./oficina-pc.css?v=1.0.0", load: () => import("./oficina-pc.mjs?v=1.0.0").then((module) => module.oficinaPcGame) }
+  };
+  const loadGameCss = (path) => new Promise((resolve, reject) => {
+    const href = new URL(path, document.baseURI).href;
+    if ([...document.styleSheets].some((sheet) => sheet.href === href)) { resolve(); return; }
+    let link = [...document.querySelectorAll("link[data-lazy-game-style]")].find((element) => element.href === href);
+    const newLink = !link;
+    if (!link) { link = document.createElement("link"); link.rel = "stylesheet"; link.href = href; link.dataset.lazyGameStyle = "true"; }
+    const loaded = () => { link.removeEventListener("error", failed); resolve(); };
+    const failed = () => { link.removeEventListener("load", loaded); link.remove(); reject(new Error("Não foi possível carregar os estilos.")); };
+    link.addEventListener("load", loaded, { once: true }); link.addEventListener("error", failed, { once: true });
+    if (newLink) document.head.append(link);
+  });
+  const enterLazyGame = async (route, generation) => {
+    const entry = lazyGames[route], root = document.getElementById(entry.rootId);
+    root.innerHTML = `<div class="lazy-game-loading" role="status"><h1>${entry.title}</h1><p>${route === "oficina-pc" ? "Carregando oficina…" : "Carregando treinamento…"}</p><progress max="4" value="0" aria-label="Carregamento do jogo"></progress><small data-loading-step>Preparando estilos…</small><a href="#/">Voltar para Central</a></div>`;
+    try {
+      await loadGameCss(entry.css);
+      if (generation !== routeGeneration || getRoute() !== route) return;
+      root.querySelector("progress").value = 1;
+      root.querySelector("[data-loading-step]").textContent = "Importando módulos…";
+      entry.promise ||= entry.load().catch((error) => { entry.promise = null; throw error; });
+      const game = await entry.promise;
+      if (generation !== routeGeneration || getRoute() !== route) return;
+      root.querySelector("progress").value = 2;
+      root.querySelector("[data-loading-step]").textContent = "Construindo cena 3D…";
+      entry.game = game; game.mount(root); game.enter();
+      root.dataset.loadingStage = "scene-ready";
+      prepareGameOffline(route);
+    } catch (error) {
+      if (generation !== routeGeneration || getRoute() !== route) return;
+      root.innerHTML = `<div class="lazy-game-loading" role="alert"><h1>${entry.title}</h1><p>${navigator.onLine ? "Não foi possível carregar a experiência. Tente novamente." : "Abra este jogo uma vez com internet para preparar o uso offline."}</p><button class="primary-button" type="button" data-retry-lazy> Tentar novamente </button><a href="#/">Voltar para Central</a></div>`;
+      root.querySelector("[data-retry-lazy]").addEventListener("click", () => enterLazyGame(route, ++routeGeneration), { once: true });
+    }
+  };
 
   const shuffle = (values) => {
     const copy = [...values];
@@ -49,6 +87,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
     if (hash.startsWith("#/cruzadinha")) return "crossword-game";
     if (hash.startsWith("#/desafio-ti")) return "desafio-ti";
     if (hash.startsWith("#/missoes-windows")) return "windows-mission";
+    if (hash.startsWith("#/oficina-do-pc")) return "oficina-pc";
     if (hash.startsWith("#/descubra-windows")) return "windows-discovery";
     if (hash.startsWith("#/google-apresentacoes")) return "google-slides-course";
     if (hash.startsWith("#/google-planilhas")) return "google-sheets-course";
@@ -61,12 +100,13 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
 
   const renderRoute = () => {
     const route = getRoute();
+    const generation = route === activeRoute ? routeGeneration : ++routeGeneration;
     if (activeRoute === "side-game" && route !== "side-game") sideGame.leave();
     if (activeRoute === "support-game" && route !== "support-game") supportGame.leave();
     if (activeRoute === "memory-game" && route !== "memory-game") memoryGame.leave();
     if (activeRoute === "crossword-game" && route !== "crossword-game") crosswordGame.leave();
     if (activeRoute === "desafio-ti" && route !== "desafio-ti") desafioTiGame.leave();
-    if (activeRoute === "windows-mission" && route !== "windows-mission") windowsMissionGame.leave();
+    if (lazyGames[activeRoute] && route !== activeRoute) lazyGames[activeRoute].game?.leave();
     if (activeRoute === "windows-discovery" && route !== "windows-discovery") windowsDiscoveryGame.leave();
     if (activeRoute === "google-slides-course" && route !== "google-slides-course") googleSlidesCourseGame.leave();
     if (activeRoute === "google-sheets-course" && route !== "google-sheets-course") googleSheetsCourseGame.leave();
@@ -98,6 +138,8 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
           ? "Desafio TI — Valendo Pontos | Central de Jogos"
         : route === "windows-mission"
           ? "Técnico em Ação 3D — Missões Windows | Central de Jogos"
+        : route === "oficina-pc"
+          ? "Oficina do PC — Montagem 3D | Central de Jogos"
         : route === "windows-discovery"
           ? "Descubra o Windows — Aula e Caça-palavras | Central de Jogos"
         : route === "google-slides-course"
@@ -121,7 +163,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
     if (route === "memory-game" && activeRoute !== "memory-game") memoryGame.enter();
     if (route === "crossword-game" && activeRoute !== "crossword-game") crosswordGame.enter();
     if (route === "desafio-ti" && activeRoute !== "desafio-ti") desafioTiGame.enter();
-    if (route === "windows-mission" && activeRoute !== "windows-mission") windowsMissionGame.enter();
+    if (lazyGames[route] && activeRoute !== route) enterLazyGame(route, generation);
     if (route === "windows-discovery" && activeRoute !== "windows-discovery") windowsDiscoveryGame.enter();
     if (route === "google-slides-course" && activeRoute !== "google-slides-course") googleSlidesCourseGame.enter();
     if (route === "google-sheets-course" && activeRoute !== "google-sheets-course") googleSheetsCourseGame.enter();
@@ -760,7 +802,6 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
   supportGame.mount(document.getElementById("support-game-app"));
   crosswordGame.mount(document.getElementById("crossword-game-app"));
   desafioTiGame.mount(document.getElementById("desafio-ti-app"));
-  windowsMissionGame.mount(document.getElementById("windows-mission-app"));
   windowsDiscoveryGame.mount(document.getElementById("windows-discovery-app"));
   googleSlidesCourseGame.mount(document.getElementById("google-slides-course-app"));
   googleSheetsCourseGame.mount(document.getElementById("google-sheets-course-app"));
@@ -811,7 +852,8 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
       });
       if (!result?.ok) throw new Error(result?.message || "Falha ao preparar o cache.");
       publishOfflineStatus("ready", "Pronto para jogar offline.");
-      showToast("Treinamento salvo neste Chromebook. Já pode desligar a internet.");
+      updateGameOfflineCards();
+      showToast("Jogos preparados. Abra os jogos 3D uma vez antes de desconectar.");
     } catch (error) {
       console.error("Falha ao preparar o modo offline:", error);
       publishOfflineStatus("error", "Não foi possível preparar o modo offline.");
@@ -821,4 +863,6 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
   retryOffline?.addEventListener("click", prepareOffline);
   window.addEventListener("central-retry-offline", prepareOffline);
   prepareOffline();
+  navigator.serviceWorker?.addEventListener("controllerchange", () => { const route = getRoute(); if (lazyGames[route]?.game) prepareGameOffline(route); updateGameOfflineCards(); });
+  document.addEventListener("central-retry-game-offline", (event) => { if (lazyGames[event.detail?.gameId]) prepareGameOffline(event.detail.gameId); });
 })();

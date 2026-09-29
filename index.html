@@ -7,13 +7,12 @@
     <meta name="theme-color" content="#182a43">
     <title>Central de Jogos — Fundamentos de Informática</title>
     <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="stylesheet" href="./styles.css?v=1.4.0">
+    <link rel="stylesheet" href="./styles.css?v=1.4.1">
     <link rel="stylesheet" href="./side-game.css?v=1.0.0">
     <link rel="stylesheet" href="./support-game.css?v=2.0.0">
     <link rel="stylesheet" href="./memory-game.css?v=1.0.0">
     <link rel="stylesheet" href="./crossword-game.css?v=1.1.0">
     <link rel="stylesheet" href="./desafio-ti-game.css?v=1.0.0">
-    <link rel="stylesheet" href="./windows-mission-game.css?v=1.0.1">
     <link rel="stylesheet" href="./windows-discovery-game.css?v=1.0.3">
     <link rel="stylesheet" href="./google-slides-course.css?v=3.0.0">
     <link rel="stylesheet" href="./google-sheets-course.css?v=1.0.6">
@@ -54,9 +53,9 @@
         <div class="hero-copy">
           <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
           <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
-          <p>Quatorze jogos para reconhecer equipamentos, programas, redes, sistemas operacionais e ferramentas de produtividade.</p>
+          <p>Quinze jogos para reconhecer equipamentos, programas, redes, sistemas operacionais e ferramentas de produtividade.</p>
           <div class="hero-stats" aria-label="Conteúdo disponível">
-            <div><strong>14</strong><span>jogos educativos</span></div>
+            <div><strong>15</strong><span>jogos educativos</span></div>
             <div><strong>74</strong><span>itens na roleta</span></div>
             <div><strong>30</strong><span>termos na forca</span></div>
           </div>
@@ -187,6 +186,7 @@
               <h2>Técnico em Ação 3D</h2>
               <p>Aprenda o básico do Windows e organize as ações corretas para resolver seis chamados.</p>
               <a class="primary-button" href="#/missoes-windows">Começar treinamento <span aria-hidden="true">→</span></a>
+              <small class="game-offline-hint" data-game-offline="windows-mission">Abra uma vez com internet para jogar offline.</small>
             </div>
           </article>
 
@@ -271,6 +271,12 @@
               <a class="primary-button" href="#/carrinho-do-saber">JOGAR AGORA <span aria-hidden="true">→</span></a>
             </div>
           </article>
+          <article class="game-card oficina-home-card">
+            <div class="card-topline"><span>Jogo 15</span><span class="difficulty">Hardware + prática 3D</span></div>
+            <div class="oficina-home-preview"><img src="./assets/oficina-pc/oficina-pc-preview.jpg" alt="Computador 3D montado, com gabinete aberto, monitor, teclado e mouse" loading="lazy"><b>3D INTERATIVO</b></div>
+            <div class="game-card-copy"><p class="card-kicker">Pegue, conheça e encaixe</p><h2>Oficina do PC</h2><p>Monte um computador em 3D e resolva desafios de SSD, memória RAM e mouse.</p><a class="primary-button" href="#/oficina-do-pc">ABRIR OFICINA <span aria-hidden="true">→</span></a><small class="game-offline-hint" data-game-offline="oficina-pc">Abra uma vez com internet para jogar offline.</small></div>
+          </article>
+
           <article class="game-card windows-installer-home-card">
             <div class="card-topline"><span>Laboratório 01</span><span class="difficulty">Simulador</span></div>
             <div class="windows-installer-home-preview" aria-hidden="true">
@@ -388,6 +394,7 @@
       <section id="windows-installer-screen" class="screen windows-installer-screen" data-screen="windows-installer" hidden>
         <div id="windows-installer-app"></div>
       </section>
+      <section id="oficina-pc-screen" class="screen" data-screen="oficina-pc" hidden><div id="oficina-pc-app"></div></section>
     </main>
 
     <footer class="site-footer">
@@ -410,6 +417,6 @@
     </div>
     <script src="./js/credits-data.js?v=1.0.5"></script>
     <script src="./js/data.js?v=1.0.5"></script>
-    <script type="module" src="./js/app.js?v=3.4.0"></script>
+    <script type="module" src="./js/app.js?v=3.5.0"></script>
   </body>
 </html>

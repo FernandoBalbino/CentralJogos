@@ -62,6 +62,16 @@ Os logotipos Linux e Android foram obtidos do projeto Simple Icons e armazenados
 
 O script `scripts/download-side-game-assets.ps1` registra as versões e endereços usados para baixar novamente os ícones. Execute-o somente quando for necessário reconstruir o acervo local.
 
+## Oficina do PC — montagem e manutenção 3D
+
+- **Modelos procedurais originais:** gabinete, placa-mãe, CPU, cooler, RAM, HD, SSD SATA, GPU, fonte, bancada, monitor, teclado, mouse, tomada e plugues foram construídos especificamente para o CentralJogos em `js/oficina-pc-models.mjs`. Os cabos são curvas procedurais da cena. Usam formas genéricas, sem marcas, texturas ou modelos externos. Autoria: projeto CentralJogos, implementação assistida por Codex. Redistribuição junto com o código do projeto.
+- **Prévia do card:** `assets/oficina-pc/oficina-pc-preview.jpg` é uma captura da própria cena da Oficina, com a mesma autoria dos modelos.
+- **OrbitControls r185:** three.js authors, MIT, obtido de `https://github.com/mrdoob/three.js/blob/r185/examples/jsm/controls/OrbitControls.js`. A alteração local troca apenas o import `three` por `../three.module.min.js`. Coberto por `vendor/three/LICENSE.txt`, junto com Three.js 0.185.1.
+- **Fontes e cores:** reutilizam os recursos locais já presentes na CentralJogos; as atribuições existentes de Atkinson Hyperlegible e Fredoka permanecem válidas.
+- **Áudio:** cliques, encaixes e ruído de ventoinha são sintetizados pela Web Audio API; não há gravações externas.
+
+A pesquisa considerou o [Furniture Kit de Kenney](https://kenney.nl/assets/furniture-kit), CC0, e o [CPU/cooler de GAMICO no Sketchfab](https://sketchfab.com/3d-models/cpu-processor-cpu-cooler-detailed-3d-model-f50555aedd2f455fa433cb3e135099dd), indicado como CC BY 4.0 e com download exigindo login. Não foi validado um conjunto completo de componentes para esta versão. Esses recursos não foram incorporados; as referências registram a pesquisa. Detalhes em `assets/oficina-pc/SOURCES.md`.
+
 ## Ilustrações do Ache os Pares
 
 As representações de topologias, protocolos, serviços de rede, segurança e malware em `assets/memory-game/tech-illustrations.svg` foram desenhadas especificamente para este projeto com formas vetoriais originais. Não utilizam imagens externas e podem ser redistribuídas junto com o código do CentralJogos.

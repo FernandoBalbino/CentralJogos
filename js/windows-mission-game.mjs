@@ -39,7 +39,8 @@ class WindowsMissionGame {
     this.sceneGroup = null;
     this.workstationGroups = [];
     this.pointerTarget = { x: 0, y: 0 };
-    this.offlineHandler = (event) => this.updateOfflineStatus(event.detail);
+    this.gameOfflineState = "preparing";
+    this.offlineHandler = (event) => { if (event.detail.gameId === "windows-mission") this.updateOfflineStatus(event.detail); };
   }
 
   mount(root) {
@@ -48,17 +49,17 @@ class WindowsMissionGame {
   }
 
   enter() {
-    if (!this.root) return;
+    if (!this.root || this.active) return;
     this.active = true;
     document.body.classList.add("windows-mission-active");
-    document.addEventListener("central-offline-status", this.offlineHandler);
+    document.addEventListener("central-game-offline-status", this.offlineHandler);
     this.render();
   }
 
   leave() {
     this.active = false;
     document.body.classList.remove("windows-mission-active");
-    document.removeEventListener("central-offline-status", this.offlineHandler);
+    document.removeEventListener("central-game-offline-status", this.offlineHandler);
     this.stopLessonTimer();
     this.disposeScene();
   }
@@ -118,9 +119,10 @@ class WindowsMissionGame {
             </span>
           </nav>
           <div class="wm-toolbar">
-            <span class="wm-offline-status" data-offline-state="${document.documentElement.dataset.offlineState || "preparing"}">
+            <span class="wm-offline-status" data-offline-state="${this.gameOfflineState}">
               ${icon("wifi")}<span>${this.offlineLabel()}</span>
             </span>
+            <button class="wm-icon-button" type="button" data-action="retry-offline" ${this.gameOfflineState === "error" ? "" : "hidden"}>Tentar offline novamente</button>
             <button class="wm-icon-button" type="button" data-action="fullscreen" aria-label="Alternar tela cheia">${icon("fullscreen")}</button>
           </div>
         </header>
@@ -184,6 +186,7 @@ class WindowsMissionGame {
       button.addEventListener("click", () => this.goToMission(Number(button.dataset.missionIndex)));
     });
     this.root.querySelector("[data-action='fullscreen']").addEventListener("click", () => this.toggleFullscreen());
+    this.root.querySelector("[data-action='retry-offline']").addEventListener("click", () => document.dispatchEvent(new CustomEvent("central-retry-game-offline", { detail: { gameId: "windows-mission" } })));
     this.root.querySelector("[data-action='evaluate']").addEventListener("click", () => this.evaluate());
     this.root.querySelector("[data-action='hint']").addEventListener("click", () => this.toggleHint());
   }
@@ -341,19 +344,21 @@ class WindowsMissionGame {
   }
 
   offlineLabel() {
-    const state = document.documentElement.dataset.offlineState;
+    const state = this.gameOfflineState;
     if (state === "ready") return "Disponível offline";
     if (state === "error") return "Offline indisponível";
     return "Preparando offline";
   }
 
   updateOfflineStatus(detail = {}) {
+    this.gameOfflineState = detail.state || "preparing";
     const badge = this.root?.querySelector(".wm-offline-status");
     if (!badge) return;
-    const state = detail.state || document.documentElement.dataset.offlineState || "preparing";
+    const state = this.gameOfflineState;
     badge.dataset.offlineState = state;
     const label = badge.querySelector("span");
     if (label) label.textContent = detail.label || this.offlineLabel();
+    this.root.querySelector("[data-action='retry-offline']").hidden = state !== "error";
   }
 
   startLessonTimer() {

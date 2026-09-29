@@ -1,4 +1,9 @@
-const CACHE_NAME = "central-jogos-offline-v28";
+const CACHE_NAME = "central-jogos-offline-v31";
+
+const GAME_OFFLINE_PATHS = {
+  "windows-mission": ["./windows-mission-game.css", "./js/windows-mission-game.mjs", "./js/windows-mission-core.mjs", "./js/windows-mission-data.mjs", "./vendor/three/three.module.min.js", "./vendor/three/three.core.min.js"],
+  "oficina-pc": ["./oficina-pc.css", "./js/oficina-pc.mjs", "./js/oficina-pc-core.mjs", "./js/oficina-pc-data.mjs", "./js/oficina-pc-scene.mjs", "./js/oficina-pc-models.mjs", "./js/oficina-pc-camera.mjs", "./js/oficina-pc-interactions.mjs", "./vendor/three/three.module.min.js", "./vendor/three/three.core.min.js", "./vendor/three/controls/OrbitControls.js"]
+};
 
 const WINDOWS_DISCOVERY_VIDEO_NAMES = [
   "01-desktop", "02-desktop", "03-desktop", "04-desktop", "05-start",
@@ -85,7 +90,6 @@ const PRECACHE_PATHS = [
   "./memory-game.css",
   "./crossword-game.css",
   "./desafio-ti-game.css",
-  "./windows-mission-game.css",
   "./windows-discovery-game.css",
   "./google-slides-course.css",
   "./google-sheets-course.css",
@@ -98,6 +102,8 @@ const PRECACHE_PATHS = [
   "./assets/items/roteador.jpg",
   "./windows-installer.css",
   "./js/app.js",
+  "./js/game-offline.mjs",
+  "./assets/oficina-pc/oficina-pc-preview.jpg",
   "./js/credits-data.js",
   "./js/data.js",
   "./js/side-game.mjs",
@@ -114,9 +120,6 @@ const PRECACHE_PATHS = [
   "./js/desafio-ti-game.mjs",
   "./js/desafio-ti-core.mjs",
   "./js/desafio-ti-data.mjs",
-  "./js/windows-mission-game.mjs",
-  "./js/windows-mission-core.mjs",
-  "./js/windows-mission-data.mjs",
   "./js/windows-discovery-game.mjs",
   "./js/windows-discovery-core.mjs",
   "./js/windows-discovery-data.mjs",
@@ -140,8 +143,6 @@ const PRECACHE_PATHS = [
   "./js/maze-game-data.mjs",
   "./js/windows-installer.mjs",
   "./js/windows-installer-core.mjs",
-  "./vendor/three/three.module.min.js",
-  "./vendor/three/three.core.min.js",
   "./assets/windows-mission/tecnico-em-acao-card.png",
   "./assets/windows-discovery/scene-desktop.png",
   "./assets/windows-discovery/cursor.png",
@@ -180,11 +181,11 @@ const PRECACHE_PATHS = [
   ...WINDOWS_FILE_ORGANIZER_ASSETS
 ];
 
-const scopedUrls = () => PRECACHE_PATHS.map((path) => new URL(path, self.registration.scope).href);
+const scopedUrls = (paths = PRECACHE_PATHS) => paths.map((path) => new URL(path, self.registration.scope).href);
 
-const prepareOfflineCache = async (progressPort) => {
+const prepareOfflineCache = async (progressPort, paths = PRECACHE_PATHS) => {
   const cache = await caches.open(CACHE_NAME);
-  const urls = scopedUrls();
+  const urls = scopedUrls(paths);
   const failures = [];
   for (let index = 0; index < urls.length; index += 1) {
     const url = urls[index];
@@ -201,6 +202,7 @@ const prepareOfflineCache = async (progressPort) => {
     progressPort?.postMessage({ type: "progress", loaded: index + 1, total: urls.length });
   }
   if (failures.length) throw new Error(`Falha em ${failures.length} arquivo(s): ${failures[0]}`);
+  for (const url of urls) if (!await cache.match(url, { ignoreSearch: true })) throw new Error("O pacote offline está incompleto.");
 };
 
 self.addEventListener("install", (event) => {
@@ -210,16 +212,25 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const names = await caches.keys();
-    await Promise.all(names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name)));
+    await Promise.all(names.filter((name) => name.startsWith("central-jogos-offline-") && name !== CACHE_NAME).map((name) => caches.delete(name)));
     await self.clients.claim();
   })());
 });
 
 self.addEventListener("message", (event) => {
-  if (event.data?.type !== "PREPARE_OFFLINE") return;
+  const type = event.data?.type;
+  if (!["PREPARE_OFFLINE", "PREPARE_GAME_OFFLINE", "GAME_OFFLINE_STATUS"].includes(type)) return;
   event.waitUntil((async () => {
     try {
-      await prepareOfflineCache(event.ports[0]);
+      const paths = type === "PREPARE_OFFLINE" ? PRECACHE_PATHS : GAME_OFFLINE_PATHS[event.data.gameId];
+      if (!paths) throw new Error("Jogo offline desconhecido.");
+      if (type === "GAME_OFFLINE_STATUS") {
+        const cache = await caches.open(CACHE_NAME);
+        const matches = await Promise.all(scopedUrls(paths).map((url) => cache.match(url, { ignoreSearch: true })));
+        event.ports[0]?.postMessage({ type: "done", ok: true, ready: matches.every(Boolean) });
+        return;
+      }
+      await prepareOfflineCache(event.ports[0], paths);
       event.ports[0]?.postMessage({ type: "done", ok: true, cache: CACHE_NAME });
     } catch (error) {
       event.ports[0]?.postMessage({ type: "done", ok: false, message: error instanceof Error ? error.message : String(error) });
@@ -234,7 +245,8 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.mode === "navigate") {
     event.respondWith((async () => {
-      const cachedPage = await caches.match(new URL("./index.html", self.registration.scope).href, { ignoreSearch: true });
+      const cache = await caches.open(CACHE_NAME);
+      const cachedPage = await cache.match(new URL("./index.html", self.registration.scope).href, { ignoreSearch: true });
       if (cachedPage) return cachedPage;
       return fetch(event.request);
     })());
@@ -242,13 +254,13 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith((async () => {
-    const cached = await caches.match(event.request, { ignoreSearch: true });
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(event.request, { ignoreSearch: true });
     if (cached) return cached;
     try {
       const response = await fetch(event.request);
       if (response.ok) {
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(event.request, response.clone());
+        await cache.put(event.request, response.clone());
       }
       return response;
     } catch {

@@ -226,6 +226,14 @@ main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 .hero-stats span { max-width: none; color: var(--muted); font-size: .7rem; line-height: 1.2; }
 
 .game-selection { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; }
+.oficina-home-preview { position:relative; overflow:hidden; height:112px; background:#dfece6; }
+.oficina-home-preview img { width:100%; height:100%; object-fit:cover; object-position:center 55%; }
+.oficina-home-preview b { position:absolute; right:9px; bottom:8px; color:#fff; background:#173c40; border-radius:999px; padding:5px 8px; font-size:.6rem; }
+.game-offline-hint { display:block; font-size:.65rem; color:var(--muted); margin-top:7px; }
+.lazy-game-loading { min-height:55vh; display:grid; place-content:center; padding:30px; text-align:center; color:#254f47; }
+.lazy-game-loading h1 { font-family:"Fredoka",sans-serif; }
+.lazy-game-loading progress { width:220px; accent-color:#168e7d; }
+.lazy-game-loading a { margin-top:16px; }
 .game-card {
   position: relative;
   display: grid;

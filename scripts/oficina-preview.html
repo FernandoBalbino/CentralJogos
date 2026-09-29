@@ -1,0 +1,9 @@
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Prévia 3D da Oficina</title><style>html,body{margin:0;background:#e7ece8}main{width:960px;height:540px}canvas{width:100%;height:100%;display:block}</style><main><canvas></canvas></main><script type="module">
+import { WorkshopScene } from '../js/oficina-pc-scene.mjs';
+import { createState } from '../js/oficina-pc-core.mjs';
+import { INSTALL_ORDER } from '../js/oficina-pc-data.mjs';
+const preview = new WorkshopScene(document.querySelector('main'), { reducedMotion: true });
+preview.sync({ ...createState(), phase: 'POWER_ON', installed: [...INSTALL_ORDER.filter(id => id !== 'hdd'), 'ssd'], plugged: true, mouseConnected: true, powered: true });
+preview.navigation.computer();
+addEventListener('pagehide', () => preview.destroy(), { once: true });
+</script></html>

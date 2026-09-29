@@ -1,6 +1,6 @@
 # Central de Jogos — Fundamentos de Informática
 
-Site educacional estático com treze jogos para aulas introdutórias de informática:
+Site educacional estático com quinze jogos para aulas introdutórias de informática:
 
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
@@ -15,6 +15,8 @@ Site educacional estático com treze jogos para aulas introdutórias de informá
 - **Google Planilhas na Prática:** 30 aulas com demonstração e prática em um simulador de planilhas preparado para teclado e touchpad de Chromebook.
 - **Organize o Windows — Arquivos e Extensões:** curso prático em quatro etapas para reconhecer 11 extensões, mover arquivos, organizar duas Áreas de Trabalho e consultar o tipo pelo menu Propriedades.
 - **Labirinto da Informática:** exploração de um labirinto procedural ampliado, com cronômetro, vírus perseguidor, 16 baús-base, 15 poderes, quatro escolhas por baú, cinco eventos aleatórios, personagem em pixel art e 36 desafios práticos de arquivos, hardware, software, periféricos, Windows e suporte básico.
+- **Carrinho do Saber:** dez fases de movimento e identificação de itens, com explicações, respostas simples ou múltiplas e progresso local.
+- **Oficina do PC:** montagem 3D guiada em oito etapas, exame das peças, liga/desliga e manutenção para substituir um HD por SSD. Arraste real ou seleção seguida de encaixe, com suporte a teclado.
 
 Além dos jogos, há o **Laboratório de Instalação do Windows**: simulação educacional de instalação limpa do Windows 10 22H2 e do Windows 11 25H2, com duas opções de HD virtual já preparadas, guia lateral, configuração inicial e desktop final. A atividade não acessa discos reais nem instala software. A sessão pode ser retomada após recarregar a página; senha e PIN fictícios nunca são salvos.
 
@@ -23,6 +25,14 @@ O terceiro jogo foi projetado para uso em tela cheia com a turma. Ele oferece cr
 ## Abrir localmente
 
 Não há dependências nem etapa de compilação. Sirva a pasta com qualquer servidor HTTP estático. Como os scripts usam módulos JavaScript, abrir o arquivo diretamente por `file://` pode ser bloqueado pelo navegador.
+
+Servidor incluído (Node.js moderno):
+
+```powershell
+node scripts/serve.mjs
+```
+
+Acesse **http://127.0.0.1:4173/#/oficina-do-pc**. Para testar a hospedagem em subdiretório, use **http://127.0.0.1:4173/CentralJogos/#/oficina-do-pc**. O servidor retorna 404 para arquivos ausentes e os tipos de conteúdo de módulos, estilos, imagens e modelos.
 
 Exemplo com Python:
 
@@ -45,6 +55,8 @@ As rotas diretas dos jogos mais recentes são:
 - `http://localhost:8000/#/google-planilhas`
 - `http://localhost:8000/#/organize-windows`
 - `http://localhost:8000/#/labirinto-da-informatica`
+- `http://localhost:8000/#/carrinho-do-saber`
+- `http://localhost:8000/#/oficina-do-pc`
 - `http://localhost:8000/#/instalacao-windows`
 
 ## Expandir o curso Google Apresentações
@@ -57,7 +69,9 @@ Para cadastrar uma aula, adicione o registro ao catálogo, defina seu estado ini
 
 ## Uso offline nos Chromebooks
 
-O site registra um service worker e prepara automaticamente os arquivos essenciais em cache. Aguarde o aviso **Pronto para jogar offline** antes de desligar o roteamento da internet. As fontes, os ícones, o Three.js, os 30 vídeos WebM e seus pôsteres são servidos pelo próprio repositório; não há dependência de CDN durante a aula.
+O service worker **central-jogos-offline-v31** prepara automaticamente o pacote básico e os demais jogos. Aguarde **Pronto para jogar offline**. **Oficina do PC** e **Técnico em Ação 3D** são carregados sob demanda: abra cada um com conexão e aguarde seu próprio aviso **Disponível offline ✓** antes de desconectar. Three.js e os módulos exclusivos desses dois jogos não fazem parte do preparo inicial. Um download incompleto não é anunciado como disponível; há botão para tentar novamente.
+
+Todos os arquivos, fontes, ícones, bibliotecas e vídeos são locais. Não há dependência de CDN durante a aula. O worker define os IDs e arquivos permitidos dos pacotes opcionais; URLs são resolvidas pelo seu escopo, inclusive em `/CentralJogos/`.
 
 Para testar localmente, use `localhost` (não abra por `file://`), carregue a página uma vez, aguarde a confirmação e então coloque o navegador em modo offline.
 
@@ -105,7 +119,26 @@ node --test tests/maze-game.test.mjs
 
 O projeto usa apenas caminhos relativos e navegação por hash, portanto também funciona em endereços como `https://usuario.github.io/CentralJogos/`.
 
-O jogo 3D usa uma cópia local do **Three.js 0.185.1** em `vendor/three/`, compatível com a hospedagem estática do GitHub Pages.
+Os jogos 3D usam **Three.js 0.185.1** local em `vendor/three/`. A Oficina usa OrbitControls da mesma versão, com import relativo. O renderizador exige WebGL2; a Oficina apresenta uma mensagem clara quando ele não está disponível.
+
+## Oficina do PC
+
+O gabinete fica deitado e aberto na montagem e na manutenção interna; fica em pé na apresentação. As etapas são gabinete, placa-mãe, processador, cooler, RAM, HD, fonte e GPU. A bancada ampliada mantém as opções lado a lado, apoiadas na superfície; peças instaladas não voltam como distratores. Antes de ligar, o aluno precisa conectar o cabo da fonte à tomada. As conexões internas são automáticas, e os cabos externos têm curvas suaves com trajetos organizados pela borda.
+
+Há três ordens de serviço: Lucas pede a troca de HD por SSD; Sofia pede uma RAM compatível de maior capacidade; Marina precisa reconectar e testar o mouse USB. Cada desafio exige localizar a peça, realizar a tarefa, testar e responder à pergunta. A manutenção interna desliga e desconecta automaticamente o PC, exigindo reconectar antes do teste. Comparações e testes são simulações ilustrativas, sem benchmarks.
+
+Controles: arraste uma peça até o destino destacado; arraste o espaço vazio para girar; use a roda ou os botões para zoom. Também é possível selecionar uma peça nos botões e selecionar o destino. Tab e Enter percorrem os controles; setas giram a câmera com o canvas focado; `+`/`−` alteram o zoom. Exame 360°, visão geral, raio-X, visão explodida reversível, som opcional e tela cheia ficam na própria oficina.
+
+O checkpoint de versão 2 usa a chave `central-oficina-pc-v1` e migra a versão anterior, oferecendo os novos desafios a quem já concluiu o SSD. Recomeçar limpa apenas esse progresso. Caso o armazenamento seja bloqueado, a atividade continua em memória. A saída descarta a cena, o renderizador, geometrias, materiais, texturas, áudio, listeners e observers; uma animação antiga não avança a próxima sessão.
+
+Arquitetura, autoria, tamanhos, resultados e limites da validação: [documentação da Oficina](docs/oficina-do-pc.md) e [fontes dos recursos](assets/oficina-pc/SOURCES.md).
+
+Validação completa:
+
+```powershell
+node --test tests/*.test.mjs
+git diff --check
+```
 
 ## Recursos visuais e licenças
 

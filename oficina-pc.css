@@ -1,0 +1,113 @@
+/* Identidade da Central, com a cena ocupando o espaço principal. */
+body.oficina-pc-active { overflow:hidden; background:#edf2ed; }
+body.oficina-pc-active > :is(.site-header,.site-footer,.ambient,.skip-link,.site-offline-status) { display:none!important; }
+body.oficina-pc-active > main { width:100%; max-width:none; margin:0; padding:0; }
+.opc-shell { height:100vh; height:100dvh; display:grid; grid-template-rows:64px auto minmax(0,1fr) 44px; overflow:hidden; color:#193d46; background:#f7f8f0; font-family:"Atkinson Hyperlegible",sans-serif; }
+.opc-shell button,.opc-shell a { -webkit-tap-highlight-color:transparent; }
+.opc-shell button { cursor:pointer; font:inherit; }
+.opc-shell button:disabled { opacity:.52; cursor:default; }
+.opc-shell :is(button,a,canvas):focus-visible { outline:3px solid #f4a825; outline-offset:3px; }
+.opc-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 24px; border-bottom:1px solid #d4ddd6; background:#fffef8; z-index:4; }
+.opc-back { font-weight:700; text-decoration:none; }
+.opc-toolbar > strong { text-align:center; font:600 23px "Fredoka",sans-serif; }
+.opc-toolbar > strong span { display:block; font:700 9px "Atkinson Hyperlegible",sans-serif; color:#608079; letter-spacing:.16em; margin-top:3px; }
+.opc-tools { display:flex; gap:7px; }
+.opc-tools button { background:transparent; color:#275254; border:1px solid #c1d4cc; border-radius:10px; min-width:40px; min-height:40px; padding:7px 10px; }
+.opc-mission { padding:15px 26px; display:flex; justify-content:space-between; align-items:center; gap:20px; background:#f8f9f2; z-index:3; }
+.opc-kicker { font-size:10px; font-weight:700; letter-spacing:.15em; color:#098577; }
+.opc-mission h1 { margin:5px 0; font:500 clamp(22px,2.3vw,32px)/1.1 "Fredoka",sans-serif; }
+.opc-mission p { margin:0; color:#57726c; font-size:14px; }
+.opc-progress { flex:0 0 140px; font-size:11px; color:#648077; text-align:right; }
+.opc-progress progress { display:block; width:140px; height:7px; border:0; border-radius:6px; margin-top:7px; accent-color:#159b8c; }
+.opc-progress progress::-webkit-progress-bar { background:#dbe7df; border-radius:6px; }
+.opc-progress progress::-webkit-progress-value { background:#149b8c; border-radius:6px; }
+.opc-body { display:grid; grid-template-columns:minmax(0,1fr) 300px; min-height:0; }
+.opc-stage { position:relative; min-width:0; min-height:0; overflow:hidden; background:#e7ece8; }
+.opc-stage canvas { display:block; width:100%; height:100%; touch-action:none; user-select:none; outline-offset:-4px!important; }
+.opc-scene-badge { position:absolute; top:16px; left:18px; padding:8px 11px; border:1px solid #ffffffb0; background:#fffef8d9; border-radius:9px; font-size:9px; font-weight:700; letter-spacing:.13em; pointer-events:none; }
+.opc-live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#11a791; margin-right:5px; }
+.opc-stage-controls { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:5px; padding:6px; border:1px solid #b9ccc2; border-radius:13px; background:#fffef8ed; box-shadow:0 4px 14px #193d4610; white-space:nowrap; z-index:3; }
+.opc-stage-controls button { min-width:36px; min-height:36px; padding:6px 9px; border:0; border-radius:8px; background:#edf2ec; color:#214d4b; font-weight:700; font-size:12px; }
+.opc-stage-controls button[aria-pressed=true] { background:#177c70; color:white; }
+.opc-panel { min-width:0; padding:24px 22px; background:#fffef8; border-left:1px solid #d8e2d9; overflow-y:auto; display:flex; flex-direction:column; align-items:stretch; gap:13px; }
+.opc-panel h2 { margin:0; font:500 23px/1.15 "Fredoka",sans-serif; }
+.opc-panel p { margin:0; font-size:14px; line-height:1.5; color:#4b6961; }
+.opc-panel small { font-size:11px; line-height:1.4; color:#698279; }
+.opc-panel-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:15px; color:#0c8a79; background:#e1f2e8; font-size:28px; }
+.opc-learning-path { display:flex; align-items:center; gap:7px; font-size:10px; font-weight:700; color:#137c71; padding:12px 0; }
+.opc-learning-path i { font-style:normal; color:#e1a345; }
+.opc-primary,.opc-secondary { border:0; border-radius:12px; padding:13px 14px; min-height:44px; text-align:center; font-size:12px!important; font-weight:700!important; line-height:1.4; text-decoration:none; }
+.opc-primary { color:white; background:#116e63; box-shadow:0 4px 0 #0a5148; }
+.opc-primary:hover:not(:disabled) { background:#0b8170; }
+.opc-secondary { background:#edf3eb; color:#246458; border:1px solid #bdd2c6; }
+.opc-note { font-size:12px!important; color:#688076!important; line-height:1.5; }
+.opc-control-list { display:grid; gap:14px; }
+.opc-control-list b { display:block; color:#16796c; font-size:12px; margin-bottom:4px; }
+.opc-piece-list { display:grid; gap:9px; }
+.opc-piece-list button { display:flex; align-items:center; gap:10px; text-align:left; border:1px solid #d2e0d6; border-radius:12px; background:#f6f8f0; color:#294f49; padding:12px 10px; min-height:44px; font-size:13px; font-weight:700; }
+.opc-piece-list button span { display:grid; place-items:center; width:27px; height:27px; color:#6a8a7b; background:#e7eee3; border-radius:8px; font-size:10px; }
+.opc-piece-list button i { margin-left:auto; font-style:normal; color:#789c89; }
+.opc-piece-list button.is-selected { border:2px solid #128d7c; padding:11px 9px; background:#e8f6ec; }
+.opc-fact { padding:14px; border-radius:13px; background:#eff6eb; border:1px solid #dbe8d3; }
+.opc-fact > span { font-size:8px; font-weight:700; color:#668576; letter-spacing:.13em; }
+.opc-fact h3 { font:500 20px "Fredoka",sans-serif; margin:7px 0; }
+.opc-fact p { font-size:12px; }
+.opc-text-button { border:0; background:transparent; color:#16796c; padding:10px 0 0; font-size:10px!important; font-weight:700!important; }
+.opc-installed-chips { display:flex; flex-wrap:wrap; gap:7px; }
+.opc-installed-chips button { border:1px solid #c3d8ca; border-radius:999px; color:#326651; background:#f1f6ec; padding:8px 10px; font-size:11px; min-height:34px; }
+.opc-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 22px; border-top:1px solid #d5e2d7; background:#f8faf2; font-size:11px; }
+.opc-footer > [data-feedback] { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.opc-offline progress { width:54px; height:6px; margin-left:8px; vertical-align:middle; accent-color:#168f80; }
+.opc-offline { flex-shrink:0; color:#6b8074; font-size:10px; }
+.opc-offline[data-state=ready] { color:#127b5b; }
+.opc-service-order { border:1px dashed #b5cfc0; padding:16px; border-radius:12px; }
+.opc-service-order > span { font-size:9px; letter-spacing:.12em; color:#65806e; }
+.opc-service-order h2 { margin:4px 0 14px; }
+.opc-service-order blockquote { margin:0 0 18px; font-size:14px; line-height:1.55; color:#496456; }
+.opc-answer-buttons { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.opc-comparison { padding:15px; border-radius:12px; background:#edf4e8; }
+.opc-comparison > span { font-size:8px; font-weight:700; color:#70856d; letter-spacing:.1em; }
+.opc-comparison p { margin:14px 0!important; }
+.opc-comparison b { font-size:11px; }
+.opc-comparison i { display:block; height:11px; border-radius:4px; margin-top:7px; }
+.opc-hdd-bar { width:100%; background:#d8984b; }
+.opc-ssd-bar { width:32%; background:#159585; }
+.opc-comparison i { transform-origin:left; animation:opc-boot 2.4s linear; }
+.opc-comparison .opc-ssd-bar { animation-duration:.75s; }
+@keyframes opc-boot { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+.opc-checklist { list-style:none; margin:0; padding:0; display:grid; gap:10px; color:#43614f; font-size:13px; }
+.opc-checklist li::before { content:'✓'; color:#168458; margin-right:7px; font-weight:700; }
+.opc-return { color:#1a7562; font-size:11px; font-weight:700; text-align:center; padding:10px; }
+.opc-snap-label,.opc-part-label { position:absolute; transform:translate(-50%,-50%); z-index:2; border:2px solid #f8f9ee; border-radius:999px; color:white; background:#087a67; padding:8px 12px; font-size:10px!important; font-weight:700!important; box-shadow:0 4px 15px #193d4630; }
+.opc-snap-label { background:#118977; border-style:dashed; animation:opc-pulse 1.8s ease-in-out infinite; }
+.opc-part-label::before { content:'•'; margin-right:5px; color:#f6c154; }
+.opc-overlay { position:absolute; inset:0; pointer-events:none; z-index:4; }
+.opc-examine { position:absolute; top:18px; right:18px; width:250px; max-width:calc(100% - 36px); padding:20px; background:#fffef8f0; border:1px solid #cfded1; border-radius:18px; box-shadow:0 12px 40px #193d461a; pointer-events:auto; }
+.opc-examine h2 { font:500 25px "Fredoka",sans-serif; margin:10px 0; }
+.opc-examine dl { margin:0 0 16px; font-size:12px; line-height:1.45; }
+.opc-examine dt { font-weight:700; color:#168877; margin-top:11px; }
+.opc-examine dd { margin:3px 0; color:#526c5d; }
+.opc-examine button { width:100%; }
+.opc-error { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(440px,calc(100% - 36px)); background:#fffef8; border:1px solid #d0dfd2; border-radius:20px; padding:28px; pointer-events:auto; }
+.opc-error h2 { font:500 25px "Fredoka",sans-serif; }
+.opc-error p { line-height:1.5; }
+.opc-error a { display:block; margin-top:20px; }
+.lazy-game-loading { min-height:55vh; display:grid; place-content:center; padding:30px; text-align:center; color:#254f47; }
+.lazy-game-loading h1 { font-family:"Fredoka",sans-serif; }
+.lazy-game-loading progress { width:220px; accent-color:#168e7d; }
+.lazy-game-loading a { margin-top:16px; }
+@keyframes opc-pulse { 50% { box-shadow:0 0 0 6px #1dbca322; } }
+@media (max-height:720px) and (min-width:850px) { .opc-shell { grid-template-rows:56px auto minmax(0,1fr) 36px; } .opc-mission { padding:10px 22px; } .opc-mission h1 { font-size:24px; } .opc-panel { padding:18px; gap:10px; } }
+@media (max-width:1000px) { .opc-body { grid-template-columns:minmax(0,1fr) 270px; } .opc-panel { padding:18px; } }
+@media (max-width:700px) {
+  body.oficina-pc-active { overflow:auto; }
+  .opc-shell { min-height:100dvh; height:auto; grid-template-rows:58px auto auto auto; overflow:visible; }
+  .opc-toolbar { padding:8px 12px; gap:8px; }.opc-toolbar > strong { font-size:18px; }.opc-toolbar > strong span { font-size:7px; }.opc-tools { gap:4px; }.opc-tools button { min-width:32px; min-height:36px; padding:5px 7px; font-size:11px; }.opc-back { font-size:13px; }
+  .opc-mission { padding:13px 14px; gap:10px; }.opc-mission h1 { font-size:23px; }.opc-mission p { font-size:12px; }.opc-progress { flex-basis:72px; font-size:9px; }.opc-progress progress { width:72px; }
+  .opc-body { grid-template-columns:1fr; }.opc-stage { height:420px; }.opc-panel { border-left:0; border-top:1px solid #d6e0d5; overflow:visible; padding:20px; }
+  .opc-panel h2 { font-size:22px; }.opc-piece-list { grid-template-columns:1fr; }.opc-stage-controls { bottom:10px; gap:3px; padding:4px; }.opc-stage-controls button { font-size:10px; padding:5px 6px; min-width:30px; }
+  .opc-footer { flex-direction:column; align-items:flex-start; gap:5px; padding:10px 14px; }.opc-footer > [data-feedback] { white-space:normal; }
+  .opc-examine { top:auto; right:10px; bottom:60px; width:210px; padding:14px; }.opc-examine dd { font-size:11px; }.opc-examine h2 { font-size:21px; }
+  .opc-examine dl { margin-bottom:10px; }.opc-scene-badge { top:10px; left:10px; font-size:8px; }
+}
+@media (prefers-reduced-motion:reduce) { .opc-snap-label,.opc-comparison i { animation:none; } }

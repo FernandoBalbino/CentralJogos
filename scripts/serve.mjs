@@ -1,6 +1,6 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
-import { extname, join, normalize } from "node:path";
+import { extname, join, normalize, relative, resolve } from "node:path";
 
 const root = normalize(join(import.meta.dirname, ".."));
 const port = Number(process.env.CENTRAL_JOGOS_PORT || 4173);
@@ -17,15 +17,19 @@ const types = {
   ".png": "image/png",
   ".webp": "image/webp",
   ".webm": "video/webm",
-  ".svg": "image/svg+xml"
+  ".svg": "image/svg+xml",
+  ".glb": "model/gltf-binary",
+  ".gltf": "model/gltf+json"
 };
 
 createServer((request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, `http://${request.headers.host}`).pathname);
-  const requested = normalize(join(root, pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "")));
-  const safePath = requested.startsWith(root) && existsSync(requested) && statSync(requested).isFile()
-    ? requested
-    : join(root, "index.html");
+  if (pathname === "/CentralJogos") { response.writeHead(307, { Location: "/CentralJogos/" }); response.end(); return; }
+  const scopedPath = pathname.startsWith("/CentralJogos/") ? pathname.slice("/CentralJogos".length) : pathname;
+  const requested = resolve(root, scopedPath === "/" ? "index.html" : scopedPath.replace(/^\/+/, ""));
+  const taskRelativePath = relative(root, requested);
+  if (taskRelativePath.startsWith("..") || !existsSync(requested) || !statSync(requested).isFile()) { response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); response.end("Arquivo não encontrado."); return; }
+  const safePath = requested;
   response.writeHead(200, {
     "Content-Type": types[extname(safePath).toLowerCase()] || "application/octet-stream",
     "Cache-Control": "no-store"
