@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v31";
+const CACHE_NAME = "central-jogos-offline-v32";
 
 const GAME_OFFLINE_PATHS = {
   "windows-mission": ["./windows-mission-game.css", "./js/windows-mission-game.mjs", "./js/windows-mission-core.mjs", "./js/windows-mission-data.mjs", "./vendor/three/three.module.min.js", "./vendor/three/three.core.min.js"],
@@ -96,6 +96,15 @@ const PRECACHE_PATHS = [
   "./windows-file-organizer-game.css",
   "./maze-game.css",
   "./carrinho-saber.css",
+  "./balcao-informatica.css",
+  "./js/balcao-informatica.mjs",
+  "./js/balcao-informatica-core.mjs",
+  "./js/balcao-informatica-data.mjs",
+  "./js/balcao-informatica-products.mjs",
+  "./js/balcao-informatica-renderer.mjs",
+  "./js/balcao-informatica-interactions.mjs",
+  "./assets/items/fonte-alimentacao.jpg",
+  "./assets/items/cooler.jpg",
   "./assets/items/disco-rigido.jpg",
   "./assets/items/pen-drive.jpg",
   "./assets/items/placa-video.jpg",

@@ -1,6 +1,6 @@
 # Central de Jogos — Fundamentos de Informática
 
-Site educacional estático com quinze jogos para aulas introdutórias de informática:
+Site educacional estático com dezesseis jogos para aulas introdutórias de informática:
 
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
@@ -17,6 +17,7 @@ Site educacional estático com quinze jogos para aulas introdutórias de inform�
 - **Labirinto da Informática:** exploração de um labirinto procedural ampliado, com cronômetro, vírus perseguidor, 16 baús-base, 15 poderes, quatro escolhas por baú, cinco eventos aleatórios, personagem em pixel art e 36 desafios práticos de arquivos, hardware, software, periféricos, Windows e suporte básico.
 - **Carrinho do Saber:** dez fases de movimento e identificação de itens, com explicações, respostas simples ou múltiplas e progresso local.
 - **Oficina do PC:** montagem 3D guiada em oito etapas, exame das peças, liga/desliga e manutenção para substituir um HD por SSD. Arraste real ou seleção seguida de encaixe, com suporte a teclado.
+- **Balcão da Informática:** loja educativa em 2D com 100 clientes, cinco fases e 17 produtos. Selecione um item e clique na sacola, ou arraste; interprete pedidos, tente novamente e aprenda após cada entrega. Campanha estimada em 50–70 minutos, com progresso local. [Guia do jogo e imagens reutilizadas](docs/balcao-da-informatica.md).
 
 Além dos jogos, há o **Laboratório de Instalação do Windows**: simulação educacional de instalação limpa do Windows 10 22H2 e do Windows 11 25H2, com duas opções de HD virtual já preparadas, guia lateral, configuração inicial e desktop final. A atividade não acessa discos reais nem instala software. A sessão pode ser retomada após recarregar a página; senha e PIN fictícios nunca são salvos.
 
@@ -58,6 +59,7 @@ As rotas diretas dos jogos mais recentes são:
 - `http://localhost:8000/#/carrinho-do-saber`
 - `http://localhost:8000/#/oficina-do-pc`
 - `http://localhost:8000/#/instalacao-windows`
+- `http://localhost:8000/#/balcao-da-informatica`
 
 ## Expandir o curso Google Apresentações
 
@@ -69,7 +71,7 @@ Para cadastrar uma aula, adicione o registro ao catálogo, defina seu estado ini
 
 ## Uso offline nos Chromebooks
 
-O service worker **central-jogos-offline-v31** prepara automaticamente o pacote básico e os demais jogos. Aguarde **Pronto para jogar offline**. **Oficina do PC** e **Técnico em Ação 3D** são carregados sob demanda: abra cada um com conexão e aguarde seu próprio aviso **Disponível offline ✓** antes de desconectar. Three.js e os módulos exclusivos desses dois jogos não fazem parte do preparo inicial. Um download incompleto não é anunciado como disponível; há botão para tentar novamente.
+O service worker **central-jogos-offline-v32** prepara automaticamente o pacote básico e os demais jogos. Aguarde **Pronto para jogar offline**. **Oficina do PC** e **Técnico em Ação 3D** são carregados sob demanda: abra cada um com conexão e aguarde seu próprio aviso **Disponível offline ✓** antes de desconectar. Three.js e os módulos exclusivos desses dois jogos não fazem parte do preparo inicial. Um download incompleto não é anunciado como disponível; há botão para tentar novamente.
 
 Todos os arquivos, fontes, ícones, bibliotecas e vídeos são locais. Não há dependência de CDN durante a aula. O worker define os IDs e arquivos permitidos dos pacotes opcionais; URLs são resolvidas pelo seu escopo, inclusive em `/CentralJogos/`.
 

@@ -12,6 +12,7 @@ import { windowsFileOrganizerGame } from "./windows-file-organizer-game.mjs?v=1.
 import { mazeGame } from "./maze-game.mjs?v=1.1.0";
 import { carrinhoSaberGame } from "./carrinho-saber.mjs?v=1.0.0";
 import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
+import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
 
 (function () {
   "use strict";
@@ -95,6 +96,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
     if (hash.startsWith("#/labirinto-da-informatica")) return "maze-game";
     if (hash.startsWith("#/carrinho-do-saber")) return "carrinho-saber";
     if (hash.startsWith("#/instalacao-windows")) return "windows-installer";
+    if (hash.startsWith("#/balcao-da-informatica")) return "balcao-informatica";
     return "home";
   };
 
@@ -114,6 +116,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
     if (activeRoute === "maze-game" && route !== "maze-game") mazeGame.leave();
     if (activeRoute === "carrinho-saber" && route !== "carrinho-saber") carrinhoSaberGame.leave();
     if (activeRoute === "windows-installer" && route !== "windows-installer") windowsInstaller.leave();
+    if (activeRoute === "balcao-informatica" && route !== "balcao-informatica") balcaoGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -154,6 +157,8 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
           ? "Carrinho do Saber | Central de Jogos"
         : route === "windows-installer"
           ? "Simulador de Instalação do Windows | Central de Jogos"
+        : route === "balcao-informatica"
+          ? "Balcão da Informática | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
     if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer" && route !== "maze-game" && route !== "carrinho-saber" && route !== "windows-installer") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
@@ -171,6 +176,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
     if (route === "maze-game" && activeRoute !== "maze-game") mazeGame.enter();
     if (route === "carrinho-saber" && activeRoute !== "carrinho-saber") carrinhoSaberGame.enter();
     if (route === "windows-installer" && activeRoute !== "windows-installer") windowsInstaller.enter();
+    if (route === "balcao-informatica" && activeRoute !== "balcao-informatica") balcaoGame.enter();
     activeRoute = route;
   };
 
@@ -808,6 +814,7 @@ import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
   windowsFileOrganizerGame.mount(document.getElementById("windows-file-organizer-app"));
   mazeGame.mount(document.getElementById("maze-game-app"));
   carrinhoSaberGame.mount(document.getElementById("carrinho-saber-app"));
+  balcaoGame.mount(document.getElementById("balcao-informatica-app"));
   windowsInstaller.mount(document.getElementById("windows-installer-app"));
   classification.ensureState();
   renderRoute();

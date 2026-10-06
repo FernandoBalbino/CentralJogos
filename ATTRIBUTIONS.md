@@ -2,6 +2,11 @@
 
 Todos os recursos usados pelo site são armazenados localmente. Este arquivo complementa os créditos exibidos na interface.
 
+## Balcão da Informática
+
+- Os 17 produtos reutilizam imagens locais de `assets/items/`, sem alterações nos arquivos originais; as fontes, autores e licenças já registrados em `js/credits-data.js` permanecem válidos. O mapeamento completo está em `docs/balcao-da-informatica.md`.
+- Loja, personagens, balcão e sacola são formas originais feitas em HTML/CSS para o CentralJogos. Não foram usadas fotografias de clientes nem novas imagens externas. As fontes locais Atkinson Hyperlegible e Fredoka mantêm seus créditos existentes.
+
 ## Labirinto da Informática
 
 - **Personagem em pixel art** — imagem original gerada para este projeto com OpenAI ImageGen e armazenada em `assets/maze-game/player-sprites.png`.
