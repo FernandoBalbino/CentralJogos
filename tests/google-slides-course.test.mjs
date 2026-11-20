@@ -241,7 +241,7 @@ test("conclusões forçadas pelo professor não entram na precisão", () => {
   assert.equal(reset.currentLessonId, 2);
 });
 
-test("rota, desafio, acesso do professor, tela cheia, interface responsiva e cache v32 estão integrados", async () => {
+test("rota, desafio, acesso do professor, tela cheia, interface responsiva e cache v33 estão integrados", async () => {
   const [index, app, game, css, worker] = await Promise.all([
     readFile(resolve(projectRoot, "index.html"), "utf8"),
     readFile(resolve(projectRoot, "js/app.js"), "utf8"),
@@ -249,7 +249,7 @@ test("rota, desafio, acesso do professor, tela cheia, interface responsiva e cac
     readFile(resolve(projectRoot, "google-slides-course.css"), "utf8"),
     readFile(resolve(projectRoot, "service-worker.js"), "utf8")
   ]);
-  assert.match(index, /30 aulas \+ desafio/);
+  assert.match(index, /Google Apresentações/);
   assert.match(index, /#\/google-apresentacoes/);
   assert.match(app, /googleSlidesCourseGame\.mount/);
   assert.match(game, /renderChallenge\(\)/);
@@ -279,7 +279,7 @@ test("rota, desafio, acesso do professor, tela cheia, interface responsiva e cac
   assert.match(css, /overflow-x: auto/);
   assert.match(css, /gsc-teacher-auth-form/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(worker, /central-jogos-offline-v32/);
+  assert.match(worker, /central-jogos-offline-v33/);
   assert.match(worker, /google-slides-course-data\.mjs/);
   assert.match(worker, /material-symbols-outlined\.ttf/);
   assert.match(worker, /google-slides\.ico/);

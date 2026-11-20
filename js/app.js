@@ -13,6 +13,7 @@ import { mazeGame } from "./maze-game.mjs?v=1.1.0";
 import { carrinhoSaberGame } from "./carrinho-saber.mjs?v=1.0.0";
 import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
 import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
+import { tiposSoGame } from "./tipos-so.mjs?v=1.0.0";
 
 (function () {
   "use strict";
@@ -97,6 +98,7 @@ import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
     if (hash.startsWith("#/carrinho-do-saber")) return "carrinho-saber";
     if (hash.startsWith("#/instalacao-windows")) return "windows-installer";
     if (hash.startsWith("#/balcao-da-informatica")) return "balcao-informatica";
+    if (hash.startsWith("#/tipos-de-so")) return "tipos-so";
     return "home";
   };
 
@@ -117,6 +119,7 @@ import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
     if (activeRoute === "carrinho-saber" && route !== "carrinho-saber") carrinhoSaberGame.leave();
     if (activeRoute === "windows-installer" && route !== "windows-installer") windowsInstaller.leave();
     if (activeRoute === "balcao-informatica" && route !== "balcao-informatica") balcaoGame.leave();
+    if (activeRoute === "tipos-so" && route !== "tipos-so") tiposSoGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -159,8 +162,10 @@ import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
           ? "Simulador de Instalação do Windows | Central de Jogos"
         : route === "balcao-informatica"
           ? "Balcão da Informática | Central de Jogos"
+        : route === "tipos-so"
+          ? "Tipos de Sistemas Operacionais | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer" && route !== "maze-game" && route !== "carrinho-saber" && route !== "windows-installer") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer" && route !== "maze-game" && route !== "carrinho-saber" && route !== "windows-installer" && route !== "tipos-so") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
@@ -177,6 +182,7 @@ import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
     if (route === "carrinho-saber" && activeRoute !== "carrinho-saber") carrinhoSaberGame.enter();
     if (route === "windows-installer" && activeRoute !== "windows-installer") windowsInstaller.enter();
     if (route === "balcao-informatica" && activeRoute !== "balcao-informatica") balcaoGame.enter();
+    if (route === "tipos-so" && activeRoute !== "tipos-so") tiposSoGame.enter();
     activeRoute = route;
   };
 
@@ -802,6 +808,28 @@ import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
     if (event.target === creditsDialog) creditsDialog.close();
   });
 
+  // Filtros e busca da página inicial: apenas ocultam itens da lista estática.
+  const gameGrid = document.getElementById("game-grid");
+  const gameSearch = document.getElementById("game-search");
+  const filterButtons = [...document.querySelectorAll("[data-filter]")];
+  let activeFilter = "all";
+  const filterGames = () => {
+    const query = normalizeTerm(gameSearch.value.trim());
+    let visible = 0;
+    for (const item of gameGrid.children) {
+      const show = (activeFilter === "all" || item.dataset.cat === activeFilter) && normalizeTerm(item.textContent).includes(query);
+      item.hidden = !show;
+      if (show) visible += 1;
+    }
+    document.getElementById("no-games").hidden = visible > 0;
+  };
+  filterButtons.forEach((button) => button.addEventListener("click", () => {
+    activeFilter = button.dataset.filter;
+    filterButtons.forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
+    filterGames();
+  }));
+  gameSearch.addEventListener("input", filterGames);
+
   window.addEventListener("hashchange", renderRoute);
   if (!window.location.hash) window.location.hash = "#/";
   sideGame.mount(document.getElementById("side-game-app"));
@@ -815,6 +843,7 @@ import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
   mazeGame.mount(document.getElementById("maze-game-app"));
   carrinhoSaberGame.mount(document.getElementById("carrinho-saber-app"));
   balcaoGame.mount(document.getElementById("balcao-informatica-app"));
+  tiposSoGame.mount(document.getElementById("tipos-so-app"));
   windowsInstaller.mount(document.getElementById("windows-installer-app"));
   classification.ensureState();
   renderRoute();

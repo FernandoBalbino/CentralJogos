@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v32";
+const CACHE_NAME = "central-jogos-offline-v33";
 
 const GAME_OFFLINE_PATHS = {
   "windows-mission": ["./windows-mission-game.css", "./js/windows-mission-game.mjs", "./js/windows-mission-core.mjs", "./js/windows-mission-data.mjs", "./vendor/three/three.module.min.js", "./vendor/three/three.core.min.js"],
@@ -80,6 +80,8 @@ const WINDOWS_INSTALLER_ASSETS = [
   "./assets/windows-installer/desktop/LICENSE.txt"
 ];
 
+const HOME_THUMBS = ["tipos-so", "balcao", "oficina", "carrinho", "instalacao", "labirinto", "organize", "planilhas", "apresentacoes", "descubra", "tecnico", "desafio", "cruzadinha", "pares", "suporte", "lado", "forca", "classificacao"].map((name) => `./assets/thumbs/${name}.jpg`);
+
 const PRECACHE_PATHS = [
   "./",
   "./index.html",
@@ -110,6 +112,10 @@ const PRECACHE_PATHS = [
   "./assets/items/placa-video.jpg",
   "./assets/items/roteador.jpg",
   "./windows-installer.css",
+  "./tipos-so.css",
+  "./js/tipos-so.mjs",
+  "./js/tipos-so-core.mjs",
+  "./js/tipos-so-data.mjs",
   "./js/app.js",
   "./js/game-offline.mjs",
   "./assets/oficina-pc/oficina-pc-preview.jpg",
@@ -184,6 +190,7 @@ const PRECACHE_PATHS = [
   "./assets/side-game/icons/touch_app.svg",
   "./assets/side-game/icons/visibility.svg",
   "./assets/side-game/icons/wifi.svg",
+  ...HOME_THUMBS,
   ...MAZE_GAME_ASSETS,
   ...WINDOWS_INSTALLER_ASSETS,
   ...WINDOWS_DISCOVERY_MEDIA,

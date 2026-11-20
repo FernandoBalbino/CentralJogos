@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Jogos educativos sobre fundamentos de informática e sistemas operacionais.">
-    <meta name="theme-color" content="#182a43">
+    <meta name="description" content="Jogos educativos de informática: hardware, sistemas operacionais, suporte técnico e produtividade.">
+    <meta name="theme-color" content="#f5f7fb">
     <title>Central de Jogos — Fundamentos de Informática</title>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./assets/side-game/icons/apps.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="./styles.css?v=1.4.1">
+    <link rel="stylesheet" href="./styles.css?v=2.0.0">
     <link rel="stylesheet" href="./side-game.css?v=1.0.0">
     <link rel="stylesheet" href="./support-game.css?v=2.0.0">
     <link rel="stylesheet" href="./memory-game.css?v=1.0.0">
@@ -22,282 +22,139 @@
     <link rel="stylesheet" href="./carrinho-saber.css?v=1.0.0">
     <link rel="stylesheet" href="./balcao-informatica.css?v=1.0.0">
     <link rel="stylesheet" href="./windows-installer.css?v=1.0.0">
+    <link rel="stylesheet" href="./tipos-so.css?v=1.0.0">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
-    <div class="ambient ambient-one" aria-hidden="true"></div>
-    <div class="ambient ambient-two" aria-hidden="true"></div>
-
     <header class="site-header">
-      <a class="brand" href="#/" aria-label="Voltar para a Central de Jogos">
+      <a class="brand" href="#/" aria-label="Central de Jogos: página inicial">
         <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-        <span class="brand-copy">
-          <strong>Central de Jogos</strong>
-          <small>Fundamentos de Informática</small>
-        </span>
+        <span class="brand-copy"><strong>Central de Jogos</strong><small>Informática</small></span>
       </a>
-      <nav class="header-nav" aria-label="Navegação principal">
-        <a href="#/" data-route-link="home">Início</a>
-        <a href="#/classificacao" data-route-link="classification">Classificação</a>
-        <a href="#/forca" data-route-link="hangman">Forca</a>
-        <a href="#/escolha-seu-lado" data-route-link="side-game">Escolha seu lado</a>
-        <a href="#/suporte-tecnico" data-route-link="support-game">Suporte</a>
-        <a href="#/ache-os-pares" data-route-link="memory-game">Ache os pares</a>
-        <a href="#/cruzadinha" data-route-link="crossword-game">Cruzadinha</a>
-        <a href="#/desafio-ti" data-route-link="desafio-ti">Desafio TI</a>
-        <a href="#/missoes-windows" data-route-link="windows-mission">Missões Windows</a>
-        <a href="#/descubra-windows" data-route-link="windows-discovery">Descubra o Windows</a>
-      </nav>
+      <div class="header-actions">
+        <div id="site-offline-status" class="site-offline-status" data-offline-state="preparing" role="status" aria-live="polite">
+          <i class="status-dot" aria-hidden="true"></i><span>Preparando offline…</span><button id="retry-offline" type="button">Tentar de novo</button>
+        </div>
+        <a class="home-button" href="#/" data-route-link="home">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+          <span>Jogos</span>
+        </a>
+      </div>
     </header>
 
     <main id="main-content">
       <section id="home-screen" class="screen home-screen" data-screen="home">
-        <div class="hero-copy">
-          <span class="eyebrow"><span class="live-dot"></span> Aprender brincando</span>
-          <h1>Explore o computador.<br><em>Desafie a turma.</em></h1>
-          <p>Dezesseis jogos para reconhecer equipamentos, programas, redes, sistemas operacionais e ferramentas de produtividade.</p>
-          <div class="hero-stats" aria-label="Conteúdo disponível">
-            <div><strong>16</strong><span>jogos educativos</span></div>
-            <div><strong>74</strong><span>itens na roleta</span></div>
-            <div><strong>30</strong><span>termos na forca</span></div>
+        <h1 class="visually-hidden">Central de Jogos de Informática</h1>
+
+        <a class="spotlight" href="#/tipos-de-so">
+          <span class="spotlight-copy">
+            <span class="tag-new">Novo</span>
+            <strong class="spotlight-title">Tipos de Sistemas Operacionais</strong>
+            <span class="spotlight-text">Aula animada + desafio de arrastar</span>
+            <span class="spotlight-cta">Jogar agora <span aria-hidden="true">→</span></span>
+          </span>
+          <span class="spotlight-art" aria-hidden="true">
+            <span class="orbit"></span>
+            <span class="core-chip">SO</span>
+            <span class="type-chip t-mono">Monousuário</span>
+            <span class="type-chip t-multi">Multiusuário</span>
+            <span class="type-chip t-real">Tempo real</span>
+            <span class="type-chip t-emb">Embarcado</span>
+          </span>
+        </a>
+
+        <div class="library-bar">
+          <div class="filters" role="group" aria-label="Filtrar jogos por assunto">
+            <button type="button" data-filter="all" aria-pressed="true">Todos</button>
+            <button type="button" data-filter="sistemas" aria-pressed="false">Sistemas</button>
+            <button type="button" data-filter="hardware" aria-pressed="false">Hardware</button>
+            <button type="button" data-filter="escritorio" aria-pressed="false">Escritório</button>
+            <button type="button" data-filter="suporte" aria-pressed="false">Suporte</button>
+            <button type="button" data-filter="revisao" aria-pressed="false">Revisão</button>
           </div>
+          <label class="game-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+            <input id="game-search" type="search" placeholder="Buscar jogo" autocomplete="off" aria-label="Buscar jogo pelo nome">
+          </label>
         </div>
 
-        <div class="game-selection" aria-label="Escolha um jogo ou laboratório">
-          <article class="game-card classification-card">
-            <div class="card-topline"><span>Jogo 01</span><span class="difficulty">Observação</span></div>
-            <div class="classification-preview" aria-hidden="true">
-              <span class="preview-chip chip-keyboard">⌨</span>
-              <span class="preview-chip chip-monitor">▣</span>
-              <span class="preview-chip chip-software">◎</span>
-              <span class="preview-slot"></span><span class="preview-slot"></span><span class="preview-slot"></span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Arraste e organize</p>
-              <h2>Classifique os itens</h2>
-              <p>Descubra o que é entrada, saída, hardware, software ou periférico híbrido.</p>
-              <a class="primary-button" href="#/classificacao">Começar atividade <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card hangman-card">
-            <div class="card-topline"><span>Jogo 02</span><span class="difficulty">Vocabulário</span></div>
-            <div class="hangman-preview" aria-hidden="true">
-              <span class="mini-gallows"></span>
-              <div><span class="mini-word">_ _ _ _ _ _</span><span class="mini-keys">A B C D E</span></div>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Escolha e descubra</p>
-              <h2>Forca do sistema</h2>
-              <p>O professor prepara o termo e a turma tenta revelar cada letra antes do boneco ficar completo.</p>
-              <a class="primary-button" href="#/forca">Preparar partida <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card choose-side-card">
-            <div class="card-topline"><span>Jogo 03</span><span class="difficulty">Movimento</span></div>
-            <div class="choose-side-preview" aria-hidden="true">
-              <span class="choose-preview-zone choose-preview-left"><img src="./assets/side-game/icons/arrow_back.svg" alt=""></span>
-              <span class="choose-preview-zone choose-preview-center"><img src="./assets/side-game/icons/arrow_downward.svg" alt=""></span>
-              <span class="choose-preview-zone choose-preview-right"><img src="./assets/side-game/icons/arrow_forward.svg" alt=""></span>
-              <span class="choose-preview-item"><img src="./assets/items/memoria-ram.jpg" alt=""></span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Observe e se mova</p>
-              <h2>Escolha seu lado</h2>
-              <p>A roleta sorteia 74 itens e a turma escolhe um lado para classificar natureza ou fluxo de dados.</p>
-              <a class="primary-button" href="#/escolha-seu-lado">Abrir a roleta <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card support-card">
-            <div class="card-topline"><span>Jogo 04</span><span class="difficulty">Suporte Técnico</span></div>
-            <div class="support-preview" aria-hidden="true">
-              <span class="support-preview-headset">◖◗</span>
-              <span class="support-preview-ticket ticket-one"><i></i><i></i><i></i></span>
-              <span class="support-preview-ticket ticket-two"><i></i><i></i><i></i></span>
-              <span class="support-preview-check">✓</span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Analise e resolva</p>
-              <h2>Central de Suporte</h2>
-              <p>Resolva seis chamados em dois níveis, identificando o que verificar, a causa e a solução.</p>
-              <a class="primary-button" href="#/suporte-tecnico">Atender chamados <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card memory-home-card">
-            <div class="card-topline"><span>Jogo 05</span><span class="difficulty">Imagem + definição</span></div>
-            <div class="memory-home-preview" aria-hidden="true">
-              <span class="memory-preview-card memory-preview-back">?</span>
-              <span class="memory-preview-card memory-preview-image">▦</span>
-              <span class="memory-preview-card memory-preview-back">?</span>
-              <span class="memory-preview-card memory-preview-text"><i></i><i></i><i></i></span>
-              <span class="memory-preview-link">↔</span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Associe e conquiste</p>
-              <h2>Ache os Pares</h2>
-              <p>Encontre o equipamento, conceito ou tecnologia correspondente à definição.</p>
-              <a class="primary-button" href="#/ache-os-pares">Começar partida <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card crossword-home-card">
-            <div class="card-topline"><span>Jogo 06</span><span class="difficulty">Raciocínio + vocabulário</span></div>
-            <div class="crossword-home-preview" aria-hidden="true">
-              <img src="./assets/side-game/icons/apps.svg" alt="">
-              <span>10 palavras</span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Leia, cruze e descubra</p>
-              <h2>Cruzadinha Tech</h2>
-              <p>Resolva uma grade aleatória com dez conceitos e definições diferentes a cada partida.</p>
-              <a class="primary-button" href="#/cruzadinha">Gerar cruzadinha <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card desafio-home-card">
-            <div class="card-topline"><span>Jogo 07</span><span class="difficulty">Competição em equipes</span></div>
-            <div class="desafio-home-preview" aria-hidden="true">
-              <span class="desafio-preview-title">VALENDO PONTOS</span>
-              <span class="desafio-preview-cell">100</span>
-              <span class="desafio-preview-cell">200</span>
-              <span class="desafio-preview-cell">300</span>
-              <span class="desafio-preview-cell">200</span>
-              <span class="desafio-preview-cell is-hot">400</span>
-              <span class="desafio-preview-cell">500</span>
-              <span class="desafio-preview-score">BYTE <strong>800</strong></span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Escolha, arrisque e dispute</p>
-              <h2>Desafio TI</h2>
-              <p>Escolha categorias, responda perguntas e dispute pontos com sua equipe em uma grande revisão de informática.</p>
-              <a class="primary-button" href="#/desafio-ti">Iniciar desafio <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card windows-mission-home-card">
-            <div class="card-topline"><span>Jogo 08</span><span class="difficulty">Prática guiada + 3D</span></div>
-            <div class="windows-mission-home-preview">
-              <img src="./assets/windows-mission/tecnico-em-acao-card.png" alt="Laboratório de informática em estilo 3D">
-              <span>6 missões</span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Aprenda e faça</p>
-              <h2>Técnico em Ação 3D</h2>
-              <p>Aprenda o básico do Windows e organize as ações corretas para resolver seis chamados.</p>
-              <a class="primary-button" href="#/missoes-windows">Começar treinamento <span aria-hidden="true">→</span></a>
-              <small class="game-offline-hint" data-game-offline="windows-mission">Abra uma vez com internet para jogar offline.</small>
-            </div>
-          </article>
-
-          <article class="game-card windows-discovery-home-card">
-            <div class="card-topline"><span>Jogo 09</span><span class="difficulty">Aula animada + vocabulário</span></div>
-            <div class="windows-discovery-home-preview">
-              <img src="./assets/windows-discovery/scene-desktop.png" alt="Área de Trabalho do Windows 11">
-              <span>30 aulas + 15 termos</span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Assista, responda e encontre</p>
-              <h2>Descubra o Windows</h2>
-              <p>Aprenda 30 conceitos em animações rápidas e pratique em um caça-palavras diferente para cada aluno.</p>
-              <a class="primary-button" href="#/descubra-windows">Começar aula <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card google-slides-home-card">
-            <div class="card-topline"><span>Jogo 10</span><span class="difficulty">Demonstração + prática</span></div>
-            <div class="google-slides-home-preview" aria-hidden="true">
-              <span>30 aulas + desafio</span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Assista, responda e faça</p>
-              <h2>Google Apresentações na Prática</h2>
-              <p>Aprenda os principais recursos em 30 aulas práticas e conclua uma missão final no simulador.</p>
-              <a class="primary-button" href="#/google-apresentacoes">Começar treinamento <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card google-sheets-home-card">
-            <div class="card-topline"><span>Jogo 11</span><span class="difficulty">Demonstração + prática</span></div>
-            <div class="google-sheets-home-preview" aria-hidden="true">
-              <img src="./assets/google-sheets/google-sheets.ico" alt="">
-              <span>30 aulas + desafio</span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Assista, responda e faça</p>
-              <h2>Google Planilhas na Prática</h2>
-              <p>Aprenda a preencher, organizar, formatar e calcular em 30 aulas básicas no simulador.</p>
-              <a class="primary-button" href="#/google-planilhas">Começar treinamento <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card windows-file-organizer-home-card">
-            <div class="card-topline"><span>Jogo 12</span><span class="difficulty">Arquivos e Extensões</span></div>
-            <div class="windows-file-organizer-home-preview" aria-hidden="true">
-              <img class="wfo-preview-file" src="./assets/windows-file-organizer/icons/pdf.svg" alt="">
-              <span>→</span>
-              <img class="wfo-preview-folder" src="./assets/windows-file-organizer/icons/folder.svg" alt="">
-              <b>11 tipos + prática</b>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Arquivos e Extensões</p>
-              <h2>Organize o Windows</h2>
-              <p>Aprenda a reconhecer tipos de arquivo e organize uma Área de Trabalho do Windows.</p>
-              <a class="primary-button" href="#/organize-windows">JOGAR <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-
-          <article class="game-card maze-home-card">
-            <div class="card-topline"><span>Jogo 13</span><span class="difficulty">Exploração + prática</span></div>
-            <div class="maze-home-preview" aria-hidden="true">
-              <span class="maze-home-hero"></span>
-              <span class="maze-home-exit"></span>
-              <b>36 desafios</b>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Explore, resolva e avance</p>
-              <h2>Labirinto da Informática</h2>
-              <p>Explore caminhos ramificados, escape do vírus, abra baús de poderes e resolva desafios para ganhar tempo.</p>
-              <a class="primary-button" href="#/labirinto-da-informatica">INICIAR MISSÃO <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-          <article class="game-card carrinho-home-card">
-            <div class="card-topline"><span>Jogo 14</span><span class="difficulty">10 fases</span></div>
-            <div class="cs-home-preview" aria-hidden="true"><img src="./assets/items/mouse.jpg" alt=""><b>🛒</b><img src="./assets/windows-file-organizer/icons/powerpoint.svg" alt=""></div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Conhecimento e movimento</p>
-              <h2>Carrinho do Saber</h2>
-              <p>Leia a missão e pegue apenas o item correto!</p>
-              <a class="primary-button" href="#/carrinho-do-saber">JOGAR AGORA <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-          <article class="game-card oficina-home-card">
-            <div class="card-topline"><span>Jogo 15</span><span class="difficulty">Hardware + prática 3D</span></div>
-            <div class="oficina-home-preview"><img src="./assets/oficina-pc/oficina-pc-preview.jpg" alt="Computador 3D montado, com gabinete aberto, monitor, teclado e mouse" loading="lazy"><b>3D INTERATIVO</b></div>
-            <div class="game-card-copy"><p class="card-kicker">Pegue, conheça e encaixe</p><h2>Oficina do PC</h2><p>Monte um computador em 3D e resolva desafios de SSD, memória RAM e mouse.</p><a class="primary-button" href="#/oficina-do-pc">ABRIR OFICINA <span aria-hidden="true">→</span></a><small class="game-offline-hint" data-game-offline="oficina-pc">Abra uma vez com internet para jogar offline.</small></div>
-          </article>
-
-          <article class="game-card balcao-home-card">
-            <div class="card-topline"><span>Jogo 16</span><span class="difficulty">100 clientes • 5 fases</span></div>
-            <div class="bi-home-preview" aria-hidden="true"><img src="./assets/items/headset.jpg" alt=""><b>LOJA<br>TECH</b><img src="./assets/items/ssd.jpg" alt=""></div>
-            <div class="game-card-copy"><p class="card-kicker">Ouça, escolha e entregue</p><h2>Balcão da Informática</h2><p>Atenda clientes, descubra o que eles precisam e escolha os equipamentos corretos.</p><a class="primary-button" href="#/balcao-da-informatica">JOGAR <span aria-hidden="true">→</span></a></div>
-          </article>
-          <article class="game-card windows-installer-home-card">
-            <div class="card-topline"><span>Laboratório 01</span><span class="difficulty">Simulador</span></div>
-            <div class="windows-installer-home-preview" aria-hidden="true">
-              <img src="./assets/items/windows.svg" alt="">
-              <span>10 + 11</span>
-            </div>
-            <div class="game-card-copy">
-              <p class="card-kicker">Laboratório técnico</p>
-              <h2>Instalação do Windows</h2>
-              <p>Simule a instalação completa do Windows 10 ou 11 e escolha o HD virtual de destino.</p>
-              <a class="primary-button" href="#/instalacao-windows">ABRIR SIMULADOR <span aria-hidden="true">→</span></a>
-            </div>
-          </article>
-        </div>
+        <ul id="game-grid" class="game-grid" aria-label="Jogos, do mais novo ao mais antigo">
+          <li data-cat="sistemas"><a class="game-card" href="#/tipos-de-so">
+            <span class="thumb"><img src="./assets/thumbs/tipos-so.jpg" alt="" loading="lazy"><b class="badge badge-new">Novo</b></span>
+            <span class="card-info"><strong>Tipos de Sistemas Operacionais</strong><small>Jogo 17 · Sistemas</small></span>
+          </a></li>
+          <li data-cat="hardware"><a class="game-card" href="#/balcao-da-informatica">
+            <span class="thumb"><img src="./assets/thumbs/balcao.jpg" alt="" loading="lazy"><b class="badge badge-new">Novo</b></span>
+            <span class="card-info"><strong>Balcão da Informática</strong><small>Jogo 16 · Hardware</small></span>
+          </a></li>
+          <li data-cat="hardware"><a class="game-card" href="#/oficina-do-pc">
+            <span class="thumb"><img src="./assets/thumbs/oficina.jpg" alt="" loading="lazy"><b class="badge badge-new">Novo</b><b class="badge badge-3d">3D</b></span>
+            <span class="card-info"><strong>Oficina do PC</strong><small>Jogo 15 · Hardware</small></span>
+            <small class="game-offline-hint" data-game-offline="oficina-pc">Abra uma vez com internet para jogar offline.</small>
+          </a></li>
+          <li data-cat="hardware"><a class="game-card" href="#/carrinho-do-saber">
+            <span class="thumb"><img src="./assets/thumbs/carrinho.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Carrinho do Saber</strong><small>Jogo 14 · Hardware</small></span>
+          </a></li>
+          <li data-cat="sistemas"><a class="game-card" href="#/instalacao-windows">
+            <span class="thumb"><img src="./assets/thumbs/instalacao.jpg" alt="" loading="lazy"><b class="badge badge-lab">Simulador</b></span>
+            <span class="card-info"><strong>Instalação do Windows</strong><small>Laboratório · Sistemas</small></span>
+          </a></li>
+          <li data-cat="revisao"><a class="game-card" href="#/labirinto-da-informatica">
+            <span class="thumb"><img src="./assets/thumbs/labirinto.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Labirinto da Informática</strong><small>Jogo 13 · Revisão</small></span>
+          </a></li>
+          <li data-cat="sistemas"><a class="game-card" href="#/organize-windows">
+            <span class="thumb"><img src="./assets/thumbs/organize.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Organize o Windows</strong><small>Jogo 12 · Sistemas</small></span>
+          </a></li>
+          <li data-cat="escritorio"><a class="game-card" href="#/google-planilhas">
+            <span class="thumb"><img src="./assets/thumbs/planilhas.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Google Planilhas</strong><small>Jogo 11 · Escritório</small></span>
+          </a></li>
+          <li data-cat="escritorio"><a class="game-card" href="#/google-apresentacoes">
+            <span class="thumb"><img src="./assets/thumbs/apresentacoes.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Google Apresentações</strong><small>Jogo 10 · Escritório</small></span>
+          </a></li>
+          <li data-cat="sistemas"><a class="game-card" href="#/descubra-windows">
+            <span class="thumb"><img src="./assets/thumbs/descubra.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Descubra o Windows</strong><small>Jogo 09 · Sistemas</small></span>
+          </a></li>
+          <li data-cat="suporte"><a class="game-card" href="#/missoes-windows">
+            <span class="thumb"><img src="./assets/thumbs/tecnico.jpg" alt="" loading="lazy"><b class="badge badge-3d">3D</b></span>
+            <span class="card-info"><strong>Técnico em Ação 3D</strong><small>Jogo 08 · Suporte</small></span>
+            <small class="game-offline-hint" data-game-offline="windows-mission">Abra uma vez com internet para jogar offline.</small>
+          </a></li>
+          <li data-cat="revisao"><a class="game-card" href="#/desafio-ti">
+            <span class="thumb"><img src="./assets/thumbs/desafio.jpg" alt="" loading="lazy"><b class="badge badge-team">Turma</b></span>
+            <span class="card-info"><strong>Desafio TI</strong><small>Jogo 07 · Revisão</small></span>
+          </a></li>
+          <li data-cat="revisao"><a class="game-card" href="#/cruzadinha">
+            <span class="thumb"><img src="./assets/thumbs/cruzadinha.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Cruzadinha Tech</strong><small>Jogo 06 · Revisão</small></span>
+          </a></li>
+          <li data-cat="revisao"><a class="game-card" href="#/ache-os-pares">
+            <span class="thumb"><img src="./assets/thumbs/pares.jpg" alt="" loading="lazy"><b class="badge badge-team">Turma</b></span>
+            <span class="card-info"><strong>Ache os Pares</strong><small>Jogo 05 · Revisão</small></span>
+          </a></li>
+          <li data-cat="suporte"><a class="game-card" href="#/suporte-tecnico">
+            <span class="thumb"><img src="./assets/thumbs/suporte.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Central de Suporte</strong><small>Jogo 04 · Suporte</small></span>
+          </a></li>
+          <li data-cat="hardware"><a class="game-card" href="#/escolha-seu-lado">
+            <span class="thumb"><img src="./assets/thumbs/lado.jpg" alt="" loading="lazy"><b class="badge badge-team">Turma</b></span>
+            <span class="card-info"><strong>Escolha seu Lado</strong><small>Jogo 03 · Hardware</small></span>
+          </a></li>
+          <li data-cat="sistemas"><a class="game-card" href="#/forca">
+            <span class="thumb"><img src="./assets/thumbs/forca.jpg" alt="" loading="lazy"><b class="badge badge-team">Turma</b></span>
+            <span class="card-info"><strong>Forca do Sistema</strong><small>Jogo 02 · Sistemas</small></span>
+          </a></li>
+          <li data-cat="hardware"><a class="game-card" href="#/classificacao">
+            <span class="thumb"><img src="./assets/thumbs/classificacao.jpg" alt="" loading="lazy"></span>
+            <span class="card-info"><strong>Classifique os Itens</strong><small>Jogo 01 · Hardware</small></span>
+          </a></li>
+        </ul>
+        <p id="no-games" class="no-games" hidden>Nenhum jogo encontrado. Tente outra palavra.</p>
       </section>
 
       <section id="classification-screen" class="screen game-screen" data-screen="classification" hidden>
@@ -403,10 +260,11 @@
       </section>
       <section id="oficina-pc-screen" class="screen" data-screen="oficina-pc" hidden><div id="oficina-pc-app"></div></section>
       <section id="balcao-informatica-screen" class="screen" data-screen="balcao-informatica" hidden><div id="balcao-informatica-app"></div></section>
+      <section id="tipos-so-screen" class="screen" data-screen="tipos-so" hidden><div id="tipos-so-app"></div></section>
     </main>
 
     <footer class="site-footer">
-      <p>Feito para aprender — nenhum dado do aluno é coletado.</p>
+      <p>Nenhum dado do aluno é coletado.</p>
       <button id="open-credits" class="text-button" type="button">Créditos das imagens</button>
     </footer>
 
@@ -420,11 +278,8 @@
     </dialog>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <div id="site-offline-status" class="site-offline-status" data-offline-state="preparing" role="status" aria-live="polite">
-      <img src="./assets/side-game/icons/wifi.svg" alt=""><span>Preparando jogos para uso offline…</span><button id="retry-offline" type="button">Tentar novamente</button>
-    </div>
     <script src="./js/credits-data.js?v=1.0.5"></script>
     <script src="./js/data.js?v=1.0.5"></script>
-    <script type="module" src="./js/app.js?v=3.6.0"></script>
+    <script type="module" src="./js/app.js?v=4.0.0"></script>
   </body>
 </html>
