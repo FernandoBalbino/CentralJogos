@@ -2,10 +2,20 @@
 export const TYPE_INFO = {
   mono: { label: "Monousuário", desc: "uma pessoa por vez", icon: "👤", color: "#6c5ce7" },
   multi: { label: "Multiusuário", desc: "várias ao mesmo tempo", icon: "👥", color: "#0d9f9a" },
-  real: { label: "Tempo real", desc: "atrasar = falhar", icon: "⏱️", color: "#e4532f" },
+  real: { label: "Tempo real", desc: "não pode atrasar", icon: "⏱️", color: "#e4532f" },
   emb: { label: "Embarcado", desc: "dentro de um aparelho", icon: "🔌", color: "#d98a0b" },
-  geral: { label: "Uso geral", desc: "pode esperar um pouco", icon: "🖥️", color: "#64748b" },
-  pc: { label: "Computador", desc: "uso geral, vários programas", icon: "💻", color: "#64748b" }
+  geral: { label: "Pode esperar", desc: "atrasar não é perigoso", icon: "⏳", color: "#64748b" },
+  pc: { label: "Computador", desc: "roda vários programas", icon: "💻", color: "#64748b" }
+};
+
+// Logos já armazenados no projeto (créditos em ATTRIBUTIONS.md e js/credits-data.js).
+// "color" pinta logos de uma cor só (Simple Icons) com máscara CSS.
+export const LOGOS = {
+  windows: { src: "./assets/items/windows.svg", name: "Windows" },
+  ubuntu: { src: "./assets/items/ubuntu.svg", name: "Ubuntu" },
+  chrome: { src: "./assets/items/google-chrome.svg", name: "ChromeOS" },
+  linux: { src: "./assets/side-game/brands/linux.svg", name: "Linux" },
+  android: { src: "./assets/side-game/brands/android.svg", name: "Android", color: "#3ddc84" }
 };
 
 export const LESSONS = [
@@ -65,7 +75,7 @@ export const LESSONS = [
     title: "Embarcado",
     lead: "Fica <b>dentro de um aparelho</b> e faz uma tarefa específica.",
     points: ["Usa pouca memória e pouca energia.", "Muitas vezes você nem percebe que ele existe."],
-    examples: ["Roteador Wi-Fi", "Smart TV", "Smartwatch", "Máquina de lavar"],
+    examples: ["Ar-condicionado", "Micro-ondas", "Roteador Wi-Fi", "Smart TV"],
     question: {
       text: "Qual destes aparelhos tem um SO embarcado?",
       options: [
@@ -97,66 +107,81 @@ export const LESSONS = [
 export const PHASES = [
   {
     id: "usuarios",
-    title: "Quantas pessoas ao mesmo tempo?",
-    hint: "O sistema aceita várias pessoas usando juntas?",
+    title: "Quantas pessoas usam ao mesmo tempo?",
+    hint: "Uma pessoa por vez ou várias juntas?",
     bins: ["mono", "multi"],
     cards: [
-      { id: "msdos", icon: "💾", name: "MS-DOS", detail: "Computador pessoal dos anos 80", answer: "mono", why: "O MS-DOS não tinha contas: atendia uma pessoa por vez." },
-      { id: "win98", icon: "🪟", name: "Windows 98", detail: "PC de casa dos anos 90", answer: "mono", why: "O Windows 98 foi feito para uma pessoa por vez, sem separar usuários de verdade." },
-      { id: "ios", icon: "📱", name: "iOS no iPhone", detail: "Celular com uma única conta", answer: "mono", why: "O iPhone tem uma conta só: tudo pertence a uma pessoa." },
-      { id: "ubuntu-server", icon: "🐧", name: "Ubuntu Server", detail: "Servidor com 30 alunos conectados", answer: "multi", why: "Cada aluno entra com sua conta, todos ao mesmo tempo." },
-      { id: "win-server", icon: "🗄️", name: "Windows Server", detail: "Funcionários no acesso remoto", answer: "multi", why: "Vários funcionários usam o mesmo servidor ao mesmo tempo." },
-      { id: "unix", icon: "🏦", name: "Unix do banco", detail: "Centenas de terminais ligados", answer: "multi", why: "Centenas de pessoas usam o sistema central juntas." }
+      { id: "msdos", icon: "💾", name: "MS-DOS", detail: "Computador dos anos 80", answer: "mono", why: "O MS-DOS atendia uma pessoa por vez." },
+      { id: "iphone", icon: "📱", name: "iPhone (iOS)", detail: "Celular com uma conta só", answer: "mono", why: "O iPhone tem uma única conta: a do dono." },
+      { id: "relogio-user", icon: "⌚", name: "Smartwatch", detail: "Só o dono usa", answer: "mono", why: "O relógio é de uma pessoa só." },
+      { id: "ubuntu-server", logo: "ubuntu", name: "Ubuntu Server", detail: "30 alunos logados juntos", answer: "multi", why: "Cada aluno entra com sua conta, todos ao mesmo tempo." },
+      { id: "win-server", logo: "windows", name: "Windows Server", detail: "Funcionários conectados juntos", answer: "multi", why: "Vários funcionários usam o mesmo servidor ao mesmo tempo." },
+      { id: "linux-banco", logo: "linux", name: "Linux do banco", detail: "Centenas de caixas ao mesmo tempo", answer: "multi", why: "Muitas pessoas usam o mesmo sistema juntas." }
     ]
   },
   {
     id: "prazo",
-    title: "O tempo é crítico?",
+    title: "Pode atrasar?",
     hint: "Se atrasar um pouquinho, alguém corre perigo?",
     bins: ["real", "geral"],
     cards: [
-      { id: "airbag", icon: "🚗", name: "Airbag do carro", detail: "Infla logo após a batida", answer: "real", why: "Se o airbag atrasar, ele não protege ninguém." },
-      { id: "marcapasso", icon: "❤️", name: "Marca-passo", detail: "Estimula o coração", answer: "real", why: "O estímulo precisa chegar no momento exato, sempre." },
-      { id: "marte", icon: "🤖", name: "Robô em Marte", detail: "VxWorks controlando rodas e braço", answer: "real", why: "Motores e sensores precisam responder dentro do prazo." },
-      { id: "aviao", icon: "✈️", name: "Piloto automático", detail: "Corrige a rota do avião", answer: "real", why: "Um atraso na correção pode tirar o avião da rota." },
-      { id: "trabalho", icon: "📝", name: "Digitar um trabalho", detail: "Windows 11 no notebook", answer: "geral", why: "Se demorar um segundo, ninguém se machuca." },
-      { id: "navegar", icon: "🌐", name: "Navegar na internet", detail: "Ubuntu no laboratório", answer: "geral", why: "Uma página pode carregar um pouco mais devagar sem perigo." },
-      { id: "fotos", icon: "🖼️", name: "Organizar fotos", detail: "macOS no computador de casa", answer: "geral", why: "Esperar um pouco não causa nenhum acidente." },
-      { id: "download", icon: "⬇️", name: "Baixar um arquivo", detail: "ChromeOS no Chromebook", answer: "geral", why: "O download pode atrasar sem colocar ninguém em risco." }
+      { id: "airbag", icon: "🚗", name: "Airbag", detail: "Infla logo após a batida", answer: "real", why: "Se o airbag atrasar, ele não protege ninguém." },
+      { id: "abs", icon: "🛑", name: "Freio ABS", detail: "Evita que a roda trave", answer: "real", why: "O freio precisa agir na hora, sem atraso." },
+      { id: "marcapasso", icon: "❤️", name: "Marca-passo", detail: "Ajuda o coração a bater", answer: "real", why: "O estímulo precisa chegar no momento exato." },
+      { id: "robo", icon: "🦾", name: "Robô da fábrica", detail: "Para se alguém chegar perto", answer: "real", why: "Se o robô demorar para parar, alguém se machuca." },
+      { id: "windows-word", logo: "windows", name: "Windows 11", detail: "Abrir o Word", answer: "geral", why: "Se o Word demorar um segundo, ninguém se machuca." },
+      { id: "android-zap", logo: "android", name: "Android", detail: "Abrir o WhatsApp", answer: "geral", why: "A mensagem pode demorar um pouco sem perigo." },
+      { id: "ar-temp", icon: "❄️", name: "Ar-condicionado", detail: "Mudar a temperatura", answer: "geral", why: "Esfriar alguns segundos depois não é perigoso." },
+      { id: "tv-youtube", icon: "📺", name: "Smart TV", detail: "Abrir o YouTube", answer: "geral", why: "O vídeo pode carregar devagar sem risco." }
     ]
   },
   {
     id: "aparelho",
-    title: "Onde o sistema está?",
-    hint: "Ele fica escondido dentro de um aparelho com uma função só?",
+    title: "Onde fica o sistema?",
+    hint: "Escondido num aparelho ou num computador?",
     bins: ["emb", "pc"],
     cards: [
-      { id: "roteador", icon: "📶", name: "Roteador Wi-Fi", detail: "Distribui a internet da casa", answer: "emb", why: "O sistema do roteador só cuida da rede." },
-      { id: "smart-tv", icon: "📺", name: "Smart TV", detail: "Canais e apps de vídeo", answer: "emb", why: "O sistema fica dentro da TV, feito para vídeo." },
-      { id: "relogio", icon: "⌚", name: "Smartwatch", detail: "Passos e notificações", answer: "emb", why: "Sistema pequeno, econômico, dentro do relógio." },
-      { id: "lavar", icon: "🧺", name: "Máquina de lavar", detail: "Controla água, giro e tempo", answer: "emb", why: "Ele só controla o ciclo de lavagem." },
-      { id: "notebook", icon: "💻", name: "Notebook", detail: "Windows 11 com vários programas", answer: "pc", why: "Computador de uso geral: roda qualquer programa." },
-      { id: "pc-lab", icon: "🖥️", name: "PC do laboratório", detail: "Ubuntu com navegador e editor", answer: "pc", why: "Serve para muitas tarefas diferentes." },
-      { id: "chromebook", icon: "🎒", name: "Chromebook", detail: "ChromeOS para estudar", answer: "pc", why: "É um computador: navegador, documentos, apps…" },
-      { id: "servidor", icon: "🗄️", name: "Servidor da escola", detail: "Contas e arquivos dos alunos", answer: "pc", why: "Servidor também é um computador de uso geral." }
+      { id: "ar", icon: "❄️", name: "Ar-condicionado", detail: "Controla a temperatura", answer: "emb", why: "Tem um sistema só para controlar o ar." },
+      { id: "microondas", icon: "🍿", name: "Micro-ondas", detail: "Timer e potência", answer: "emb", why: "O sistema dele só cuida do tempo e da potência." },
+      { id: "roteador", icon: "📶", name: "Roteador Wi-Fi", detail: "Distribui a internet", answer: "emb", why: "O sistema do roteador só cuida da rede." },
+      { id: "lavar", icon: "🧺", name: "Máquina de lavar", detail: "Água, giro e tempo", answer: "emb", why: "Ele só controla o ciclo de lavagem." },
+      { id: "notebook", logo: "windows", name: "Notebook com Windows", detail: "Jogos, Word, navegador…", answer: "pc", why: "Computador: roda qualquer programa." },
+      { id: "pc-lab", logo: "ubuntu", name: "PC com Ubuntu", detail: "Laboratório da escola", answer: "pc", why: "Serve para muitas tarefas diferentes." },
+      { id: "chromebook", logo: "chrome", name: "Chromebook", detail: "ChromeOS", answer: "pc", why: "É um computador: navegador, documentos, apps…" },
+      { id: "macbook", icon: "💻", name: "MacBook", detail: "macOS", answer: "pc", why: "Computador de uso geral, como o notebook." }
     ]
   },
   {
     id: "final",
     title: "Desafio final: qual é o tipo?",
-    hint: "Procure a pista: pessoas, prazo ou aparelho.",
+    hint: "Procure a pista: pessoas, tempo ou aparelho.",
     bins: ["mono", "multi", "real", "emb"],
     cards: [
-      { id: "f-escola", icon: "🏫", name: "30 alunos entram no mesmo servidor ao mesmo tempo, cada um com sua senha.", answer: "multi", why: "Várias pessoas ao mesmo tempo: multiusuário." },
-      { id: "f-robo", icon: "🦾", name: "O braço robótico deve parar em até 5 ms quando alguém entra na área.", answer: "real", why: "Prazo curto e garantido: tempo real." },
-      { id: "f-lavar", icon: "🧺", name: "A máquina de lavar tem um sistema só para controlar o ciclo.", answer: "emb", why: "Dentro do aparelho, com uma tarefa: embarcado." },
-      { id: "f-dos", icon: "💾", name: "No MS-DOS, outra pessoa só usa o PC quando a primeira sai.", answer: "mono", why: "Uma pessoa por vez: monousuário." },
-      { id: "f-banco", icon: "🏦", name: "Centenas de caixas do banco usam o sistema central juntos.", answer: "multi", why: "Muitas pessoas juntas: multiusuário." },
-      { id: "f-coracao", icon: "❤️", name: "O marca-passo nunca pode atrasar o estímulo ao coração.", answer: "real", why: "Não pode atrasar: tempo real." },
-      { id: "f-tv", icon: "📺", name: "A smart TV tem um sistema dentro dela, feito só para vídeo.", answer: "emb", why: "Escondido no aparelho: embarcado." },
-      { id: "f-celular", icon: "📱", name: "O celular tem uma única conta: tudo é de uma só pessoa.", answer: "mono", why: "Uma única pessoa: monousuário." }
+      { id: "f-escola", icon: "🏫", name: "30 alunos fazem login no mesmo servidor, ao mesmo tempo.", answer: "multi", why: "Várias pessoas juntas: multiusuário." },
+      { id: "f-banco", icon: "🏦", name: "Vários caixas do banco usam o mesmo sistema juntos.", answer: "multi", why: "Muitas pessoas juntas: multiusuário." },
+      { id: "f-abs", icon: "🛑", name: "O freio ABS tem que agir na hora, sem atraso.", answer: "real", why: "Não pode atrasar: tempo real." },
+      { id: "f-coracao", icon: "❤️", name: "O marca-passo nunca pode atrasar.", answer: "real", why: "Não pode atrasar: tempo real." },
+      { id: "f-ar", icon: "❄️", name: "O ar-condicionado tem um sistema só para controlar a temperatura.", answer: "emb", why: "Escondido no aparelho: embarcado." },
+      { id: "f-micro", icon: "🍿", name: "O micro-ondas tem um sistema escondido para o timer.", answer: "emb", why: "Escondido no aparelho: embarcado." },
+      { id: "f-dos", icon: "💾", name: "No MS-DOS, só uma pessoa usa o computador por vez.", answer: "mono", why: "Uma pessoa por vez: monousuário." },
+      { id: "f-iphone", icon: "📱", name: "O iPhone tem só uma conta: a do dono.", answer: "mono", why: "Uma pessoa só: monousuário." }
     ]
   }
 ];
+
+// Questão especial sobre o sistema dos Chromebooks da turma.
+export const BONUS = {
+  text: "Na escola, cada aluno entra no Chromebook com a própria conta Google e só vê os seus arquivos. Então o ChromeOS é…",
+  options: [
+    { text: "Monousuário", correct: false },
+    { text: "Multiusuário", correct: true },
+    { text: "Embarcado", correct: false }
+  ],
+  wrong: "Ainda não. Pense: várias pessoas, cada uma com sua conta.",
+  facts: [
+    "Por dentro do ChromeOS existe um <b>Linux</b>! Ele usa o mesmo núcleo (o <b>kernel</b>) do Ubuntu e do Android — são “primos”.",
+    "Ele se <b>atualiza sozinho</b>: baixa a versão nova enquanto você usa e instala quando o Chromebook reinicia."
+  ]
+};
 
 export const TOTAL_CARDS = PHASES.reduce((sum, phase) => sum + phase.cards.length, 0);

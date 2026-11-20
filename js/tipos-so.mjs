@@ -1,4 +1,4 @@
-import { TYPE_INFO, LESSONS, PHASES, TOTAL_CARDS } from "./tipos-so-data.mjs";
+import { TYPE_INFO, LOGOS, LESSONS, PHASES, BONUS, TOTAL_CARDS } from "./tipos-so-data.mjs";
 import { STORAGE_KEY, createProgress, restoreProgress, isCorrect, nextStage, totalScore, starsFor, shuffle } from "./tipos-so-core.mjs";
 
 const prefersReducedMotion = () => Boolean(globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
@@ -82,6 +82,15 @@ const STEP_HOOKS = {
 };
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+
+// Logo do sistema quando houver; senão, o emoji da carta.
+const cardArt = (card) => {
+  const logo = LOGOS[card.logo];
+  if (!logo) return card.icon;
+  return logo.color
+    ? `<span class="ts-logo is-mask" style="--logo:url('${logo.src}');--logo-color:${logo.color}"></span>`
+    : `<img class="ts-logo" src="${logo.src}" alt="">`;
+};
 
 export class TiposSoGame {
   constructor({ storage, random = Math.random } = {}) {
@@ -333,7 +342,7 @@ export class TiposSoGame {
     if (!slot || !card) return;
     const final = PHASES[this.phaseIndex].bins.length > 2;
     this.root.querySelector(".ts-counter").textContent = `Carta ${this.cardIndex + 1} de ${this.deck.length}`;
-    slot.innerHTML = `<div class="ts-card${final ? " is-scenario" : ""}" role="group" aria-label="Carta: ${escapeHtml(card.name)}${card.detail ? `. ${escapeHtml(card.detail)}` : ""}"><span class="ts-card-icon" aria-hidden="true">${card.icon}</span><span class="ts-card-text"><strong>${escapeHtml(card.name)}</strong>${card.detail ? `<small>${escapeHtml(card.detail)}</small>` : ""}</span><span class="ts-grip" aria-hidden="true">⠿</span></div>`;
+    slot.innerHTML = `<div class="ts-card${final ? " is-scenario" : ""}" role="group" aria-label="Carta: ${escapeHtml(card.name)}${card.detail ? `. ${escapeHtml(card.detail)}` : ""}"><span class="ts-card-icon" aria-hidden="true">${cardArt(card)}</span><span class="ts-card-text"><strong>${escapeHtml(card.name)}</strong>${card.detail ? `<small>${escapeHtml(card.detail)}</small>` : ""}</span><span class="ts-grip" aria-hidden="true">⠿</span></div>`;
   }
 
   binAt(x, y) {
@@ -408,7 +417,7 @@ export class TiposSoGame {
     const finish = () => {
       const chip = document.createElement("span");
       chip.className = "ts-chip";
-      chip.textContent = card.icon;
+      chip.innerHTML = cardArt(card);
       chip.title = card.name;
       bin.querySelector(".ts-bin-items").append(chip);
       bin.classList.add("is-right");
@@ -456,9 +465,53 @@ export class TiposSoGame {
         <span class="ts-done-emoji" aria-hidden="true">${perfect ? "🏆" : "🎉"}</span>
         <h2>Fase concluída!</h2>
         <p><b>${this.firstTry} de ${phase.cards.length}</b> certas de primeira</p>
-        <button class="ts-btn ts-btn-primary" type="button" data-action="${last ? "result" : "phase"}" data-index="${this.phaseIndex + 1}">${last ? "Ver resultado" : "Próxima fase"} <span aria-hidden="true">→</span></button>
+        <button class="ts-btn ts-btn-primary" type="button" data-action="${last ? "bonus" : "phase"}" data-index="${this.phaseIndex + 1}">${last ? "⭐ Questão especial" : "Próxima fase"} <span aria-hidden="true">→</span></button>
       </div>`;
     this.root.querySelector(".ts-done .ts-btn-primary")?.focus({ preventScroll: true });
+  }
+
+  // ---------- Questão especial: o Chromebook da turma ----------
+  showBonus() {
+    this.clearTimers();
+    const onChromebook = /\bCrOS\b/.test(globalThis.navigator?.userAgent || "");
+    this.frame(1, `
+      <section class="ts-bonus">
+        <img class="ts-bonus-logo" src="${LOGOS.chrome.src}" alt="Logo do ChromeOS">
+        <span class="ts-kicker">⭐ Questão especial</span>
+        <h1>O sistema do seu Chromebook</h1>
+        ${onChromebook ? '<p class="ts-bonus-live">👀 Você está usando um Chromebook agora mesmo!</p>' : ""}
+        <div class="ts-quiz">
+          <p class="ts-quiz-q">${BONUS.text}</p>
+          <div class="ts-options">${BONUS.options.map((option, index) => `<button type="button" class="ts-option" data-action="bonus-answer" data-index="${index}">${option.text}</button>`).join("")}</div>
+          <p class="ts-quiz-feedback" role="status"></p>
+        </div>
+        <div class="ts-facts" hidden>
+          <b>🤓 Curiosidades do ChromeOS</b>
+          <ul>${BONUS.facts.map((fact) => `<li>${fact}</li>`).join("")}</ul>
+          <button class="ts-btn ts-btn-primary" type="button" data-action="result">Ver resultado <span aria-hidden="true">→</span></button>
+        </div>
+      </section>`);
+  }
+
+  bonusAnswer(index, button) {
+    const option = BONUS.options[index];
+    const feedback = this.root.querySelector(".ts-quiz-feedback");
+    if (!option || !feedback) return;
+    if (!option.correct) {
+      button.classList.remove("is-wrong");
+      void button.offsetWidth;
+      button.classList.add("is-wrong");
+      feedback.textContent = BONUS.wrong;
+      feedback.className = "ts-quiz-feedback is-bad";
+      return;
+    }
+    this.root.querySelectorAll(".ts-option").forEach((item) => { item.disabled = true; });
+    button.classList.add("is-right");
+    feedback.textContent = "✓ Isso! O ChromeOS é multiusuário.";
+    feedback.className = "ts-quiz-feedback is-good";
+    const facts = this.root.querySelector(".ts-facts");
+    facts.hidden = false;
+    facts.querySelector(".ts-btn-primary").focus({ preventScroll: true });
   }
 
   // ---------- Resultado ----------
@@ -502,6 +555,8 @@ export class TiposSoGame {
       case "react": this.react(); break;
       case "answer": this.answer(index, button); break;
       case "phase": this.showPhase(Math.min(index, this.progress.scores.length)); break;
+      case "bonus": this.showBonus(); break;
+      case "bonus-answer": this.bonusAnswer(index, button); break;
       case "result": this.showResult(); break;
       case "replay-game": this.progress.scores = []; this.save(); this.showPhase(0); break;
       default: break;

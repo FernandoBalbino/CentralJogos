@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { TYPE_INFO, LESSONS, PHASES, TOTAL_CARDS } from "../js/tipos-so-data.mjs";
+import { TYPE_INFO, LOGOS, LESSONS, PHASES, BONUS, TOTAL_CARDS } from "../js/tipos-so-data.mjs";
 import { createProgress, restoreProgress, isCorrect, nextStage, totalScore, starsFor, shuffle } from "../js/tipos-so-core.mjs";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
@@ -26,11 +26,30 @@ test("fases: cartas únicas, respostas válidas e todas as caixas usadas", () =>
     }
     for (const card of phase.cards) {
       assert.ok(phase.bins.includes(card.answer), card.id);
-      assert.ok(card.why && card.icon && card.name, card.id);
+      assert.ok(card.why && (card.icon || card.logo) && card.name, card.id);
       assert.equal(isCorrect(card, card.answer), true);
       assert.equal(phase.bins.filter((bin) => isCorrect(card, bin)).length, 1, card.id);
     }
   }
+});
+
+test("logos: cartas usam logos locais, guardados no cache offline", () => {
+  const worker = read("service-worker.js");
+  const used = new Set(PHASES.flatMap((phase) => phase.cards.filter((card) => card.logo).map((card) => card.logo)));
+  assert.ok(used.size >= 4);
+  for (const name of used) {
+    const logo = LOGOS[name];
+    assert.ok(logo, name);
+    assert.ok(existsSync(new URL(`../${logo.src.slice(2)}`, import.meta.url)), logo.src);
+    assert.ok(worker.includes(`"${logo.src}"`), `cache: ${logo.src}`);
+  }
+  for (const card of PHASES.flatMap((phase) => phase.cards)) assert.ok(card.logo || card.icon, card.id);
+});
+
+test("questão especial do Chromebook: uma resposta certa e curiosidades", () => {
+  assert.equal(BONUS.options.filter((option) => option.correct).length, 1);
+  assert.equal(BONUS.options.find((option) => option.correct).text, "Multiusuário");
+  assert.ok(BONUS.facts.length >= 1 && BONUS.wrong);
 });
 
 test("progresso: restauração aceita só dados coerentes", () => {

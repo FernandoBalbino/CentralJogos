@@ -115,5 +115,5 @@ test("integração: rota, ciclo de vida, precache e imagens dos 17 produtos", as
   assert.match(html,/#\/balcao-da-informatica/); assert.match(html,/Jogo 16/); assert.match(app,/balcaoGame\.mount/); assert.match(app,/balcaoGame\.enter/); assert.match(app,/balcaoGame\.leave/);
   for (const suffix of ["","-core","-data","-products","-renderer","-interactions"]) assert.ok(sw.includes(`./js/balcao-informatica${suffix}.mjs`));
   for(const p of PRODUCTS) assert.ok(sw.includes(p.image),p.image);
-  assert.match(sw,/central-jogos-offline-v33/); assert.match(css,/prefers-reduced-motion/); assert.match(css,/focus-visible/);
+  assert.match(sw,/central-jogos-offline-v34/); assert.match(css,/prefers-reduced-motion/); assert.match(css,/focus-visible/);
 });

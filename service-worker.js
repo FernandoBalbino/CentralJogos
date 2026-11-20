@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v33";
+const CACHE_NAME = "central-jogos-offline-v34";
 
 const GAME_OFFLINE_PATHS = {
   "windows-mission": ["./windows-mission-game.css", "./js/windows-mission-game.mjs", "./js/windows-mission-core.mjs", "./js/windows-mission-data.mjs", "./vendor/three/three.module.min.js", "./vendor/three/three.core.min.js"],
@@ -116,6 +116,8 @@ const PRECACHE_PATHS = [
   "./js/tipos-so.mjs",
   "./js/tipos-so-core.mjs",
   "./js/tipos-so-data.mjs",
+  "./assets/side-game/brands/linux.svg",
+  "./assets/side-game/brands/android.svg",
   "./js/app.js",
   "./js/game-offline.mjs",
   "./assets/oficina-pc/oficina-pc-preview.jpg",

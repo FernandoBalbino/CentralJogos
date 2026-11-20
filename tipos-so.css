@@ -292,6 +292,23 @@ body.tipos-so-active > main { width: 100%; }
 .ts-bar { height: 8px; overflow: hidden; background: #e8ecf3; border-radius: 999px; }
 .ts-bar i { display: block; width: var(--w); height: 100%; background: linear-gradient(90deg, #5b4bdb, #00a6a6); border-radius: inherit; }
 
+/* Logos dos sistemas nas cartas e nas caixas */
+.ts-logo { display: block; width: 66%; height: 66%; object-fit: contain; }
+.ts-logo.is-mask { background: var(--logo-color); -webkit-mask: var(--logo) center / contain no-repeat; mask: var(--logo) center / contain no-repeat; }
+.ts-chip .ts-logo { width: 62%; height: 62%; }
+
+/* Questão especial: Chromebook */
+.ts-bonus { display: grid; flex: 1; align-content: center; justify-items: center; gap: 12px; width: min(620px, 100%); margin: 0 auto; padding: 12px 0; text-align: center; }
+.ts-bonus-logo { width: 84px; height: 84px; animation: ts-spin-in .7s cubic-bezier(.2, .9, .3, 1.2) backwards; }
+.ts-bonus h1 { margin: 0; font-family: "Fredoka", sans-serif; font-size: clamp(1.6rem, 3.4vw, 2.3rem); font-weight: 600; line-height: 1.1; }
+.ts-bonus-live { margin: 0; padding: 6px 14px; color: #14532d; background: #eaf8ef; border-radius: 999px; font-weight: 700; }
+.ts-bonus .ts-quiz { width: 100%; text-align: left; }
+.ts-facts { display: grid; gap: 10px; width: 100%; padding: 16px 18px; text-align: left; background: #fffbea; border: 1px solid #f3dc8b; border-radius: 16px; animation: ts-pop .4s ease backwards; }
+.ts-facts > b { font-family: "Fredoka", sans-serif; font-size: 1.15rem; font-weight: 600; }
+.ts-facts ul { display: grid; gap: 8px; margin: 0; padding-left: 20px; line-height: 1.45; }
+.ts-facts .ts-btn { justify-self: center; margin-top: 4px; }
+
+@keyframes ts-spin-in { from { opacity: 0; transform: rotate(-120deg) scale(.5); } }
 @keyframes ts-pop { from { opacity: 0; transform: scale(.6); } }
 @keyframes ts-card-in { from { opacity: 0; transform: translateY(18px) scale(.96); } }
 @keyframes ts-shake { 25% { transform: translateX(-7px); } 50% { transform: translateX(7px); } 75% { transform: translateX(-4px); } }

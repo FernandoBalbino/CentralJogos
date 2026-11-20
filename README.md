@@ -2,7 +2,7 @@
 
 Site educacional estático com dezessete jogos para aulas introdutórias de informática. A página inicial lista os jogos do mais novo ao mais antigo, com filtros por assunto (Sistemas, Hardware, Escritório, Suporte, Revisão), busca pelo nome e miniaturas reais de cada jogo em `assets/thumbs/`.
 
-- **Tipos de Sistemas Operacionais (Jogo 17):** aula animada em cinco cenas (monousuário, multiusuário, tempo real com teste de reação, embarcado e combinações), cada uma com pergunta rápida, seguida de quatro fases de arrastar com 30 cartas e resultado com estrelas. Progresso local; arraste com mouse, touchpad ou toque, clique na caixa ou use as teclas 1–4.
+- **Tipos de Sistemas Operacionais (Jogo 17):** aula animada em cinco cenas (monousuário, multiusuário, tempo real com teste de reação, embarcado e combinações), cada uma com pergunta rápida, seguida de quatro fases de arrastar com 30 cartas do dia a dia (ar-condicionado, micro-ondas, airbag, Windows, Ubuntu, Android, Chromebook…), com os logos dos sistemas, uma questão especial sobre o ChromeOS dos Chromebooks e resultado com estrelas. Progresso local; arraste com mouse, touchpad ou toque, clique na caixa ou use as teclas 1–4.
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
 - **Escolha seu lado:** uma roleta sem repetição apresenta 74 itens. Peças, programas e conceitos usam Hardware/Nenhum/Software; periféricos usam Entrada/Híbrido/Saída.
@@ -73,7 +73,7 @@ Para cadastrar uma aula, adicione o registro ao catálogo, defina seu estado ini
 
 ## Uso offline nos Chromebooks
 
-O service worker **central-jogos-offline-v33** prepara automaticamente o pacote básico e os demais jogos. Aguarde **Pronto para jogar offline**. **Oficina do PC** e **Técnico em Ação 3D** são carregados sob demanda: abra cada um com conexão e aguarde seu próprio aviso **Disponível offline ✓** antes de desconectar. Three.js e os módulos exclusivos desses dois jogos não fazem parte do preparo inicial. Um download incompleto não é anunciado como disponível; há botão para tentar novamente.
+O service worker **central-jogos-offline-v34** prepara automaticamente o pacote básico e os demais jogos. Aguarde **Pronto para jogar offline**. **Oficina do PC** e **Técnico em Ação 3D** são carregados sob demanda: abra cada um com conexão e aguarde seu próprio aviso **Disponível offline ✓** antes de desconectar. Three.js e os módulos exclusivos desses dois jogos não fazem parte do preparo inicial. Um download incompleto não é anunciado como disponível; há botão para tentar novamente.
 
 Todos os arquivos, fontes, ícones, bibliotecas e vídeos são locais. Não há dependência de CDN durante a aula. O worker define os IDs e arquivos permitidos dos pacotes opcionais; URLs são resolvidas pelo seu escopo, inclusive em `/CentralJogos/`.
 

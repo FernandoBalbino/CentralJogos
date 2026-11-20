@@ -13,7 +13,7 @@ import { mazeGame } from "./maze-game.mjs?v=1.1.0";
 import { carrinhoSaberGame } from "./carrinho-saber.mjs?v=1.0.0";
 import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
 import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
-import { tiposSoGame } from "./tipos-so.mjs?v=1.0.0";
+import { tiposSoGame } from "./tipos-so.mjs?v=1.1.0";
 
 (function () {
   "use strict";
