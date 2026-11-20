@@ -13,7 +13,8 @@ import { mazeGame } from "./maze-game.mjs?v=1.1.0";
 import { carrinhoSaberGame } from "./carrinho-saber.mjs?v=1.0.0";
 import { windowsInstaller } from "./windows-installer.mjs?v=1.0.0";
 import { balcaoGame } from "./balcao-informatica.mjs?v=1.0.0";
-import { tiposSoGame } from "./tipos-so.mjs?v=1.1.0";
+import { tiposSoGame } from "./tipos-so.mjs?v=1.2.0";
+import { iotGame } from "./iot.mjs?v=1.0.0";
 
 (function () {
   "use strict";
@@ -99,6 +100,7 @@ import { tiposSoGame } from "./tipos-so.mjs?v=1.1.0";
     if (hash.startsWith("#/instalacao-windows")) return "windows-installer";
     if (hash.startsWith("#/balcao-da-informatica")) return "balcao-informatica";
     if (hash.startsWith("#/tipos-de-so")) return "tipos-so";
+    if (hash.startsWith("#/internet-das-coisas")) return "iot";
     return "home";
   };
 
@@ -120,6 +122,7 @@ import { tiposSoGame } from "./tipos-so.mjs?v=1.1.0";
     if (activeRoute === "windows-installer" && route !== "windows-installer") windowsInstaller.leave();
     if (activeRoute === "balcao-informatica" && route !== "balcao-informatica") balcaoGame.leave();
     if (activeRoute === "tipos-so" && route !== "tipos-so") tiposSoGame.leave();
+    if (activeRoute === "iot" && route !== "iot") iotGame.leave();
     screens.forEach((screen) => {
       screen.hidden = screen.dataset.screen !== route;
     });
@@ -164,8 +167,10 @@ import { tiposSoGame } from "./tipos-so.mjs?v=1.1.0";
           ? "Balcão da Informática | Central de Jogos"
         : route === "tipos-so"
           ? "Tipos de Sistemas Operacionais | Central de Jogos"
+        : route === "iot"
+          ? "Internet das Coisas | Central de Jogos"
         : "Central de Jogos — Fundamentos de Informática";
-    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer" && route !== "maze-game" && route !== "carrinho-saber" && route !== "windows-installer" && route !== "tipos-so") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (route !== "side-game" && route !== "memory-game" && route !== "crossword-game" && route !== "desafio-ti" && route !== "windows-mission" && route !== "windows-discovery" && route !== "google-slides-course" && route !== "google-sheets-course" && route !== "windows-file-organizer" && route !== "maze-game" && route !== "carrinho-saber" && route !== "windows-installer" && route !== "tipos-so" && route !== "iot") window.scrollTo({ top: 0, behavior: "smooth" });
     if (route === "classification") classification.render();
     if (route === "hangman") hangman.render();
     if (route === "side-game" && activeRoute !== "side-game") sideGame.enter();
@@ -183,6 +188,7 @@ import { tiposSoGame } from "./tipos-so.mjs?v=1.1.0";
     if (route === "windows-installer" && activeRoute !== "windows-installer") windowsInstaller.enter();
     if (route === "balcao-informatica" && activeRoute !== "balcao-informatica") balcaoGame.enter();
     if (route === "tipos-so" && activeRoute !== "tipos-so") tiposSoGame.enter();
+    if (route === "iot" && activeRoute !== "iot") iotGame.enter();
     activeRoute = route;
   };
 
@@ -844,6 +850,7 @@ import { tiposSoGame } from "./tipos-so.mjs?v=1.1.0";
   carrinhoSaberGame.mount(document.getElementById("carrinho-saber-app"));
   balcaoGame.mount(document.getElementById("balcao-informatica-app"));
   tiposSoGame.mount(document.getElementById("tipos-so-app"));
+  iotGame.mount(document.getElementById("iot-app"));
   windowsInstaller.mount(document.getElementById("windows-installer-app"));
   classification.ensureState();
   renderRoute();

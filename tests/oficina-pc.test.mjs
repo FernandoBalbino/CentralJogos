@@ -123,7 +123,7 @@ test("rota, importação sob demanda, arquivos e controles acessíveis estão in
   const [html, app, worker, ui] = await Promise.all(["index.html", "js/app.js", "service-worker.js", "js/oficina-pc.mjs"].map((path) => readFile(new URL(path, root), "utf8")));
   assert.match(html, /#\/oficina-do-pc/); assert.match(html, /oficina-pc-app/); assert.match(html, /Oficina do PC/);
   assert.doesNotMatch(app, /import\s*\{\s*windowsMissionGame\s*\}\s*from/); assert.match(app, /import\("\.\/oficina-pc.mjs/);
-  assert.match(worker, /PREPARE_GAME_OFFLINE/); assert.match(worker, /central-jogos-offline-v34/);
+  assert.match(worker, /PREPARE_GAME_OFFLINE/); assert.match(worker, /central-jogos-offline-v35/);
   assert.match(ui, /EXAMINAR PEÇA/); assert.match(ui, /SIMULAÇÃO ILUSTRATIVA/); assert.match(ui, /aria-live="polite"/);
   for (const path of ["oficina-pc.css", ...["", "-core", "-data", "-scene", "-models", "-camera", "-interactions"].map((suffix) => `js/oficina-pc${suffix}.mjs`), "vendor/three/controls/OrbitControls.js", "assets/oficina-pc/oficina-pc-preview.jpg"]) await access(new URL(path, root));
 });

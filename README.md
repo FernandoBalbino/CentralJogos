@@ -1,7 +1,8 @@
 # Central de Jogos — Fundamentos de Informática
 
-Site educacional estático com dezessete jogos para aulas introdutórias de informática. A página inicial lista os jogos do mais novo ao mais antigo, com filtros por assunto (Sistemas, Hardware, Escritório, Suporte, Revisão), busca pelo nome e miniaturas reais de cada jogo em `assets/thumbs/`.
+Site educacional estático com dezoito jogos para aulas introdutórias de informática. A página inicial lista os jogos do mais novo ao mais antigo, com filtros por assunto (Sistemas, Hardware, Redes, Escritório, Suporte, Revisão), busca pelo nome e miniaturas reais de cada jogo em `assets/thumbs/`.
 
+- **Internet das Coisas (Jogo 18):** aula animada pensada para a TV (cinco cenas: o que é IoT, sensor → rede → nuvem → ação, sensores e atuadores, onde a IoT aparece e segurança/5G), com tela cheia, setas ou passador de slides e pergunta para a turma; depois os alunos jogam quatro fases de arrastar (28 cartas: É IoT?, Sensor ou atuador?, Casa/Cidade/Saúde/Campo e Seguro ou perigoso?). O jogo abre direto, sem exigir a aula.
 - **Tipos de Sistemas Operacionais (Jogo 17):** aula animada em cinco cenas (monousuário, multiusuário, tempo real com teste de reação, embarcado e combinações), cada uma com pergunta rápida, seguida de quatro fases de arrastar com 30 cartas do dia a dia (ar-condicionado, micro-ondas, airbag, Windows, Ubuntu, Android, Chromebook…), com os logos dos sistemas, uma questão especial sobre o ChromeOS dos Chromebooks e resultado com estrelas. Progresso local; arraste com mouse, touchpad ou toque, clique na caixa ou use as teclas 1–4.
 - **Classifique os itens:** 40 cartões distribuídos entre Entrada, Saída, Hardware, Software e Periféricos híbridos.
 - **Forca do sistema operacional:** o professor escolhe um entre 30 termos, oculta a palavra e inicia a rodada com a turma.
@@ -62,6 +63,7 @@ As rotas diretas dos jogos mais recentes são:
 - `http://localhost:8000/#/instalacao-windows`
 - `http://localhost:8000/#/balcao-da-informatica`
 - `http://localhost:8000/#/tipos-de-so`
+- `http://localhost:8000/#/internet-das-coisas`
 
 ## Expandir o curso Google Apresentações
 
@@ -73,7 +75,7 @@ Para cadastrar uma aula, adicione o registro ao catálogo, defina seu estado ini
 
 ## Uso offline nos Chromebooks
 
-O service worker **central-jogos-offline-v34** prepara automaticamente o pacote básico e os demais jogos. Aguarde **Pronto para jogar offline**. **Oficina do PC** e **Técnico em Ação 3D** são carregados sob demanda: abra cada um com conexão e aguarde seu próprio aviso **Disponível offline ✓** antes de desconectar. Three.js e os módulos exclusivos desses dois jogos não fazem parte do preparo inicial. Um download incompleto não é anunciado como disponível; há botão para tentar novamente.
+O service worker **central-jogos-offline-v35** prepara automaticamente o pacote básico e os demais jogos. Aguarde **Pronto para jogar offline**. **Oficina do PC** e **Técnico em Ação 3D** são carregados sob demanda: abra cada um com conexão e aguarde seu próprio aviso **Disponível offline ✓** antes de desconectar. Three.js e os módulos exclusivos desses dois jogos não fazem parte do preparo inicial. Um download incompleto não é anunciado como disponível; há botão para tentar novamente.
 
 Todos os arquivos, fontes, ícones, bibliotecas e vídeos são locais. Não há dependência de CDN durante a aula. O worker define os IDs e arquivos permitidos dos pacotes opcionais; URLs são resolvidas pelo seu escopo, inclusive em `/CentralJogos/`.
 
@@ -113,6 +115,7 @@ node --test tests/google-sheets-course.test.mjs
 node --test tests/windows-file-organizer.test.mjs
 node --test tests/maze-game.test.mjs
 node --test tests/tipos-so.test.mjs
+node --test tests/iot.test.mjs
 ```
 
 ## Publicar no GitHub Pages
@@ -170,3 +173,7 @@ As camadas PNG da ilustração da forca podem ser recriadas com:
 ```
 
 Marcas e logotipos pertencem aos respectivos titulares e são usados somente para identificação em contexto educacional.
+
+## Aula animada + jogo de arrastar
+
+Tipos de SO e Internet das Coisas usam o mesmo motor (`js/lesson-game.mjs` e `js/lesson-game-core.mjs`, estilos `ts-*` em `tipos-so.css`). Cada jogo tem um arquivo de dados (`*-data.mjs`: aulas, fases e cartas) e um arquivo com as cenas SVG e a configuração (`tipos-so.mjs`, `iot.mjs`). Com `lessonsRequired: false` a aula vira modo TV: sem trava nas perguntas, botão de tela cheia, setas ←/→ ou passador de slides, e o jogo abre direto nos Chromebooks.

@@ -171,6 +171,10 @@ export const PHASES = [
 
 // Questão especial sobre o sistema dos Chromebooks da turma.
 export const BONUS = {
+  logo: "chrome",
+  title: "O sistema do seu Chromebook",
+  right: "Isso! O ChromeOS é multiusuário.",
+  factsTitle: "🤓 Curiosidades do ChromeOS",
   text: "Na escola, cada aluno entra no Chromebook com a própria conta Google e só vê os seus arquivos. Então o ChromeOS é…",
   options: [
     { text: "Monousuário", correct: false },

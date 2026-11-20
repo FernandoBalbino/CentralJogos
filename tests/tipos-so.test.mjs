@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { TYPE_INFO, LOGOS, LESSONS, PHASES, BONUS, TOTAL_CARDS } from "../js/tipos-so-data.mjs";
-import { createProgress, restoreProgress, isCorrect, nextStage, totalScore, starsFor, shuffle } from "../js/tipos-so-core.mjs";
+import { createProgress, restoreProgress as restoreAny, isCorrect, nextStage as nextAny, totalScore, starsFor, shuffle } from "../js/lesson-game-core.mjs";
+
+// Tipos de SO exige a aula antes do jogo (lessonsRequired = true, o padrão).
+const restoreProgress = (raw) => restoreAny(raw, LESSONS, PHASES);
+const nextStage = (progress) => nextAny(progress, LESSONS, PHASES);
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
@@ -68,10 +72,10 @@ test("próxima etapa, pontuação e estrelas", () => {
   assert.deepEqual(nextStage({ lessonsDone: 5, scores: [6] }), { screen: "phase", index: 1 });
   assert.deepEqual(nextStage({ lessonsDone: 5, scores: [6, 8, 8, 8] }), { screen: "result" });
   assert.equal(totalScore([6, 8, 8, 8]), 30);
-  assert.equal(starsFor(30), 3);
-  assert.equal(starsFor(27), 3);
-  assert.equal(starsFor(21), 2);
-  assert.equal(starsFor(10), 1);
+  assert.equal(starsFor(30, TOTAL_CARDS), 3);
+  assert.equal(starsFor(27, TOTAL_CARDS), 3);
+  assert.equal(starsFor(21, TOTAL_CARDS), 2);
+  assert.equal(starsFor(10, TOTAL_CARDS), 1);
 });
 
 test("embaralhar não altera o original e mantém as cartas", () => {
@@ -90,9 +94,9 @@ test("integração: rota, cartão na página inicial, ciclo de vida e cache offl
   assert.match(html, /data-screen="tipos-so"/);
   assert.match(html, /tipos-so\.css/);
   for (const call of ["mount", "enter", "leave"]) assert.match(app, new RegExp(`tiposSoGame\\.${call}`));
-  for (const path of ["./tipos-so.css", "./js/tipos-so.mjs", "./js/tipos-so-core.mjs", "./js/tipos-so-data.mjs"]) assert.ok(worker.includes(path), path);
+  for (const path of ["./tipos-so.css", "./js/tipos-so.mjs", "./js/tipos-so-data.mjs", "./js/lesson-game.mjs", "./js/lesson-game-core.mjs"]) assert.ok(worker.includes(path), path);
   const thumbs = [...html.matchAll(/\.\/assets\/thumbs\/([\w-]+)\.jpg/g)].map((match) => match[1]);
-  assert.equal(thumbs.length, 18);
+  assert.equal(thumbs.length, 19);
   for (const name of thumbs) {
     assert.ok(existsSync(new URL(`../assets/thumbs/${name}.jpg`, import.meta.url)), name);
     assert.ok(worker.includes(`"${name}"`), `cache: ${name}`);

@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-jogos-offline-v34";
+const CACHE_NAME = "central-jogos-offline-v35";
 
 const GAME_OFFLINE_PATHS = {
   "windows-mission": ["./windows-mission-game.css", "./js/windows-mission-game.mjs", "./js/windows-mission-core.mjs", "./js/windows-mission-data.mjs", "./vendor/three/three.module.min.js", "./vendor/three/three.core.min.js"],
@@ -80,7 +80,7 @@ const WINDOWS_INSTALLER_ASSETS = [
   "./assets/windows-installer/desktop/LICENSE.txt"
 ];
 
-const HOME_THUMBS = ["tipos-so", "balcao", "oficina", "carrinho", "instalacao", "labirinto", "organize", "planilhas", "apresentacoes", "descubra", "tecnico", "desafio", "cruzadinha", "pares", "suporte", "lado", "forca", "classificacao"].map((name) => `./assets/thumbs/${name}.jpg`);
+const HOME_THUMBS = ["iot", "tipos-so", "balcao", "oficina", "carrinho", "instalacao", "labirinto", "organize", "planilhas", "apresentacoes", "descubra", "tecnico", "desafio", "cruzadinha", "pares", "suporte", "lado", "forca", "classificacao"].map((name) => `./assets/thumbs/${name}.jpg`);
 
 const PRECACHE_PATHS = [
   "./",
@@ -114,7 +114,11 @@ const PRECACHE_PATHS = [
   "./windows-installer.css",
   "./tipos-so.css",
   "./js/tipos-so.mjs",
-  "./js/tipos-so-core.mjs",
+  "./js/lesson-game.mjs",
+  "./js/lesson-game-core.mjs",
+  "./iot.css",
+  "./js/iot.mjs",
+  "./js/iot-data.mjs",
   "./js/tipos-so-data.mjs",
   "./assets/side-game/brands/linux.svg",
   "./assets/side-game/brands/android.svg",

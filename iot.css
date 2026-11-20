@@ -1,0 +1,75 @@
+/* Internet das Coisas — cenas da aula (interface compartilhada em tipos-so.css) */
+
+/* O que é IoT */
+.scene-iot-home .h-roof { fill: none; stroke: rgba(255,255,255,.35); stroke-width: 4; stroke-linejoin: round; }
+.scene-iot-home .h-wall { fill: rgba(255,255,255,.05); stroke: rgba(255,255,255,.25); stroke-width: 2; }
+.scene-iot-home .h-cloud { fill: #dfe9ff; }
+.scene-iot-home .h-emoji { font-size: 32px; }
+.scene-iot-home .o { opacity: .35; }
+.scene-iot-home .h-link { fill: none; stroke: #7ef0e0; stroke-width: 3; stroke-dasharray: 6 7; opacity: 0; }
+.scene-iot-home.s1 :is(.o1, .l1), .scene-iot-home.s2 :is(.o2, .l2), .scene-iot-home.s3 :is(.o3, .l3), .scene-iot-home.s4 :is(.o4, .l4) { opacity: 1; }
+.scene-iot-home.s1 .l1, .scene-iot-home.s2 .l2, .scene-iot-home.s3 .l3, .scene-iot-home.s4 .l4 { animation: ts-dash .9s linear infinite; }
+.scene-iot-home.s5 .h-cloud { animation: iot-pulse 1.2s ease-in-out infinite; }
+
+/* Como funciona */
+.scene-iot-flow .f-track { fill: none; stroke: rgba(255,255,255,.2); stroke-width: 3; stroke-dasharray: 4 8; }
+.scene-iot-flow .f-box { fill: rgba(255,255,255,.08); stroke: rgba(255,255,255,.25); stroke-width: 2; }
+.scene-iot-flow .f-emoji { font-size: 36px; }
+.scene-iot-flow .f-sub { fill: #ffd45a; font-size: 13px; font-weight: 700; opacity: 0; }
+.scene-iot-flow .n { opacity: .4; }
+.scene-iot-flow .f-packet { fill: #ffd45a; opacity: 0; }
+.scene-iot-flow.s1 .n1, .scene-iot-flow.s2 .n2, .scene-iot-flow.s3 .n3, .scene-iot-flow.s4 .n4 { opacity: 1; }
+.scene-iot-flow.s1 .n1 :is(.f-sub), .scene-iot-flow.s2 .n2 .f-sub, .scene-iot-flow.s3 .n3 .f-sub, .scene-iot-flow.s4 .n4 .f-sub { opacity: 1; }
+.scene-iot-flow.s1 .n1 .f-box, .scene-iot-flow.s2 .n2 .f-box, .scene-iot-flow.s3 .n3 .f-box, .scene-iot-flow.s4 .n4 .f-box { stroke: #7ef0e0; }
+.scene-iot-flow.s1 .f-packet { opacity: 1; }
+.scene-iot-flow.s2 .f-packet { transform: translateX(116px); }
+.scene-iot-flow.s3 .f-packet { transform: translateX(232px); }
+.scene-iot-flow.s4 .f-packet { transform: translateX(348px); }
+.scene-iot-flow.s5 .f-packet { opacity: 0; }
+.scene-iot-flow .f-done { opacity: 0; }
+.scene-iot-flow.s5 .f-done { opacity: 1; }
+
+/* Sensores e atuadores */
+.scene-iot-plant .p-pipe { fill: none; stroke: #9aa9c6; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+.scene-iot-plant .p-valve { fill: #e4532f; }
+.scene-iot-plant .p-drops { fill: #7cc6ff; opacity: 0; }
+.scene-iot-plant .p-soil { fill: #7a5a33; }
+.scene-iot-plant .p-wet { fill: #3e2a14; opacity: 0; }
+.scene-iot-plant .p-plant { font-size: 70px; }
+.scene-iot-plant .p-sensor { fill: #6c5ce7; }
+.scene-iot-plant .p-meter { fill: #7cc6ff; transform: scaleY(.2); transform-origin: center bottom; }
+.scene-iot-plant :is(.p-tag, .p-dry, .p-ok, .p-ok-plant, .p-done) { opacity: 0; }
+.scene-iot-plant.s1 :is(.p-tag-sensor, .p-dry) { opacity: 1; }
+.scene-iot-plant.s2 :is(.p-tag-act, .p-drops) { opacity: 1; }
+.scene-iot-plant.s2 .p-drops circle { animation: iot-drop .9s linear infinite; }
+.scene-iot-plant.s2 .p-drops circle:nth-child(2n) { animation-delay: -.45s; }
+.scene-iot-plant.s3 .p-meter { transform: scaleY(.65); transition-duration: 1s; }
+.scene-iot-plant.s3 .p-wet { opacity: .7; }
+.scene-iot-plant.s4 :is(.p-ok, .p-ok-plant, .p-done) { opacity: 1; }
+.scene-iot-plant.s4 :is(.p-dry, .p-dry-plant, .p-drops) { opacity: 0; }
+
+/* Onde a IoT aparece */
+.scene-iot-areas .a-tile { fill: #fff; stroke-width: 3; }
+.scene-iot-areas .a-emoji { font-size: 38px; }
+.scene-iot-areas .a-title { fill: #14223b; font-size: 21px; font-weight: 700; }
+.scene-iot-areas .a-sub { fill: #5d6b82; font-size: 12px; font-weight: 700; }
+.scene-iot-areas .a { opacity: 0; transform: scale(.7); }
+.scene-iot-areas.s1 .a1, .scene-iot-areas.s2 .a2, .scene-iot-areas.s3 .a3, .scene-iot-areas.s4 .a4 { opacity: 1; transform: none; }
+
+/* Segurança */
+.scene-iot-security .k-emoji { font-size: 46px; }
+.scene-iot-security .k-lock { font-size: 26px; opacity: 0; transform: scale(.4); }
+.scene-iot-security .k-hacker { opacity: 0; transform: translateX(60px); }
+.scene-iot-security .k-beam { fill: none; stroke: #ff6b6b; stroke-width: 4; stroke-dasharray: 8 6; opacity: 0; }
+.scene-iot-security :is(.k-bad, .k-good, .k-strong) { opacity: 0; }
+.scene-iot-security.s1 .k-hacker { opacity: 1; transform: none; }
+.scene-iot-security.s2 :is(.k-beam, .k-bad) { opacity: 1; }
+.scene-iot-security.s2 .k-beam { animation: ts-dash .7s linear infinite; }
+.scene-iot-security.s3 :is(.k-beam, .k-bad, .k-weak) { opacity: 0; }
+.scene-iot-security.s3 .k-strong { opacity: 1; }
+.scene-iot-security.s4 :is(.k-lock, .k-good) { opacity: 1; transform: none; }
+.scene-iot-security.s4 .k-beam { opacity: .3; animation: none; }
+.scene-iot-security.s4 .k-hacker { transform: translateX(30px); }
+
+@keyframes iot-pulse { 50% { opacity: .65; } }
+@keyframes iot-drop { from { opacity: 0; transform: translateY(-10px); } 30% { opacity: 1; } to { opacity: 0; transform: translateY(26px); } }

@@ -1,7 +1,7 @@
-/* Tipos de Sistemas Operacionais — aula animada + jogo de arrastar */
-body.tipos-so-active > :is(.site-header, .site-footer, .skip-link) { display: none !important; }
-body.tipos-so-active > main { width: 100%; }
-#tipos-so-screen { min-height: 100vh; }
+/* Aula animada + jogo de arrastar (motor js/lesson-game.mjs): Tipos de SO e Internet das Coisas */
+:is(body.tipos-so-active, body.iot-active) > :is(.site-header, .site-footer, .skip-link) { display: none !important; }
+:is(body.tipos-so-active, body.iot-active) > main { width: 100%; }
+#tipos-so-screen, #iot-screen { min-height: 100vh; }
 
 .ts-app { display: flex; flex-direction: column; min-height: 100vh; color: var(--ink); }
 
@@ -113,6 +113,16 @@ body.tipos-so-active > main { width: 100%; }
 .ts-quiz-feedback.is-good { color: #157a46; }
 .ts-quiz-feedback.is-bad { color: var(--red); }
 .ts-nav { display: flex; justify-content: space-between; gap: 10px; }
+
+/* Aula na TV: letras maiores para ler de longe */
+.ts-keys { color: var(--muted); font-size: .82rem; font-weight: 700; }
+.ts-main:has(> .ts-lesson.is-tv) { width: min(1800px, calc(100% - 48px)); }
+.ts-lesson.is-tv { grid-template-columns: minmax(0, 1.35fr) minmax(360px, 1fr); }
+.ts-lesson.is-tv .ts-panel h1 { font-size: clamp(2rem, 3.4vw, 3.4rem); }
+.ts-lesson.is-tv .ts-lead { font-size: clamp(1.2rem, 1.75vw, 1.9rem); }
+.ts-lesson.is-tv .ts-points { font-size: clamp(1rem, 1.35vw, 1.5rem); }
+.ts-lesson.is-tv :is(.ts-quiz-q, .ts-option) { font-size: clamp(1rem, 1.3vw, 1.45rem); }
+.ts-lesson.is-tv .ts-examples b { font-size: clamp(.86rem, 1.05vw, 1.15rem); }
 
 /* Cenas (SVG) */
 .ts-scene .sv-t { font-family: "Atkinson Hyperlegible", sans-serif; text-anchor: middle; }

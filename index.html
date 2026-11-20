@@ -22,7 +22,8 @@
     <link rel="stylesheet" href="./carrinho-saber.css?v=1.0.0">
     <link rel="stylesheet" href="./balcao-informatica.css?v=1.0.0">
     <link rel="stylesheet" href="./windows-installer.css?v=1.0.0">
-    <link rel="stylesheet" href="./tipos-so.css?v=1.1.0">
+    <link rel="stylesheet" href="./tipos-so.css?v=1.2.0">
+    <link rel="stylesheet" href="./iot.css?v=1.0.0">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Pular para o conteúdo</a>
@@ -46,20 +47,20 @@
       <section id="home-screen" class="screen home-screen" data-screen="home">
         <h1 class="visually-hidden">Central de Jogos de Informática</h1>
 
-        <a class="spotlight" href="#/tipos-de-so">
+        <a class="spotlight" href="#/internet-das-coisas">
           <span class="spotlight-copy">
             <span class="tag-new">Novo</span>
-            <strong class="spotlight-title">Tipos de Sistemas Operacionais</strong>
-            <span class="spotlight-text">Aula animada + desafio de arrastar</span>
+            <strong class="spotlight-title">Internet das Coisas</strong>
+            <span class="spotlight-text">Aula animada na TV + jogo de arrastar</span>
             <span class="spotlight-cta">Jogar agora <span aria-hidden="true">→</span></span>
           </span>
           <span class="spotlight-art" aria-hidden="true">
             <span class="orbit"></span>
-            <span class="core-chip">SO</span>
-            <span class="type-chip t-mono">Monousuário</span>
-            <span class="type-chip t-multi">Multiusuário</span>
-            <span class="type-chip t-real">Tempo real</span>
-            <span class="type-chip t-emb">Embarcado</span>
+            <span class="core-chip">IoT</span>
+            <span class="type-chip t-mono">🌡️ Sensor</span>
+            <span class="type-chip t-multi">📶 Rede</span>
+            <span class="type-chip t-real">☁️ Nuvem</span>
+            <span class="type-chip t-emb">❄️ Ação</span>
           </span>
         </a>
 
@@ -68,6 +69,7 @@
             <button type="button" data-filter="all" aria-pressed="true">Todos</button>
             <button type="button" data-filter="sistemas" aria-pressed="false">Sistemas</button>
             <button type="button" data-filter="hardware" aria-pressed="false">Hardware</button>
+            <button type="button" data-filter="redes" aria-pressed="false">Redes</button>
             <button type="button" data-filter="escritorio" aria-pressed="false">Escritório</button>
             <button type="button" data-filter="suporte" aria-pressed="false">Suporte</button>
             <button type="button" data-filter="revisao" aria-pressed="false">Revisão</button>
@@ -79,6 +81,10 @@
         </div>
 
         <ul id="game-grid" class="game-grid" aria-label="Jogos, do mais novo ao mais antigo">
+          <li data-cat="redes"><a class="game-card" href="#/internet-das-coisas">
+            <span class="thumb"><img src="./assets/thumbs/iot.jpg" alt="" loading="lazy"><b class="badge badge-new">Novo</b><b class="badge badge-team">Aula na TV</b></span>
+            <span class="card-info"><strong>Internet das Coisas</strong><small>Jogo 18 · Redes</small></span>
+          </a></li>
           <li data-cat="sistemas"><a class="game-card" href="#/tipos-de-so">
             <span class="thumb"><img src="./assets/thumbs/tipos-so.jpg" alt="" loading="lazy"><b class="badge badge-new">Novo</b></span>
             <span class="card-info"><strong>Tipos de Sistemas Operacionais</strong><small>Jogo 17 · Sistemas</small></span>
@@ -88,7 +94,7 @@
             <span class="card-info"><strong>Balcão da Informática</strong><small>Jogo 16 · Hardware</small></span>
           </a></li>
           <li data-cat="hardware"><a class="game-card" href="#/oficina-do-pc">
-            <span class="thumb"><img src="./assets/thumbs/oficina.jpg" alt="" loading="lazy"><b class="badge badge-new">Novo</b><b class="badge badge-3d">3D</b></span>
+            <span class="thumb"><img src="./assets/thumbs/oficina.jpg" alt="" loading="lazy"><b class="badge badge-3d">3D</b></span>
             <span class="card-info"><strong>Oficina do PC</strong><small>Jogo 15 · Hardware</small></span>
             <small class="game-offline-hint" data-game-offline="oficina-pc">Abra uma vez com internet para jogar offline.</small>
           </a></li>
@@ -261,6 +267,7 @@
       <section id="oficina-pc-screen" class="screen" data-screen="oficina-pc" hidden><div id="oficina-pc-app"></div></section>
       <section id="balcao-informatica-screen" class="screen" data-screen="balcao-informatica" hidden><div id="balcao-informatica-app"></div></section>
       <section id="tipos-so-screen" class="screen" data-screen="tipos-so" hidden><div id="tipos-so-app"></div></section>
+      <section id="iot-screen" class="screen" data-screen="iot" hidden><div id="iot-app"></div></section>
     </main>
 
     <footer class="site-footer">
@@ -280,6 +287,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="./js/credits-data.js?v=1.0.5"></script>
     <script src="./js/data.js?v=1.0.5"></script>
-    <script type="module" src="./js/app.js?v=4.0.1"></script>
+    <script type="module" src="./js/app.js?v=4.1.0"></script>
   </body>
 </html>
